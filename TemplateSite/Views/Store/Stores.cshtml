@@ -1,0 +1,90 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت فروشگاه</title>
+}
+
+@section scripts {
+    <script src="/js/Store/Stores.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-store"></i> مدیریت فروشگاه</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن فروشگاه جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchStore" placeholder="جستجو بر اساس ایتم ها...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+                        <th>عنوان فروشگاه</th>
+                        <th>صاحب فروشگاه</th>
+                        <th>کد فروشگاه</th>
+                        <th>تاریخ تاسیس</th>
+                        <th>آدرس فروشگاه</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="StoreTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="StoreModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن فروشگاه جدید</h3>
+
+        <input type="number" id="StoreId" placeholder="شناسه">
+        <input type="text" id="StoreCaption" placeholder="عنوان فروشگاه">
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">صاحب فروشگاه</label>
+            <select id="Personel" class="filter-select"></select>
+        </div>
+
+        <input type="text" id="CodeStore" placeholder="کد فروشگاه">
+
+        <!-- ✅ input تاریخ — به‌صورت date تا PersianDateInit.js روی آن تقویم شمسی اعمال کند -->
+        <input type="date" id="StoreRecord">
+
+        <input type="text" id="AddressStore" placeholder="آدرس فروشگاه">
+
+        <div style="display:flex;">
+            <label>وضعیت</label>
+            <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;margin-top: 5px;">
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>

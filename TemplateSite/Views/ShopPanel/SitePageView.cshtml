@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = ViewData["SitePageCaption"] ?? "صفحه";
+    Layout = "~/Views/Shared/_LayoutStore.cshtml";
+    var html = ViewData["SitePageHtml"]?.ToString() ?? "";
+}
+
+@section heads
+{
+    <title>@ViewData["SitePageCaption"]</title>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<div class="main-content" id="mainContent">
+    <div class="site-page-container">
+        @Html.Raw(html)
+    </div>
+</div>

@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+<html @RenderSection("html", required: false)>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نِگارشاپ | ویترین محصولات</title>
+    <link rel="stylesheet" href="~/css/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="~/css/MainStyle/HeaderStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/MainStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/menuProfileStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/StyleFooter.css">
+    <link rel="stylesheet" href="~/css/MainStyle/NavbarStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/ModelStyle.css">
+    <link rel="stylesheet" href="~/lib/persian-datepicker/css/persian-datepicker.min.css">
+    @RenderSection("heads", required: false)
+</head>
+<body data-signed-in="@(User.Identity?.IsAuthenticated.ToString().ToLower() ?? "false")">
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <h1>
+                    <span>✨</span>
+                    <span id="storeCaption">فروشگاه</span>
+                    <span>✨</span>
+                </h1>
+            </div>
+            <div class="header-actions">
+                <div onclick="toggleDropdownMenuStatus()" class="dropdown icon-btn">
+                    <a href="#" data-bs-toggle="dropdown" aria-expanded="true" class="show">
+                        <i class="fa fa-user-lock signup-login-icon"></i>
+                    </a>
+                    <ul class="dropdown-menu menuProfile dropdown-menu-custom" id="dropdownMenu">
+                        <li class="d-flex NotUser">
+                            <img src="/Images/Program/avatar.jpg" class="avatar">
+                            <div class="ms-2" style="display:flex;align-items:center;justify-content: center;width:100%;">
+                                <a href="@Url.Action("Login","Account")" class="font-14">ورود</a>
+                            </div>
+                        </li>
+                        <li class="d-flex UserEx">
+                            <img src="/Images/Program/avatar.jpg" class="avatar">
+                            <div class="ms-2" style="display: flex;flex-direction: column;">
+                                <a href="/ShopPanel/Profile" id="NameUser" class="font-14">p</a>
+                                <a href="/ShopPanel/Profile" class="font-12 d-block text-info mt-2">
+                                    مشاهده حساب کاربری <i class="fa fa-chevron-left align-middle mt-1"></i>
+                                </a>
+                            </div>
+                        </li>
+                        <li class="UserEx SubItems">
+                            <a href="/ShopPanel/Recommendation" class="login-link">
+                                <i class="fa fa-shopping-basket text-muted font-14 me-1"></i> سفارش های من
+                            </a>
+                            <a href="/Dashboard" class="login-link AdminOnly" id="adminPanelLink" style="display:none;">
+                                <i class="fas fa-tachometer-alt text-muted font-14 me-1"></i> <span>ورود به پنل مدیریتی</span>
+                            </a>
+                            <a href="/MyDashboard" class="login-link StoresOwner" style="display:none;">
+                                <i class="fas fa-tachometer-alt text-muted font-14 me-1"></i><span>داشبورد من</span>
+                            </a>
+                            <a href="@Url.Action("Index", "MyProduct")" class="login-link StoresOwner">
+                                <i class="fas fa-boxes text-muted font-14 me-1"></i><span>مدیریت محصولات</span>
+                            </a>
+                            <a href="/MyOrders" class="login-link StoresOwner" style="display:none;">
+                                <i class="fas fa-shopping-bag text-muted font-14 me-1"></i><span>مدیریت سفارشات</span>
+                            </a>
+                            <a href="@Url.Action("Index", "StoreQA")" class="login-link StoresOwner">
+                                <i class="fas fa-question-circle text-muted font-14 me-1"></i><span>مدیریت پرسش و پاسخ</span>
+                            </a>
+                            <a href="@Url.Action("Index", "MyContact")" class="login-link StoresOwner" id="myContactLink">
+                                <i class="fas fa-address-book text-muted font-14 me-1"></i> <span>راه‌های تماس</span>
+                            </a>
+                            <a href="@Url.Action("Logout","Account")" class="login-link">
+                                <i class="fas fa-sign-out-alt text-muted font-14 me-1"></i>خروج از حساب  کاربری
+                            </a>
+                            <a href="#" class="login-link" id="clearStoreCacheBtn" title="مشاهده دیگر فروشگاه ها">
+                                <i class="fas fa-eraser text-muted font-14 me-1"></i>
+                                <span>فروشگاه ها</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <button class="filter-toggle-btn" id="filterToggleBtn">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+                <button class="cart-toggle-btn" id="cartToggleBtn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+                <div class="icon-btn theme-toggle" id="themeToggleBtn">
+                    <i class="fas fa-moon"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- اوورلی -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- ===== نوار فیلتر ===== -->
+    <div class="filter-overlay" id="filterOverlay"></div>
+    <aside class="filter-sidebar" id="filterSidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-filter"></i> فیلتر محصولات</h3>
+            <button class="close-sidebar" id="closeFilterBtn"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="filter-group">
+            <label><i class="fas fa-tags"></i> دسته‌بندی</label>
+            <select id="kindFilter">
+                <option value="all">همه دسته‌بندی‌ها</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label><i class="fas fa-palette"></i> رنگ</label>
+            <div class="color-options" id="colorOptions">
+                <div class="color-option all-colors active" data-color="all">
+                    <span>همه</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <label><i class="fas fa-dollar-sign"></i> محدوده قیمت</label>
+            <div class="price-range-inputs">
+                <input type="number" id="priceMin" placeholder="از">
+                <input type="number" id="priceMax" placeholder="تا">
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <label><i class="fas fa-box"></i> موجودی</label>
+            <select id="stockFilter">
+                <option value="all">همه</option>
+                <option value="in-stock">موجود</option>
+                <option value="out-stock">ناموجود</option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn-apply-filter" id="applyFiltersBtn"><i class="fas fa-check"></i> اعمال</button>
+            <button class="btn-reset-filter" id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> بازنشانی</button>
+        </div>
+    </aside>
+
+    <!-- ===== سبد خرید ===== -->
+    <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-cart"></i> سبد خرید</h3>
+            <button class="close-cart" id="closeCartBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">
+                <i class="fas fa-cart-plus"></i>
+                <p>سبد خرید شما خالی است</p>
+                <small>محصولات مورد نظر خود را اضافه کنید</small>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>مجموع:</span>
+                <span id="cartTotal">۰ تومان</span>
+            </div>
+            <button class="btn-checkout" id="checkoutBtn">تکمیل خرید</button>
+        </div>
+    </aside>
+
+    @RenderBody()
+
+    <!-- ===== toast ===== -->
+    <div class="toast" id="toast"></div>
+
+    <footer>
+        <div class="container">
+            <div class="row footer-svg-icons border-bottom mx-2 py-2">
+                <div class="col-6 col-md text-center"><img src="~/Store/images/1.svg"><p>تحویل اکسپرس</p></div>
+                <div class="col-6 col-md text-center"><img src="~/Store/images/2.svg"><p>پشتیبانی 24 ساعته </p></div>
+                <div class="col-6 col-md text-center"><img src="~/Store/images/3.svg"><p>پرداخت در محل </p></div>
+                <div class="col-6 col-md text-center"><img src="~/Store/images/4.svg"><p>7 روز ضمانت بازگشت کالا</p></div>
+                <div class="col-12 col-md text-center"><img src="~/Store/images/5.svg"><p>ضمانت اصل بودن کالا</p></div>
+            </div>
+            <div class="row">
+                <!-- start footer box -->
+                <div class="col-lg-2 col-sm-6 footer-box R">
+                    <p>با <span class="store-caption-text">فروشگاه</span> </p>
+                    <ul class="ps-0">
+                        <li class="mb-3"><a asp-controller="ShopPanel" asp-action="Contact">تماس با <span class="store-caption-text">فروشگاه</span></a></li>
+                        <li class="mb-3"><a asp-controller="ShopPanel" asp-action="Contact">درباره <span class="store-caption-text">فروشگاه</span></a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-sm-6 footer-box R">
+                    <p>خدمات مشتریان</p>
+                    <ul class="ps-0">
+                        <li class="mb-3"><a asp-controller="ShopPanel" asp-action="Contact">پرسش‌های متداول</a></li>
+                        <li class="mb-3"><a asp-controller="ShopPanel" asp-action="Contact">گزارش تخلف</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-sm-6 footer-box R">
+                    <p>راهنمای خرید از <span class="store-caption-text">فروشگاه</span></p>
+                    <ul class="ps-0">
+                        <li class="mb-3"><a asp-controller="ShopPanel" asp-action="Contact">نحوه ثبت سفارش</a></li>
+                        <li class="mb-3"><a asp-controller="ShopPanel" asp-action="Contact">رویه‌های بازگرداندن کالا</a></li>
+                    </ul>
+                </div>
+
+                <!-- ⭐ بلوک «همراه ما باشید / خبرنامه» — با JS مدیریت می‌شود -->
+                <div class="col-lg-5 col-sm-6 footer-box" id="socialFooterBox">
+                    <p class="mb-4">همراه ما باشید!</p>
+                    <div class="social-list" id="socialList">
+                        <!-- آیکون‌ها با JS پر می‌شود -->
+                    </div>
+
+                    <p class="newsletter-label">با ثبت ایمیل، از جدید‌ترین تخفیف‌ها با‌خبر شوید</p>
+                    <div class="input-group mt-4 mb-5 email-box" id="emailNewsBox">
+                        <input type="email" id="emailNews" class="form-control form-control-lg" placeholder="ایمیل شما">
+                        <button type="button" onclick="SendEmail()" class="btn btn-danger font-13 px-3">ارسال</button>
+                    </div>
+                </div>
+            </div>
+            <!-- end footer box -->
+            <!-- start app download -->
+            <div class="row d-none d-sm-block">
+                <div class="col-12 app-download">
+                    <div class="row" style="height: 6px;">
+                    </div>
+                </div>
+            </div>
+            <!-- end app download -->
+            <!-- start footer details -->
+            <div class="row">
+                <div class="col-md-8 col-12 footer-details ps-0">
+                    <p>فروشگاه اینترنتی AMAJ، بررسی، انتخاب و خرید آنلاین</p>
+                    <span>
+                        AMAJ ، فروشگاه اینترنتی نوپا با رسالت تحول‌آفرینی در تجربه خرید آنلاین. ما با بهره‌گیری از هوش مصنوعی پیشرفته، خریدی هوشمند و شخصی‌سازی‌شده را برای کاربران خود رقم می‌زنیم؛ از نیازسنجی دقیق و تشخیص میزان ضرورت هر محصول برای خریدار، تا مشتری‌یابی هدفمند برای فروشندگان. در آماج، هوش مصنوعی به شما می‌گوید که آیا واقعاً به این محصول نیاز دارید یا نه، و فروشندگان را با مشتریان واقعی‌ و آماده به خرید آشنا می‌سازد. اینجا فقط یک فروشگاه نیست؛ همراه هوشمند خرید شماست. 🧠✨
+                    </span>
+                </div>
+                <div class="col-md-4 col-12 d-flex align-items-center justify-content-end footer-pic pe-0">
+                    <img src="~/Store/images/f-1.png" class="footer-detail-pic">
+                    <img src="~/Store/images/f-2.png" class="footer-detail-pic">
+                </div>
+            </div>
+            <!-- end footer details -->
+
+            <div class="row">
+                <!-- start copy right -->
+                <div class="col-12 copy-right">
+                    <p>
+                        استفاده از مطالب فروشگاه اینترنتی فقط برای مقاصد غیرتجاری و
+                        با ذکر منبع بلامانع است.
+                    </p>
+                </div>
+            </div><!-- end copy right -->
+        </div>
+        <a href="#" class="topbutton"><i class="fa fa-chevron-up"></i></a><!-- top button -->
+    </footer>
+
+    <div class="backShadow" id="Shadow"></div>
+
+    <!-- ===== اسکریپت‌ها ===== -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/js/Core/HttpHelper.js"></script>
+    <script src="~/js/Core/UICore.js"></script>
+    <script src="~/js/Core/AuthHelper.js"></script>
+    <script src="~/js/Core/CartHelper.js"></script>
+    <script src="~/js/Core/StoreHelper.js"></script>
+
+    <script src="~/js/StoreJS.js"></script>
+
+    <!-- Persian DatePicker -->
+    <script src="~/lib/persian-datepicker/js/persian-date.min.js"></script>
+    <script src="~/lib/persian-datepicker/js/persian-datepicker.min.js"></script>
+    <script src="~/js/PersianDateInit.js"></script>
+
+    @await RenderSectionAsync("scripts", required: false)
+    @Html.AntiForgeryToken()
+    @await Html.PartialAsync("_QuickRegisterModal")
+
+    <script>
+        // ============================================================
+        // مقداردهی اولیه — لود اطلاعات فروشگاه + اتصال دکمه‌ها
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                await StoreHelper.loadStoreInfo();
+            } catch (e) {
+                console.error('خطا در بارگذاری اطلاعات فروشگاه:', e);
+            }
+
+            // ─── دکمه پاک کردن کش فروشگاه ───
+            const clearBtn = document.getElementById('clearStoreCacheBtn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    if (!window.confirm('اطلاعات فروشگاه ذخیره‌شده پاک شود و صفحه بارگذاری مجدد شود؟'))
+                        return;
+
+                    StoreHelper.clearStoredStore();
+                    if (window.UICore) UICore.showToast('اطلاعات فروشگاه پاک شد', 'success');
+
+                    // حذف پارامتر code از URL و رفرش
+                    try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('code');
+                        setTimeout(() => { window.location.href = url.toString(); }, 600);
+                    } catch {
+                        setTimeout(() => window.location.reload(), 600);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

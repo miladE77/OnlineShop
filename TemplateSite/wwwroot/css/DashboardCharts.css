@@ -1,0 +1,126 @@
+﻿
+.chart-svg,
+.donut-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+/* نقاط نمودار خطی */
+.chart-dot {
+    cursor: pointer;
+    transition: r .2s, stroke-width .2s;
+}
+
+    .chart-dot:hover {
+        r: 6;
+        stroke-width: 3;
+    }
+
+/* کمان‌های دونات */
+.chart-arc {
+    transition: opacity .2s, stroke-width .2s;
+    cursor: pointer;
+}
+
+    .chart-arc:hover {
+        opacity: .85;
+    }
+
+/* حالت خالی */
+.chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 280px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ═══════════ Donut + Legend ═══════════ */
+.donut-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 0;
+}
+
+.donut-svg {
+    flex-shrink: 0;
+}
+
+.chart-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px 14px;
+    width: 100%;
+    padding: 0 6px;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.legend-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.legend-value {
+    font-weight: 700;
+    color: #1e2a3a;
+    font-size: 11px;
+    direction: ltr;
+}
+
+/* ═══════════ Responsive ═══════════ */
+@media (max-width: 700px) {
+    .donut-svg {
+        width: 180px !important;
+        height: 180px !important;
+    }
+
+    .chart-legend {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+}
+
+/* ═══════════ Dark Theme ═══════════ */
+body.dark .chart-empty {
+    color: #64748b;
+}
+
+body.dark .chart-legend-item {
+    color: #cbd5e1;
+}
+
+body.dark .legend-value {
+    color: #f1f5f9;
+}
+
+body.dark .donut-svg text {
+    fill: #f1f5f9 !important;
+}
+
+body.dark .chart-svg text {
+    fill: #94a3b8 !important;
+}

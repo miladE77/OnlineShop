@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت رسید پرداخت</title>
+}
+
+@section scripts {
+    <script src="/js/Receipt/Receipts.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-receipt"></i> مدیریت رسید پرداخت</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن رسید پرداخت جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchReceipt" placeholder="جستجو بر اساس عنوان، نوع پرداخت...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+                        <th>عنوان پرداخت</th>
+                        <th>نوع پرداخت</th>
+                        <th>سفارش مرتبط</th>
+                        <th>حجم پرداخت</th>
+                        <th>تاریخ پرداخت</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="ReceiptTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="ReceiptModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن رسید پرداخت جدید</h3>
+
+        <input type="number" id="ReceiptId" placeholder="شناسه">
+        <input type="text" id="ReceiptCaption" placeholder="عنوان پرداخت">
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">نوع پرداخت</label>
+            <select id="TypePeyment" class="filter-select"></select>
+        </div>
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">سفارش مرتبط</label>
+            <select id="Recommendations" class="filter-select"></select>
+        </div>
+
+        <input type="number" id="ValuePeyment" placeholder="حجم پرداخت">
+
+        <input type="date" id="DateTimePeyment" placeholder="تاریخ پرداخت">
+
+        <div style="display:flex;">
+            <label>وضعیت</label>
+            <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%; margin-top: 5px;">
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>

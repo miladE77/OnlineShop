@@ -1,0 +1,202 @@
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- مودال ثبت‌نام سریع — از هرجای سایت قابل فراخوانی -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="quickRegisterModal" class="quick-register-overlay" style="display: none;">
+    <div class="quick-register-modal">
+        <div class="quick-register-header">
+            <h3><i class="fas fa-user-plus"></i> ثبت‌نام سریع</h3>
+            <button type="button" class="close-btn" onclick="closeQuickRegister()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="quick-register-body">
+            <p class="quick-register-desc">
+                برای ادامه خرید، لطفاً اطلاعات زیر را وارد کنید:
+            </p>
+
+            <form id="quickRegisterForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نام <span class="required">*</span></label>
+                        <input type="text" id="qrFirstName" placeholder="نام" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label>نام خانوادگی <span class="required">*</span></label>
+                        <input type="text" id="qrLastName" placeholder="نام خانوادگی" maxlength="50">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>کد ملی <span class="required">*</span></label>
+                    <input type="text" id="qrLationalCode" placeholder="۱۰ رقم" maxlength="10"
+                           pattern="\d{10}" inputmode="numeric">
+                </div>
+
+                <div class="form-group">
+                    <label>شماره تماس <span class="required">*</span></label>
+                    <input type="tel" id="qrPhoneNumber" placeholder="۰۹۱۲۳۴۵۶۷۸۹" maxlength="11"
+                           pattern="09\d{9}" inputmode="numeric">
+                </div>
+
+                <div class="form-group">
+                    <label>آدرس <span class="required">*</span></label>
+                    <textarea id="qrAddress" placeholder="آدرس محل سکونت" rows="2" maxlength="500"></textarea>
+                </div>
+
+                <div id="qrError" class="qr-error" style="display: none;"></div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-save" id="qrSubmitBtn">
+                        <i class="fas fa-check"></i> ثبت‌نام و ادامه
+                    </button>
+                    <button type="button" class="btn-cancel" onclick="closeQuickRegister()">
+                        انصراف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/QuickRegisterStyle.css">
+
+   
+
+<script>
+    (function () {
+        'use strict';
+
+        // ═══════════════════════════════════════════════════════
+        // باز کردن مودال
+        // ═══════════════════════════════════════════════════════
+        window.openQuickRegister = function () {
+            const modal = document.getElementById('quickRegisterModal');
+            if (modal) modal.style.display = 'flex';
+
+            // ✅ CSRF Token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            if (!token) {
+                // اگه توکن نبود، یه‌بار از سرور بگیر
+                fetch('/AntiForgery/GetToken')
+                    .then(r => r.json())
+                    .then(d => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = '__RequestVerificationToken';
+                        input.value = d.token;
+                        document.getElementById('quickRegisterForm').appendChild(input);
+                    });
+            }
+        };
+
+        // ═══════════════════════════════════════════════════════
+        // بستن مودال
+        // ═══════════════════════════════════════════════════════
+        window.closeQuickRegister = function () {
+            const modal = document.getElementById('quickRegisterModal');
+            if (modal) modal.style.display = 'none';
+
+            // پاک کردن فرم
+            const form = document.getElementById('quickRegisterForm');
+            if (form) form.reset();
+            document.getElementById('qrError').style.display = 'none';
+        };
+
+        // ═══════════════════════════════════════════════════════
+        // ارسال فرم
+        // ═══════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('quickRegisterForm');
+            if (!form) return;
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const errorBox = document.getElementById('qrError');
+                const submitBtn = document.getElementById('qrSubmitBtn');
+                errorBox.style.display = 'none';
+
+                // ═══ اعتبارسنجی سمت کلاینت ═══
+                const firstName = document.getElementById('qrFirstName').value.trim();
+                const lastName = document.getElementById('qrLastName').value.trim();
+                const lationalCode = document.getElementById('qrLationalCode').value.trim();
+                const phoneNumber = document.getElementById('qrPhoneNumber').value.trim();
+                const address = document.getElementById('qrAddress').value.trim();
+
+                const errors = [];
+                if (firstName.length < 2) errors.push('نام نامعتبر');
+                if (lastName.length < 2) errors.push('نام خانوادگی نامعتبر');
+                if (!/^\d{10}$/.test(lationalCode)) errors.push('کد ملی باید ۱۰ رقم باشد');
+                if (!/^09\d{9}$/.test(phoneNumber)) errors.push('شماره تماس نامعتبر');
+                if (address.length < 5) errors.push('آدرس نامعتبر');
+
+                if (errors.length > 0) {
+                    errorBox.textContent = errors.join(' - ');
+                    errorBox.style.display = 'block';
+                    return;
+                }
+
+                // ═══ ارسال به سرور ═══
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ثبت‌نام...';
+
+                try {
+                    // ✅ CSRF Token
+                    const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+                    const formData = new FormData();
+                    formData.append('FirstName', firstName);
+                    formData.append('LastName', lastName);
+                    formData.append('LationalCode', lationalCode);
+                    formData.append('PhoneNumber', phoneNumber);
+                    formData.append('Address', address);
+                    formData.append('__RequestVerificationToken', token);
+
+                    const response = await fetch('/ShopQuickRegister/Register', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.isSuccess) {
+                        // ✅ موفق — reload کن
+                        window.location.reload();
+                    } else {
+                        errorBox.textContent = result.errorTitle || 'خطا در ثبت‌نام';
+                        errorBox.style.display = 'block';
+                    }
+                } catch (err) {
+                    errorBox.textContent = 'خطا در ارتباط با سرور';
+                    errorBox.style.display = 'block';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> ثبت‌نام و ادامه';
+                }
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════
+        // بستن با Escape
+        // ═══════════════════════════════════════════════════════
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('quickRegisterModal');
+                if (modal && modal.style.display === 'flex') {
+                    window.closeQuickRegister();
+                }
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════
+        // بستن با کلیک روی Overlay
+        // ═══════════════════════════════════════════════════════
+        document.addEventListener('click', function (e) {
+            if (e.target.id === 'quickRegisterModal') {
+                window.closeQuickRegister();
+            }
+        });
+    })();
+</script>

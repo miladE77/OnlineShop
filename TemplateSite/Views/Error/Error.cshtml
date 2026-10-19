@@ -1,0 +1,32 @@
+﻿@using Domain.ViewModels;
+
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+
+
+<div class="row">
+    <div class="col s12">
+        <div class="container">
+            <div class="section p-0 m-0 height-100vh section-maintenance">
+                <div class="row">
+                    <!-- Maintenance -->
+                    <div id="maintenance" class="col s12 center-align white">
+                        <img src="/app-assets/images/gallery/maintenance.png" class="responsive-img maintenance-img" alt="">
+                        @if (Model.ShowRequestId)
+                        {
+                            <h1>
+                                @Model.RequestId
+                            </h1>
+                        }
+                        <p>Use this page to detail your site's privacy policy.</p>
+                        <a class="btn waves-effect waves-light" href="@Url.Action("myprofile","Account")">بازگشت به خانه</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="content-overlay"></div>
+    </div>
+</div>

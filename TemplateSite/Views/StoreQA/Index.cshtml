@@ -1,0 +1,105 @@
+@{
+    ViewData["Title"] = "مدیریت پرسش و پاسخ";
+    Layout = "~/Views/Shared/_LayoutStore.cshtml";
+
+    var storeName = ViewData["StoreName"]?.ToString() ?? "فروشگاه";
+}
+
+@section heads
+{
+    <title>مدیریت پرسش و پاسخ — @storeName</title>
+    <link rel="stylesheet" href="~/css/Shop/ContactUsStyle.css">
+}
+
+@section scripts
+{
+    <script src="~/js/StoreQA/StoreQA.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<main class="main-content" id="mainContent">
+    <div class="qa-container">
+
+        <!-- ═══ Header ═══ -->
+        <div class="qa-header">
+            <h2><i class="fas fa-headset"></i> مدیریت پرسش و پاسخ</h2>
+
+            <div class="qa-header-filters">
+                <!-- Store Selector — JS پر می‌کند -->
+                <div class="store-selector" id="storeSelector" style="display:none;"></div>
+
+                <!-- Month Selector — JS پر می‌کند -->
+                <div class="month-filter" id="monthFilter" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- ═══ Filter Bar ═══ -->
+        <div class="qa-filter-bar">
+            <button class="qa-filter-btn active" data-condition="-1">
+                <i class="fas fa-list"></i>
+                همه
+                <span class="count-badge" id="countAll">0</span>
+            </button>
+
+            <button class="qa-filter-btn" data-condition="0">
+                <i class="fas fa-clock"></i>
+                در انتظار پاسخ
+                <span class="count-badge" id="countPending">0</span>
+            </button>
+
+            <button class="qa-filter-btn" data-condition="1">
+                <i class="fas fa-check"></i>
+                پاسخ داده شده
+                <span class="count-badge" id="countAnswered">0</span>
+            </button>
+
+            <button class="qa-filter-btn" data-condition="2">
+                <i class="fas fa-times"></i>
+                رد شده
+                <span class="count-badge" id="countRejected">0</span>
+            </button>
+
+            <button class="qa-filter-btn" data-condition="3">
+                <i class="fas fa-archive"></i>
+                بایگانی
+                <span class="count-badge" id="countArchive">0</span>
+            </button>
+        </div>
+
+        <!-- ═══ QA List ═══ -->
+        <div class="qa-list" id="qaList">
+            <div class="qa-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                در حال بارگذاری...
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- ═══ Modal پاسخ ═══ -->
+<div class="modal-overlay" id="replyModal">
+    <div class="modal modelInput">
+        <h3><i class="fas fa-reply"></i> پاسخ به سوال</h3>
+
+        <div class="qa-question-preview" id="questionPreview"></div>
+
+        <textarea id="replyText"
+                  placeholder="متن پاسخ خود را وارد کنید..."
+                  rows="5"
+                  maxlength="2000"></textarea>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="submitReply()">
+                <i class="fas fa-paper-plane"></i> ارسال پاسخ
+            </button>
+            <button class="btn-cancel" onclick="closeReplyModal()">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>

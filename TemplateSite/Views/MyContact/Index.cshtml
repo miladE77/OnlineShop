@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "مدیریت راه‌های تماس";
+    Layout = "~/Views/Shared/_LayoutStore.cshtml";
+
+    var stores = ViewData["Stores"] as List<Store>;
+    var currentStoreId = ViewData["StoreId"] as int? ?? 0;
+    var storeName = ViewData["StoreName"]?.ToString() ?? "فروشگاه";
+}
+
+@section heads
+{
+    <title>راه‌های تماس — @storeName</title>
+    <link rel="stylesheet" href="/css/Shop/MyContact.css">
+}
+
+@section scripts
+{
+    <script src="/js/MyContact/MyContact.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<main class="main-content" id="mainContent">
+    <div class="contact-container">
+
+        <!-- ═══ Header ═══ -->
+        <div class="contact-header">
+            <h2><i class="fas fa-address-book"></i> راه‌های تماس</h2>
+
+            <div class="contact-header-actions">
+                <!-- Selector فروشگاه (برای مشاهده) -->
+                @if (stores != null && stores.Count > 1)
+                {
+                    <div class="store-selector">
+                        <label><i class="fas fa-store"></i> نمایش فروشگاه:</label>
+                        <select id="viewStoreSelect">
+                            @foreach (var store in stores)
+                            {
+                                if (store.StoreId == currentStoreId)
+                                {
+                                    <option value="@store.StoreId" selected>@store.StoreCaption</option>
+                                }
+                                else
+                                {
+                                    <option value="@store.StoreId">@store.StoreCaption</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                }
+
+                <button class="btn-add" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i> افزودن راه تماس
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══ Stats ═══ -->
+        <div class="stats-cards" id="statsCards"></div>
+
+        <!-- ═══ لیست ═══ -->
+        <div class="contact-list" id="contactList">
+            <div class="contact-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                در حال بارگذاری...
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- ═══ Modal افزودن/ویرایش ═══ -->
+<div class="modal-overlay" id="contactModal">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن راه تماس</h3>
+
+        <input type="hidden" id="contactId" value="0" />
+
+        <!-- ═══════════════════════════════════════════════════════
+             ★ Selector فروشگاه (داخل Modal)
+             ═══════════════════════════════════════════════════════ -->
+        <div class="form-group" id="modalStoreGroup" style="display:none;">
+            <label>فروشگاه مربوطه <span style="color:red;">*</span></label>
+            <select id="modalStoreId" class="filter-select">
+                <option value="">انتخاب فروشگاه...</option>
+            </select>
+        </div>
+
+        <!-- نوع پلتفرم -->
+        <div class="form-group">
+            <label>نوع پلتفرم <span style="color:red;">*</span></label>
+            <select id="typeContact" class="filter-select">
+                <option value="">در حال بارگذاری...</option>
+            </select>
+        </div>
+
+        <!-- مشخصات تماس -->
+        <div class="form-group">
+            <label>مشخصات تماس <span style="color:red;">*</span></label>
+            <input type="text"
+                   id="contactCaption"
+                   placeholder="مثال: 09123456789 یا instagram"
+                   maxlength="500" />
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveContact()">
+                <i class="fas fa-check"></i> ذخیره
+            </button>
+            <button class="btn-cancel" onclick="closeModal('contactModal')">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,122 @@
+﻿
+.main-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 12px 28px;
+    border-bottom: 1px solid var(--border-light);
+    backdrop-filter: blur(8px) saturate(180%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 8px 24px rgba(0, 0, 0, 0.04);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+body.dark .main-header {
+    background: rgba(22, 33, 62, 0.72);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.header-container {
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.icon-btn {
+    background: var(--bg-body);
+    border: 1px solid var(--border-light);
+    border-radius: 40px;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: .2s;
+}
+.navbar-toggle-header {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 40px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+    .navbar-toggle-header:hover {
+        background: var(--primary-dark);
+        transform: scale(1.02);
+    }
+.filter-toggle-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: .2s;
+}
+
+    .filter-toggle-btn:hover {
+        background: var(--primary-dark);
+        transform: scale(1.02);
+    }
+
+.cart-toggle-btn {
+    background: var(--gold-grad);
+    color: #1e2a3a;
+    border: none;
+    border-radius: 40px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: .2s;
+    position: relative;
+    box-shadow: var(--gold-glow);
+}
+
+    .cart-toggle-btn:hover {
+        transform: scale(1.02);
+    }
+
+.cart-badge {
+    background: var(--danger);
+    color: #fff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+}
+
+.theme-toggle {
+    background: var(--bg-body);
+}
+
+

@@ -1,0 +1,87 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت رنگ بندی محصولات</title>
+}
+@section scripts {
+    <script src="/js/ColorPriceProduct/ColorPriceProducts.js"></script>
+}
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<!-- مودال افزودن/ویرایش  رنگ بندی محصولات -->
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-users"></i> مدیریت رنگ بندی محصولات</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن رنگ بندی محصولات جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchColorPriceProduct" placeholder="جستجو بر اساس ایتم ها...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+                        <th>رنگ محصول</th>
+                        <th>قیمت</th>
+                        <th>تخفیف</th>
+                        <th>محصول</th>
+                        <th>موجودی انبار</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="ColorPriceProductTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="ColorPriceProductModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن رنگ بندی محصولات جدید</h3>
+
+        <input type="number" id="ColorPriceProductId" placeholder="شناسه">
+        <input type="text" id="ColorPriceProductCaption" placeholder="رنگ محصول">
+        <input type="number" id="PriceProduct" placeholder="قیمت این رنگ بندی">
+        <input type="number" id="Offer" placeholder="تخفیف">
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: auto;">محصول</label>
+            <select id="Product" class="filter-select">
+            </select>
+        </div>
+        <input type="number" id="InStore" placeholder="موجودی انبار">
+        <div style="display:flex;">
+            <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
+  margin-top: 5px;">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+
+
+

@@ -17,3 +17,4 @@ C:\Users\Milad\source\repos\OnlineShop\InterFase\bin\Debug\net8.0\Application.pd
 C:\Users\Milad\source\repos\OnlineShop\InterFase\bin\Debug\net8.0\DataLayer.pdb
 C:\Users\Milad\source\repos\OnlineShop\InterFase\bin\Debug\net8.0\Domain.pdb
 C:\Users\Milad\source\repos\OnlineShop\InterFase\obj\Debug\net8.0\InterFase.csproj.Up2Date
+C:\Users\Milad\source\repos\OnlineShop\InterFase\obj\Debug\net8.0\InterFase.sourcelink.json

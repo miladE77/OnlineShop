@@ -1,0 +1,439 @@
+﻿﻿@using Domain.ViewModels;
+@model ContactUsModel
+@{
+    ViewData["Title"] = "sot";
+    Layout = null;
+}
+
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تماس با ما</title>
+    <link rel="stylesheet" href="/css/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/ContactUsStyle.css">
+    @Html.AntiForgeryToken()
+</head>
+
+<body>
+
+    <div class="contact-container">
+
+        <!-- ===== هدر صفحه ===== -->
+        <div class="page-header">
+            <h1><i class="fas fa-headset"></i> تماس با ما</h1>
+            <p>ما ۲۴ ساعته پاسخگوی سوالات و نظرات شما هستیم</p>
+        </div>
+
+        <!-- ===== فرم تماس ===== -->
+        <div class="contact-card">
+            <div class="card-title">
+                <i class="fas fa-pen"></i> ارسال پیام جدید
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="contactForm" novalidate>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="ContactUsCaption">عنوان پیام <span class="required">*</span></label>
+                            <input type="text" id="ContactUsCaption" class="form-control"
+                                   placeholder="موضوع پیام خود را وارد کنید" required>
+                            <div class="invalid-feedback">لطفاً عنوان پیام را وارد کنید</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="FullName">نام و نام خانوادگی <span class="required">*</span></label>
+                            <input type="text" id="FullName" class="form-control"
+                                   placeholder="نام و نام خانوادگی خود را وارد کنید" required>
+                            <div class="invalid-feedback">لطفاً نام و نام خانوادگی را وارد کنید</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="Email">ایمیل <span class="required">*</span></label>
+                            <input type="email" id="Email" class="form-control"
+                                   placeholder="ایمیل خود را وارد کنید" required>
+                            <div class="invalid-feedback">لطفاً یک ایمیل معتبر وارد کنید</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="PhoneNumber">شماره تماس <span class="required">*</span></label>
+                            <input type="tel" id="PhoneNumber" class="form-control"
+                                   placeholder="۰۹۱۲۳۴۵۶۷۸۹" required>
+                            <div class="invalid-feedback">لطفاً یک شماره تماس معتبر وارد کنید</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="Messages">متن پیام <span class="required">*</span></label>
+                            <textarea id="Messages" class="form-control" rows="5"
+                                      placeholder="متن پیام خود را وارد کنید..." required></textarea>
+                            <div class="invalid-feedback">لطفاً متن پیام را وارد کنید (حداقل ۱۰ کاراکتر)</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="submit-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i> ارسال پیام
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ===== لیست پیام‌های ارسالی ===== -->
+        <div class="contact-card">
+            <div class="card-title">
+                <i class="fas fa-history"></i> پیام‌های ارسالی
+                <span id="messageCount" style="font-size:0.8rem;font-weight:400;color:var(--text-secondary);margin-right:10px;"></span>
+            </div>
+
+            <div id="messagesContainer">
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>در حال بارگذاری...</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== مودال نمایش پیام و پاسخ ===== -->
+    <div class="modal fade modal-custom" id="messageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-envelope"></i>
+                        <span id="modalTitle">جزئیات پیام</span>
+                    </h5>
+                    <button type="button" class="close-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- اطلاعات توسط جاوااسکریپت پر می‌شود -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            style="border-radius:10px;padding:8px 25px;">
+                        <i class="fas fa-times"></i> بستن
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== مودال حذف ===== -->
+    <div class="modal fade modal-custom" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-trash-alt" style="color:var(--danger-color);"></i>
+                        حذف پیام
+                    </h5>
+                    <button type="button" class="close-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p style="text-align:center;margin:10px 0;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--warning-color);display:block;margin-bottom:10px;"></i>
+                        آیا از حذف این پیام مطمئن هستید؟
+                    </p>
+                    <p style="text-align:center;font-size:0.85rem;color:var(--text-secondary);">
+                        این عملیات غیرقابل بازگشت است
+                    </p>
+                </div>
+                <div class="modal-footer" style="justify-content:center;gap:10px;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            style="border-radius:10px;padding:8px 25px;">
+                        <i class="fas fa-times"></i> انصراف
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn"
+                            style="border-radius:10px;padding:8px 25px;">
+                        <i class="fas fa-trash-alt"></i> حذف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="~/Store/js/jquery.min.js"></script>
+    <script src="~/Store/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/js/Core/HttpHelper.js"></script>
+    <script src="~/js/Core/UICore.js"></script>
+    <script src="~/js/Core/AuthHelper.js"></script>
+    <script src="~/js/Core/CartHelper.js"></script>
+
+    <!-- ═══ مودال ثبت‌نام سریع ═══ -->
+    @await Html.PartialAsync("_QuickRegisterModal")
+
+    <script>
+        (function () {
+            'use strict';
+
+            const Http = window.HttpHelper;
+            const H = window.UICore;
+
+            const STATUS_TEXT = { 0: 'در انتظار پاسخ', 1: 'پاسخ داده شده', 2: 'رد شده', 3: 'بایگانی' };
+            const STATUS_CLASS = { 0: 'status-pending', 1: 'status-Answered', 2: 'status-rejected', 3: 'status-archive' };
+            const STATUS_ICON = { 0: 'fa-clock', 1: 'fa-check-circle', 2: 'fa-times-circle', 3: 'fa-archive' };
+
+            const form = document.getElementById('contactForm');
+            const sendBtn = document.getElementById('sendBtn');
+            const alertContainer = document.getElementById('alertContainer');
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageCount = document.getElementById('messageCount');
+            const modalBody = document.getElementById('modalBody');
+            const modalTitle = document.getElementById('modalTitle');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+            let deleteId = null;
+            let messagesData = [];
+
+            // ═══ اعتبارسنجی ═══
+            function isValidEmail(email) {
+                return /^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+            }
+            function isValidPhone(phone) {
+                phone = phone.replace(/\s|-|\+/g, '');
+                return /^09[0-9]{9}$/.test(phone);
+            }
+            function getStatusBadge(c) {
+                const text = STATUS_TEXT[c] || 'نامشخص';
+                const cls = STATUS_CLASS[c] || 'status-pending';
+                const icon = STATUS_ICON[c] || 'fa-clock';
+                return `<span class="status-badge ${cls}"><i class="fas ${icon}"></i> ${text}</span>`;
+            }
+            function formatDate(d) {
+                if (!d) return 'نامشخص';
+                const dt = new Date(d);
+                return `${dt.getFullYear()}/${String(dt.getMonth() + 1).padStart(2, '0')}/${String(dt.getDate()).padStart(2, '0')} - ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+            }
+
+            // ═══ Toast ═══
+            function showToast(msg, type) {
+                const container = document.getElementById('toastContainer');
+                const types = { success: 'toast-success', error: 'toast-error', warning: 'toast-warning', info: 'toast-info' };
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+
+                const toast = document.createElement('div');
+                toast.className = 'toast-notification ' + (types[type] || 'toast-info');
+                toast.innerHTML = `<i class="fas ${icons[type] || 'fa-info-circle'}"></i> ${H.escapeHtml(msg)}`;
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.parentNode && toast.parentNode.removeChild(toast), 300);
+                }, 4000);
+            }
+
+            function showAlert(msg, type) {
+                const types = { success: 'alert-success', error: 'alert-danger', warning: 'alert-warning', info: 'alert-info' };
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+
+                alertContainer.innerHTML = `
+                        <div class="alert ${types[type] || 'alert-info'} alert-dismissible fade show" role="alert">
+                            <i class="fas ${icons[type] || 'fa-info-circle'}"></i> ${H.escapeHtml(msg)}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`;
+
+                setTimeout(() => {
+                    const a = alertContainer.querySelector('.alert');
+                    if (a) { a.classList.remove('show'); setTimeout(() => alertContainer.innerHTML = '', 300); }
+                }, 5000);
+            }
+
+            // ═══ اعتبارسنجی فرم ═══
+            function validateForm() {
+                let isValid = true;
+                form.querySelectorAll('.form-control[required]').forEach(input => {
+                    input.classList.remove('is-invalid', 'is-valid');
+                    const fb = input.parentElement.querySelector('.invalid-feedback');
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                        if (fb) fb.classList.add('show');
+                    } else {
+                        input.classList.add('is-valid');
+                        if (fb) fb.classList.remove('show');
+                    }
+                });
+
+                const email = document.getElementById('Email');
+                if (email.value.trim() && !isValidEmail(email.value.trim())) {
+                    email.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                const phone = document.getElementById('PhoneNumber');
+                if (phone.value.trim() && !isValidPhone(phone.value.trim())) {
+                    phone.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                const msg = document.getElementById('Messages');
+                if (msg.value.trim() && msg.value.trim().length < 10) {
+                    msg.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            // ═══ دریافت پیام‌ها ═══
+            async function getMessages() {
+                try {
+                    const response = await Http.postSecure('/ShopPanel/Contact/getMessages');
+                    if (response.isSuccess) {
+                        renderMessages(JSON.parse(response.data));
+                    }
+                } catch (err) {
+                    showToast('خطا در دریافت پیام‌ها', 'error');
+                }
+            }
+
+            // ═══ رندر پیام‌ها ═══
+            function renderMessages(data) {
+                messagesData = data;
+                messageCount.textContent = `(${data.length}) پیام`;
+
+                if (!data || data.length === 0) {
+                    messagesContainer.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h4>هیچ پیامی ارسال نشده است</h4>
+                                <p>اولین پیام خود را ارسال کنید</p>
+                            </div>`;
+                    return;
+                }
+
+                const sorted = data.slice().sort((a, b) => new Date(b.CreatedDate) - new Date(a.CreatedDate));
+                let html = `
+                        <div class="table-responsive">
+                            <table class="messages-table">
+                                <thead><tr>
+                                    <th>#</th><th>عنوان</th><th>تاریخ</th><th>وضعیت</th><th>عملیات</th>
+                                </tr></thead>
+                                <tbody>`;
+
+                sorted.forEach(item => {
+                    html += `
+                            <tr>
+                                <td data-label="#">${item.ContactUsId}</td>
+                                <td data-label="عنوان">${H.escapeHtml(item.ContactUsCaption)}</td>
+                                <td data-label="تاریخ" style="font-size:0.8rem;">${formatDate(item.CreatedDate)}</td>
+                                <td data-label="وضعیت">${getStatusBadge(item.Condetion)}</td>
+                                <td data-label="عملیات">
+                                    <button class="action-btn view-btn" onclick="window.viewMessage(${item.ContactUsId})"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn delete-btn" onclick="window.deleteMessage(${item.ContactUsId})"><i class="fas fa-trash-alt"></i></button>
+                                </td>
+                            </tr>`;
+                });
+
+                html += `</tbody></table></div>`;
+                messagesContainer.innerHTML = html;
+            }
+
+            // ═══ مشاهده پیام ═══
+            window.viewMessage = function (id) {
+                const item = messagesData.find(m => m.ContactUsId === id);
+                if (!item) return;
+
+                let html = `
+                        <div class="modal-info-item"><span class="label">شماره:</span><span class="value">#${item.ContactUsId}</span></div>
+                        <div class="modal-info-item"><span class="label">عنوان:</span><span class="value">${H.escapeHtml(item.ContactUsCaption)}</span></div>
+                        <div class="modal-info-item"><span class="label">فرستنده:</span><span class="value">${H.escapeHtml(item.FullName)}</span></div>
+                        <div class="modal-info-item"><span class="label">ایمیل:</span><span class="value">${H.escapeHtml(item.Email)}</span></div>
+                        <div class="modal-info-item"><span class="label">شماره تماس:</span><span class="value">${H.escapeHtml(item.PhoneNumber)}</span></div>
+                        <div class="modal-info-item"><span class="label">تاریخ ارسال:</span><span class="value">${formatDate(item.CreatedDate)}</span></div>
+                        <div class="modal-info-item"><span class="label">وضعیت:</span><span class="value">${getStatusBadge(item.Condetion)}</span></div>
+                        <div class="modal-info-item"><span class="label">متن:</span><span class="value" style="background:#f8f9fa;padding:12px;border-radius:12px;width:100%;">${H.escapeHtml(item.Messages)}</span></div>`;
+
+                if (item.Answer && item.Answer.length > 0 && item.Answer[0].AnswerCustomerCaption) {
+                    const aDate = item.Answer[0].AnswerDate ? formatDate(item.Answer[0].AnswerDate) : 'نامشخص';
+                    html += `<div class="modal-info-item" style="border-top:2px solid var(--border-color);padding-top:15px;">
+                            <span class="label"><i class="fas fa-reply" style="color:var(--success-color);"></i> پاسخ:</span>
+                            <span class="value Answer-text">${H.escapeHtml(item.Answer[0].AnswerCustomerCaption)}
+                                <span class="Answer-date">${aDate}</span>
+                            </span>
+                        </div>`;
+                }
+
+                modalBody.innerHTML = html;
+                modalTitle.textContent = 'پیام #' + item.ContactUsId;
+                new bootstrap.Modal(document.getElementById('messageModal')).show();
+            };
+
+            window.deleteMessage = function (id) {
+                deleteId = id;
+                new bootstrap.Modal(document.getElementById('deleteModal')).show();
+            };
+
+            // ═══ ارسال فرم ═══
+            async function submitForm(e) {
+                e.preventDefault();
+                if (!validateForm()) return;
+
+                const msg = {
+                    contactUsCaption: document.getElementById('ContactUsCaption').value.trim(),
+                    fullName: document.getElementById('FullName').value.trim(),
+                    email: document.getElementById('Email').value.trim(),
+                    phoneNumber: document.getElementById('PhoneNumber').value.trim(),
+                    messages: document.getElementById('Messages').value.trim()
+                };
+
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<span class="loading-spinner"></span> در حال ارسال...';
+
+                try {
+                    const response = await Http.postSecure('/ShopPanel/Contact/Send', msg);
+                    if (response.isSuccess) {
+                        showToast(response.data || 'ارسال شد', 'success');
+                        showAlert(response.data || 'ارسال شد', 'success');
+                        form.reset();
+                        form.querySelectorAll('.form-control').forEach(i => i.classList.remove('is-valid', 'is-invalid'));
+                        await getMessages();
+                    } else {
+                        showToast(response.errorTitle, 'error');
+                        showAlert(response.errorTitle, 'error');
+                    }
+                } catch (err) {
+                    showToast('خطا در ارتباط', 'error');
+                } finally {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ارسال پیام';
+                }
+            }
+
+            // ═══ رویدادها ═══
+            form?.addEventListener('submit', submitForm);
+
+            confirmDeleteBtn?.addEventListener('click', () => {
+                if (deleteId) {
+                    messagesData = messagesData.filter(m => m.ContactUsId !== deleteId);
+                    renderMessages(messagesData);
+                    showToast('پیام حذف شد 🗑️', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                    if (modal) modal.hide();
+                    deleteId = null;
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => getMessages());
+        })();
+    </script>
+
+</body>
+</html>

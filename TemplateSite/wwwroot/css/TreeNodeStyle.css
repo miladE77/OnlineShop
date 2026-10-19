@@ -1,0 +1,124 @@
+﻿/* ساختار درختی دسته‌بندی‌ها */
+.tree-wrapper {
+    background: var(--bg-card);
+    border-radius: 28px;
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.hide{
+    display:none;
+}
+.tree {
+    list-style: none;
+    padding: 16px;
+}
+
+.tree-node {
+    margin: 6px 0;
+}
+
+.node-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-body);
+    border-radius: 20px;
+    margin: 4px 0;
+    transition: 0.2s;
+    border: 1px solid transparent;
+}
+
+    .node-item:hover {
+        border-color: var(--border-light);
+    }
+
+.node-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    cursor: pointer;
+}
+
+    .node-info i {
+        color: var(--accent-gold);
+        font-size: 1.2rem;
+    }
+
+.node-name {
+    font-weight: 500;
+}
+
+.node-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background: var(--success);
+    color: white;
+}
+
+.status-inactive {
+    background: var(--danger);
+    color: white;
+}
+
+.node-actions {
+    display: flex;
+    gap: 8px;
+}
+
+    .node-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 6px 8px;
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+
+.edit-cat-btn {
+    color: var(--primary);
+}
+
+.delete-cat-btn {
+    color: var(--danger);
+}
+
+.toggle-status-btn {
+    color: var(--warning);
+}
+
+.add-sub-btn {
+    color: var(--success);
+}
+
+.node-actions button:hover {
+    background: var(--border-light);
+}
+
+.children {
+    list-style: none;
+    padding-right: 32px;
+    margin-top: 4px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-secondary);
+}

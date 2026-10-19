@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html @RenderSection("html", required: false)>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="stylesheet" href="~/css/MainStyle/MainStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/HeaderStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/menuProfileStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/NavbarStyle.css">
+    <link rel="stylesheet" href="~/css/MainStyle/ModelStyle.css">
+    <link rel="stylesheet" href="~/css/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="~/css/PersonelStyle.css">
+    <link rel="stylesheet" href="~/lib/persian-datepicker/css/persian-datepicker.min.css">
+    @RenderSection("heads", required: false)
+</head>
+<body data-signed-in="@(User.Identity?.IsAuthenticated.ToString().ToLower() ?? "false")">
+    <header class="main-header full-width">
+        <div class="header-container">
+            <div class="logo-area" id="logoAreaHeader" style="margin-right:60px;display:flex;">
+                <h1>✨AMJ✨</h1>
+                <button class="menu-btn btnColorGradian" id="menuBtn" aria-label="منو">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="header-actions">
+                <div onclick="toggleDropdownMenuStatus()" class="dropdown icon-btn">
+                    <a href="#" data-bs-toggle="dropdown" aria-expanded="true" class="show"><i class="fa fa-user-lock signup-login-icon"></i></a>
+                    <ul class="dropdown-menu menuProfile dropdown-menu-custom" id="dropdownMenu">
+                        <li class="d-flex NotUser">
+                            <img src="/Images/Program/avatar.jpg" class="avatar">
+                            <div class="ms-2" style="display:flex;align-items:center;justify-content: center;width:100%;">
+                                <a href="@Url.Action("Login","Account")" class="font-14">ورود</a>
+                            </div>
+                        </li>
+                        <li class="d-flex UserEx">
+                            <img src="/Images/Program/avatar.jpg" class="avatar">
+                            <div class="ms-2" style="display: flex;flex-direction: column;">
+                                <a href="@Url.Action("myProfile","Shop")" id="NameUser" class="font-14">p</a>
+                                <a href="@Url.Action("myProfile","Shop")" class="font-12 d-block text-info mt-2">مشاهده حساب کاربری <i class="fa fa-chevron-left align-middle mt-1"></i></a>
+                            </div>
+                        </li>
+                        <li class="UserEx SubItems">
+                            <a href="@Url.Action("myRecommendation","Shop")" class="login-link"><i class="fa fa-shopping-basket text-muted font-14 me-1"></i> سفارش های من</a>
+                            <a href="@Url.Action("Logout","Account")" class="login-link"><i class="fas fa-sign-out-alt text-muted font-14 me-1"></i>خروج از حساب  کاربری</a>
+                        </li>
+                    </ul>
+                </div>
+                <a href="@Url.Action("VitrinShop","ShopPanel")" id="shopLinkBtn" class="icon-btn"><i class="fas fa-store"></i></a>
+                <div class="icon-btn theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i></div>
+            </div>
+        </div>
+    </header>
+
+    @RenderBody()
+
+    <nav class="right-navbar LuckNav" id="rightNavbar">
+        <div class="navbar-header">
+            <div class="navheaderIcon">
+                <i class="fas fa-tachometer-alt"></i>
+                <h3>داشبورد مدیریتی</h3>
+            </div>
+            <i id="toggleNavbarBtn" class="toggle btnColorGradian">...</i>
+        </div>
+
+        <div class="nav-links">
+            <!-- 📊 داشبورد -->
+            <!-- آیتم تکی داشبورد -->
+            <a href="@Url.Action("Index", "Dashboard")" class="nav-item" data-page="Index" data-charAuth="V">
+                <i class="fas fa-tachometer-alt"></i><span>داشبورد</span>
+            </a>
+            <!-- 👤 گروه: کاربران -->
+            <div class="nav-group" data-group="users">
+                <button class="nav-group-toggle" type="button">
+                    <i class="fas fa-users"></i>
+                    <span>کاربران</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="nav-group-items">
+                    <a href="@Url.Action("Personels", "Personel")" class="nav-item" data-page="Personels" data-charAuth="V">
+                        <i class="fas fa-user-tie"></i><span>پرسنل</span>
+                    </a>
+                </div>
+            </div>
+            <!-- 🛒 گروه: فروشگاه و محصولات -->
+            <div class="nav-group" data-group="shop">
+                <button class="nav-group-toggle" type="button">
+                    <i class="fas fa-store"></i>
+                    <span>فروشگاه و محصولات</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="nav-group-items">
+                    <a href="@Url.Action("Stores", "Store")" class="nav-item" data-page="Stores" data-charAuth="V">
+                        <i class="fas fa-store-alt"></i><span>فروشگاه‌ها</span>
+                    </a>
+                    <a href="@Url.Action("Products", "Product")" class="nav-item" data-page="Products" data-charAuth="V">
+                        <i class="fas fa-box"></i><span>محصولات</span>
+                    </a>
+                    <a href="@Url.Action("KindProducts", "KindProduct")" class="nav-item" data-page="KindProducts" data-charAuth="V">
+                        <i class="fas fa-tags"></i><span>دسته‌بندی محصولات</span>
+                    </a>
+                    <a href="@Url.Action("ColorPriceProducts", "ColorPriceProduct")" class="nav-item" data-page="ColorPriceProducts" data-charAuth="V">
+                        <i class="fas fa-palette"></i><span>رنگ‌بندی محصولات</span>
+                    </a>
+                    <a href="@Url.Action("DetailProducts", "DetailProduct")" class="nav-item" data-page="DetailProducts" data-charAuth="V">
+                        <i class="fas fa-list-alt"></i><span>توضیحات محصول</span>
+                    </a>
+                    <a href="@Url.Action("OptionProducts", "OptionProduct")" class="nav-item" data-page="OptionProducts" data-charAuth="V">
+                        <i class="fas fa-cogs"></i><span>مشخصات فنی</span>
+                    </a>
+                    <a href="@Url.Action("FileProducts", "FileProduct")" class="nav-item" data-page="FileProducts" data-charAuth="V">
+                        <i class="fas fa-archive"></i><span>آرشیو محصولات</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 💰 گروه: مدیریت مالی -->
+            <div class="nav-group" data-group="finance">
+                <button class="nav-group-toggle" type="button">
+                    <i class="fas fa-coins"></i>
+                    <span>مدیریت مالی</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="nav-group-items">
+                    <a href="@Url.Action("Index", "FinancialReports")" class="nav-item" data-page="Index" data-charAuth="V">
+                        <i class="fas fa-chart-pie"></i><span>گزارشات مالی</span>
+                    </a>
+                    <a href="@Url.Action("Receipts", "Receipt")" class="nav-item" data-page="Receipts" data-charAuth="V">
+                        <i class="fas fa-receipt"></i><span>رسید پرداخت</span>
+                    </a>
+                    <a href="@Url.Action("TypePeyments", "TypePeyment")" class="nav-item" data-page="TypePeyments" data-charAuth="V">
+                        <i class="fas fa-credit-card"></i><span>نوع پرداخت</span>
+                    </a>
+                    <a href="@Url.Action("Recommendationss", "Recommendations")" class="nav-item" data-page="Recommendationss" data-charAuth="V">
+                        <i class="fas fa-shopping-bag"></i><span>سفارشات</span>
+                    </a>
+                    <a href="@Url.Action("Orders", "Order")" class="nav-item" data-page="Orders" data-charAuth="V">
+                        <i class="fas fa-shopping-cart"></i><span>سفارش‌ها</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- گروه محتوای سایت -->
+            <div class="nav-group" data-group="content">
+                <button class="nav-group-toggle" type="button">
+                    <i class="fas fa-edit"></i><span>محتوای سایت</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="nav-group-items">
+
+                    <a href="@Url.Action("Pages", "Page")" class="nav-item" data-page="Pages" data-charAuth="V">
+                        <i class="fas fa-file"></i><span>صفحات سایت</span>
+                    </a>
+                    <a href="@Url.Action("EmailNewss", "EmailNews")" class="nav-item" data-page="EmailNewss" data-charAuth="V">
+                        <i class="fas fa-envelope"></i><span>ایمیل اخبار</span>
+                    </a>
+
+                    <a href="@Url.Action("SitePages", "SitePage")" class="nav-item" data-page="SitePages" data-charAuth="V">
+                        <i class="fas fa-file-code"></i><span>صفحات HTML</span>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- 💬 گروه: ارتباطات و پشتیبانی -->
+            <div class="nav-group" data-group="contact">
+                <button class="nav-group-toggle" type="button">
+                    <i class="fas fa-headset"></i>
+                    <span>ارتباطات و پشتیبانی</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="nav-group-items">
+                    <a href="@Url.Action("ContactUss", "ContactUs")" class="nav-item" data-page="ContactUss" data-charAuth="V">
+                        <i class="fas fa-envelope-open-text"></i><span>فرم تماس با ما</span>
+                    </a>
+                    <a href="@Url.Action("AnswerCustomers", "AnswerCustomer")" class="nav-item" data-page="AnswerCustomers" data-charAuth="V">
+                        <i class="fas fa-comments"></i><span>پاسخ مشتری‌ها</span>
+                    </a>
+                    <a href="@Url.Action("Contacts", "Contact")" class="nav-item" data-page="Contacts" data-charAuth="V">
+                        <i class="fas fa-address-book"></i><span>راه‌های تماس</span>
+                    </a>
+                    <a href="@Url.Action("TypeContacts", "TypeContact")" class="nav-item" data-page="TypeContacts" data-charAuth="V">
+                        <i class="fas fa-share-alt"></i><span>نوع پلتفورم ارتباطی</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 🔐 گروه: دسترسی و امنیت -->
+            <div class="nav-group" data-group="security">
+                <button class="nav-group-toggle" type="button">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>دسترسی و امنیت</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="nav-group-items">
+                    <a href="@Url.Action("LevelAccesss", "LevelAccess")" class="nav-item" data-page="LevelAccesss" data-charAuth="V">
+                        <i class="fas fa-user-shield"></i><span>دسترسی سیستم</span>
+                    </a>
+                    <a href="@Url.Action("Roles", "Role")" class="nav-item" data-page="Roles" data-charAuth="V">
+                        <i class="fas fa-user-tag"></i><span>نقش سیستم</span>
+                    </a>
+                    <a href="@Url.Action("Tockens", "Tocken")" class="nav-item" data-page="Tockens" data-charAuth="V">
+                        <i class="fas fa-key"></i><span>توکن دسترسی</span>
+                    </a>
+                    <a href="@Url.Action("CodeAccesss", "CodeAccess")" class="nav-item" data-page="CodeAccesss" data-charAuth="V">
+                        <i class="fas fa-barcode"></i><span>کد اختصاصی</span>
+                    </a>
+                    <a href="@Url.Action("SystemActs", "SystemAct")" class="nav-item" data-page="SystemActs" data-charAuth="V">
+                        <i class="fas fa-history"></i><span>تاریخچه عملیات</span>
+                    </a>
+                </div>
+            </div>
+
+            
+            <!--%otherItem%-->
+
+        </div>
+
+        <div class="navbar-footer">
+            <i class="fas fa-copyright"></i> 2025
+        </div>
+    </nav>
+    <div class="backShadow" id="Shadow"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/js/Core/HttpHelper.js"></script>
+    <script src="~/js/Core/UICore.js"></script>
+    <script src="~/js/Core/AuthHelper.js"></script>
+    <script src="~/js/Core/CartHelper.js"></script>
+
+
+
+    <script src="~/lib/persian-datepicker/js/persian-date.min.js"></script>
+    <script src="~/lib/persian-datepicker/js/persian-datepicker.min.js"></script>
+    <script src="~/js/PersianDateInit.js"></script>
+    <script src="~/js/MainJS.js"></script>
+
+    @await RenderSectionAsync("scripts", required: false)
+</body>
+</html>

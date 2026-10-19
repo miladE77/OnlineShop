@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت ایمیل اخبار</title>
+}
+@section scripts {
+    <script src="/js/EmailNews/EmailNewss.js"></script>
+}
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<!-- مودال افزودن/ویرایش  ایمیل اخبار -->
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-users"></i> مدیریت ایمیل اخبار</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن ایمیل اخبار جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchEmailNews" placeholder="جستجو بر اساس ایتم ها...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+	 <th>ایمیل</th>
+	 <th>فروشگاه</th>
+	 <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="EmailNewsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="EmailNewsModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن ایمیل اخبار جدید</h3>
+        
+ <input type="number" id="EmailNewsId" placeholder="شناسه">
+ <input type="text" id="EmailNewsCaption" placeholder="ایمیل">
+<div style="display:flex;">
+ <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: auto;">فروشگاه</label> 
+<select id="Store" class="filter-select">
+</select>
+</div>
+<div style="display:flex;">
+ <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
+  margin-top: 5px;">
+</div>
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+
+
+

@@ -1,0 +1,42 @@
+﻿.sub-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+
+.sub-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.sub-section {
+    margin-bottom: 16px;
+}
+
+.sub-content {
+    padding: 12px 16px;
+}
+
+.add-sub-btn {
+    background: var(--bg-body);
+    border: 1px dashed var(--primary);
+    border-radius: 16px;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    transition: 0.2s;
+}
+
+.modal-sm .modal {
+    max-width: 480px;
+}

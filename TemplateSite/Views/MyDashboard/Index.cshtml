@@ -1,0 +1,228 @@
+@{
+    ViewData["Title"] = "داشبورد من";
+    Layout = "~/Views/Shared/_LayoutStore.cshtml";
+
+    var storeName = ViewData["StoreName"]?.ToString() ?? "فروشگاه";
+}
+
+@section heads
+{
+    <title>داشبورد — @storeName</title>
+    <link rel="stylesheet" href="/css/Shop/MyDashboard.css">
+}
+
+@section scripts
+{
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script src="/js/MyDashboard/MyDashboard.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<main class="main-content" id="mainContent">
+    <div class="md-container">
+
+        <!-- ═══ Header ═══ -->
+        <div class="md-header">
+            <div class="md-header-left">
+                <h2><i class="fas fa-tachometer-alt"></i> داشبورد من</h2>
+                <p>خلاصه‌ای از وضعیت فروشگاه‌های شما</p>
+            </div>
+
+            <div class="md-header-actions">
+                <!-- Selector فروشگاه -->
+                <div class="store-selector" id="storeSelector" style="display:none;"></div>
+
+                <!-- بازه زمانی -->
+                <div class="date-range" id="dateRange">
+                    <button data-range="today">امروز</button>
+                    <button data-range="week">هفته</button>
+                    <button data-range="month" class="active">ماه</button>
+                    <button data-range="year">سال</button>
+                </div>
+
+                <!-- بروزرسانی -->
+                <button class="btn-refresh" onclick="refreshDashboard()" title="بروزرسانی">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══ KPI Cards ═══ -->
+        <div class="md-kpi-grid" id="kpiGrid">
+            <div class="md-kpi-card" style="--kpi-color:#eab308">
+                <i class="fas fa-coins md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiTodayIncome">—</div>
+                <div class="md-kpi-label">فروش امروز</div>
+            </div>
+
+            <div class="md-kpi-card" style="--kpi-color:#10b981">
+                <i class="fas fa-chart-line md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiMonthIncome">—</div>
+                <div class="md-kpi-label">فروش این ماه</div>
+            </div>
+
+            <div class="md-kpi-card" style="--kpi-color:#0f6bff">
+                <i class="fas fa-wallet md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiTotalIncome">—</div>
+                <div class="md-kpi-label">کل درآمد</div>
+            </div>
+
+            <div class="md-kpi-card" style="--kpi-color:#8b5cf6">
+                <i class="fas fa-shopping-bag md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiTotalOrders">—</div>
+                <div class="md-kpi-label">کل سفارشات</div>
+            </div>
+
+            <div class="md-kpi-card" style="--kpi-color:#f59e0b">
+                <i class="fas fa-clock md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiPendingOrders">—</div>
+                <div class="md-kpi-label">در انتظار</div>
+            </div>
+
+            <div class="md-kpi-card" style="--kpi-color:#06b6d4">
+                <i class="fas fa-box md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiActiveProducts">—</div>
+                <div class="md-kpi-label">محصولات فعال</div>
+            </div>
+
+            <div class="md-kpi-card" style="--kpi-color:#ec4899">
+                <i class="fas fa-palette md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiTotalColors">—</div>
+                <div class="md-kpi-label">کل رنگ‌بندی</div>
+            </div>
+
+            <div class="md-kpi-card" style="--kpi-color:#ef4444">
+                <i class="fas fa-exclamation-triangle md-kpi-icon"></i>
+                <div class="md-kpi-value" id="kpiLowStock">—</div>
+                <div class="md-kpi-label">موجودی کم</div>
+            </div>
+        </div>
+
+        <!-- ═══ نمودار فروش ═══ -->
+        <div class="md-chart-card">
+            <h3><i class="fas fa-chart-area"></i> نمودار فروش</h3>
+            <div class="md-chart-wrapper">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- ═══ نمودارهای دوقلو ═══ -->
+        <div class="md-row">
+            <div class="md-chart-card">
+                <h3><i class="fas fa-chart-pie"></i> وضعیت سفارشات</h3>
+                <div class="md-chart-wrapper">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </div>
+
+            <div class="md-chart-card">
+                <h3><i class="fas fa-chart-bar"></i> درآمد ماهانه</h3>
+                <div class="md-chart-wrapper">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ سفارشات اخیر + پرفروش‌ها ═══ -->
+        <div class="md-row">
+            <div class="md-table-card">
+                <div class="md-card-header">
+                    <h3><i class="fas fa-clock"></i> سفارشات اخیر</h3>
+                    <a href="/ShopPanel/Recommendation" class="view-all">مشاهده همه →</a>
+                </div>
+                <table class="md-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>مشتری</th>
+                            <th>مبلغ</th>
+                            <th>وضعیت</th>
+                            <th>تاریخ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOrdersBody"></tbody>
+                </table>
+            </div>
+
+            <div class="md-table-card">
+                <div class="md-card-header">
+                    <h3><i class="fas fa-fire"></i> محصولات پرفروش</h3>
+                </div>
+                <table class="md-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>محصول</th>
+                            <th>تعداد فروش</th>
+                            <th>درآمد</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ موجودی کم ═══ -->
+        <div class="md-table-card full-width">
+            <div class="md-card-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> هشدار موجودی کم</h3>
+                <a href="/MyProduct" class="view-all">مدیریت محصولات →</a>
+            </div>
+            <table class="md-table">
+                <thead>
+                    <tr>
+                        <th>محصول</th>
+                        <th>رنگ</th>
+                        <th>فروشگاه</th>
+                        <th>موجودی</th>
+                        <th>قیمت</th>
+                    </tr>
+                </thead>
+                <tbody id="lowStockBody"></tbody>
+            </table>
+        </div>
+
+        <!-- ═══ ارزش انبار به تفکیک فروشگاه ═══ -->
+        <div class="md-table-card full-width">
+            <div class="md-card-header">
+                <h3><i class="fas fa-warehouse"></i> ارزش انبار به تفکیک فروشگاه</h3>
+            </div>
+            <table class="md-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>فروشگاه</th>
+                        <th>تعداد محصولات</th>
+                        <th>کل اقلام</th>
+                        <th>ارزش انبار</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryBody"></tbody>
+            </table>
+        </div>
+
+        <!-- ═══ فروش به تفکیک فروشگاه ═══ -->
+        <div class="md-table-card full-width">
+            <div class="md-card-header">
+                <h3><i class="fas fa-store"></i> فروش به تفکیک فروشگاه</h3>
+            </div>
+            <table class="md-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>فروشگاه</th>
+                        <th>کد</th>
+                        <th>تعداد سفارش</th>
+                        <th>کل درآمد</th>
+                    </tr>
+                </thead>
+                <tbody id="salesByStoreBody"></tbody>
+            </table>
+        </div>
+
+    </div>
+</main>

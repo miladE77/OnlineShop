@@ -1,0 +1,258 @@
+﻿@{
+    ViewData["Title"] = "داشبورد مدیریتی";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads {
+    <title>داشبورد مدیریتی | OnlineShop</title>
+    <link rel="stylesheet" href="~/css/DashboardStyle.css" />
+    <link rel="stylesheet" href="~/css/DashboardCharts.css" />
+}
+
+@section html {
+ lang="fa" dir="rtl"
+}
+
+@section scripts {
+    <script src="~/lib/chartjs/chart.min.js"></script>
+    <script src="~/js/Dashboard/DashboardCharts.js"></script>
+    <script src="~/js/Dashboard/Dashboard.js"></script>
+}
+
+<div class="main-content" id="mainContent">
+    <div class="container dashboard-container">
+
+        <!-- ═══════════ هدر داشبورد ═══════════ -->
+        <div class="dashboard-header">
+            <div class="welcome-area">
+                <h2>
+                    <i class="fas fa-tachometer-alt"></i>
+                    سلام، خوش آمدید 👋
+                </h2>
+                <p id="welcomeSubtitle">خلاصه‌ای از وضعیت فروشگاه شما در @DateTime.Now.ToString("yyyy/MM/dd")</p>
+            </div>
+
+            <div class="dashboard-controls">
+                <div class="date-range">
+                    <button data-range="today">امروز</button>
+                    <button data-range="week">هفته</button>
+                    <button data-range="month" class="active">ماه</button>
+                    <button data-range="year">سال</button>
+                </div>
+               
+                <!-- ✅ فقط دکمه بروزرسانی بمونه -->
+                <button class="refresh-btn" onclick="refreshDashboard()" title="بروزرسانی">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════ ۸ کارت KPI ═══════════ -->
+        <div class="kpi-grid" id="kpiGrid">
+            <div class="kpi-card" style="--kpi-color:#eab308">
+                <i class="fas fa-coins kpi-icon"></i>
+                <div class="kpi-value" id="kpiTodaySales">—</div>
+                <div class="kpi-label">فروش امروز</div>
+                <div class="kpi-change" id="kpiTodayChange"></div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color:#10b981">
+                <i class="fas fa-chart-line kpi-icon"></i>
+                <div class="kpi-value" id="kpiMonthSales">—</div>
+                <div class="kpi-label">فروش ۳۰ روز اخیر</div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color:#f59e0b">
+                <i class="fas fa-clock kpi-icon"></i>
+                <div class="kpi-value" id="kpiPendingOrders">—</div>
+                <div class="kpi-label">سفارشات در انتظار</div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color:#0f6bff">
+                <i class="fas fa-box kpi-icon"></i>
+                <div class="kpi-value" id="kpiActiveProducts">—</div>
+                <div class="kpi-label">محصولات فعال</div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color:#8b5cf6">
+                <i class="fas fa-envelope kpi-icon"></i>
+                <div class="kpi-value" id="kpiNewMessages">—</div>
+                <div class="kpi-label">پیام‌های جدید</div>
+            </div>
+
+            <!-- ⭐ پرسنل -->
+            <div class="kpi-card kpi-clickable" style="--kpi-color:#06b6d4" onclick="scrollToSection('personelsSection')">
+                <i class="fas fa-user-tie kpi-icon"></i>
+                <div class="kpi-value" id="kpiTotalPersonels">—</div>
+                <div class="kpi-label">کل پرسنل</div>
+                <div class="kpi-hint">برای جزئیات کلیک کنید</div>
+            </div>
+
+            <!-- ⭐ فروشگاه‌ها -->
+            <div class="kpi-card kpi-clickable" style="--kpi-color:#ec4899" onclick="scrollToSection('storesSection')">
+                <i class="fas fa-store kpi-icon"></i>
+                <div class="kpi-value" id="kpiTotalStores">—</div>
+                <div class="kpi-label">کل فروشگاه‌ها</div>
+                <div class="kpi-hint">برای جزئیات کلیک کنید</div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color:#ef4444">
+                <i class="fas fa-exclamation-triangle kpi-icon"></i>
+                <div class="kpi-value" id="kpiLowStock">—</div>
+                <div class="kpi-label">هشدار موجودی کم</div>
+            </div>
+        </div>
+
+        <!-- ═══════════ نمودار فروش ═══════════ -->
+        <div class="dashboard-row">
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-area"></i> نمودار فروش</h3>
+                <div class="chart-wrapper">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-pie"></i> وضعیت سفارشات</h3>
+                <div class="chart-wrapper">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ سفارشات اخیر + پیام‌های جدید ═══════════ -->
+        <div class="dashboard-row">
+            <div class="table-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-shopping-cart"></i> سفارشات اخیر</h3>
+                    <a href="/Recommendations/Recommendations" class="view-all">مشاهده همه →</a>
+                </div>
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>مشتری</th>
+                            <th>مبلغ</th>
+                            <th>وضعیت</th>
+                            <th>تاریخ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOrdersBody"></tbody>
+                </table>
+            </div>
+
+            <div class="table-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-envelope"></i> پیام‌های تماس جدید</h3>
+                    <a href="/ContactUs/ContactUss" class="view-all">مشاهده همه →</a>
+                </div>
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>نام</th>
+                            <th>موضوع</th>
+                            <th>تاریخ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentContactsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ ⭐ پرسنل‌ها و تعداد فروشگاه ═══════════ -->
+        <div class="table-card full-width" id="personelsSection">
+            <div class="card-header">
+                <h3><i class="fas fa-user-tie"></i> پرسنل و فروشگاه‌های هر کدام</h3>
+                <a href="/Personel/Personels" class="view-all">مدیریت پرسنل →</a>
+            </div>
+            <div class="table-scroll">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام پرسنل</th>
+                            <th>نقش</th>
+                            <th>آدرس</th>
+                            <th>تعداد فروشگاه</th>
+                            <th>تعداد محصول</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ ⭐ فروشگاه‌ها و خلاصه ═══════════ -->
+        <div class="table-card full-width" id="storesSection">
+            <div class="card-header">
+                <h3><i class="fas fa-store"></i> فروشگاه‌ها و آمار</h3>
+                <a href="/Store/Stores" class="view-all">مدیریت فروشگاه‌ها →</a>
+            </div>
+            <div class="table-scroll">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام فروشگاه</th>
+                            <th>کد</th>
+                            <th>مالک</th>
+                            <th>محصولات</th>
+                            <th>سفارشات</th>
+                            <th>درآمد کل</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storesBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ محصولات پرفروش + موجودی کم ═══════════ -->
+        <div class="dashboard-row">
+            <div class="table-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-fire"></i> محصولات پرفروش</h3>
+                </div>
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>محصول</th>
+                            <th>تعداد فروش</th>
+                            <th>درآمد</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="table-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> موجودی کم</h3>
+                </div>
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>محصول</th>
+                            <th>رنگ</th>
+                            <th>موجودی</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lowStockBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ فعالیت‌های اخیر ═══════════ -->
+        <div class="table-card full-width">
+            <div class="card-header">
+                <h3><i class="fas fa-history"></i> فعالیت‌های اخیر سیستم</h3>
+                <a href="/SystemAct/SystemActs" class="view-all">مشاهده همه →</a>
+            </div>
+            <div class="activity-timeline" id="activitiesTimeline"></div>
+        </div>
+
+
+    </div>
+</div>

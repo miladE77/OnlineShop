@@ -1,0 +1,93 @@
+﻿/* مودال */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+    .modal-overlay.active {
+        display: flex !important;
+    }
+
+.modal {
+    background: var(--bg-card);
+    border-radius: 32px;
+    padding: 28px;
+    max-width: 550px;
+}
+
+.modelTable {
+    width: 75%;
+    max-height: 75%;
+    overflow-y: scroll;
+    overflow-x: auto;
+}
+
+.modelInput {
+    width: 90%;
+    max-width: 550px;
+    overflow-y: auto;
+    max-height: 90vh;
+}
+
+.modal h3 {
+    margin-bottom: 20px;
+    color: var(--primary);
+}
+
+.modal input, .modal select, .modal textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-body);
+    font-family: inherit;
+    color: var(--text-primary);
+}
+    .persian-date-display {
+        text-align: center
+    }
+.modelRelative {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn-save {
+    background: var(--success);
+    color: white;
+    padding: 12px;
+    border-radius: 40px;
+    border: none;
+    flex: 1;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-cancel {
+    background: var(--border-light);
+    color: var(--text-primary);
+    padding: 12px;
+    border-radius: 40px;
+    border: none;
+    flex: 1;
+    cursor: pointer;
+}
+.extra {
+    max-width:100%; 
+    min-width:60%;
+}

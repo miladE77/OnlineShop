@@ -1,0 +1,50 @@
+﻿@using Domain.ViewModels;
+@model RegisterViewModel
+
+@{
+    ViewData["Title"] = "ثبت‌نام";
+
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="account-container">
+    <div class="account-box">
+        <h2 class="text-center mb-4">ثبت‌نام</h2>
+        <form asp-action="Register" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="PhoneNumber" class="form-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" placeholder="09121234567" dir="ltr" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword" class="form-label"></label>
+                <input asp-for="ConfirmPassword" class="form-control" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <input type="submit" value="ثبت‌نام" class="btn btn-success w-100 p-2" />
+            <p class="text-center mt-2">
+                حساب دارید؟ <a asp-controller="Account" asp-action="Login" class="text-decoration-none">ورود</a>
+            </p>
+            <div class="text-center">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">بازگشت</a>
+            </div>
+        </form>
+    </div>
+</div>

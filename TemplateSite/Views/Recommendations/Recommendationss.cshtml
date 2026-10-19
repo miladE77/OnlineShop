@@ -1,0 +1,181 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت سفارشات</title>
+    <link rel="stylesheet" href="/css/PeoductStyle.css">
+}
+
+@section scripts {
+    <script src="/js/Recommendations/Recommendationss.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-shopping-bag"></i> مدیریت جامع سفارشات</h2>
+            <button class="btn-add" onclick="openAddRecommendationModal()">
+                <i class="fas fa-plus"></i> افزودن سفارش جدید
+            </button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchRecommendations" placeholder="جستجو بر اساس عنوان، سفارش دهنده...">
+            </div>
+            <select id="levelFilter" class="filter-select">
+                <option value="all">همه مراحل</option>
+                <option value="2">ثبت سفارش</option>
+                <option value="3">پرداخت</option>
+                <option value="4">پردازش سفارش</option>
+                <option value="5">بسته‌بندی و ارسال</option>
+                <option value="6">تحویل محصول به پست</option>
+                <option value="7">تحویل مشتری</option>
+            </select>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>شناسه</th>
+                        <th>عنوان سفارش</th>
+                        <th>سفارش دهنده</th>
+                        <th>تاریخ سفارش</th>
+                        <th>مرحله</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="RecommendationsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     مودال اصلی: افزودن/ویرایش سفارش (Recommendations)
+     ============================================================ -->
+<div class="modal-overlay" id="RecommendationModal">
+    <div class="modal modelInput">
+        <h3 id="recModalTitle">افزودن سفارش جدید</h3>
+
+        <input type="number" id="RecommendationsId" placeholder="شناسه">
+        <input type="text" id="RecommendationsCaption" placeholder="عنوان سفارش *">
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">سفارش دهنده *</label>
+            <select id="Personel" class="filter-select"></select>
+        </div>
+
+        <input type="date" id="DateTimeRecord" placeholder="تاریخ سفارش *">
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">مرحله سفارش *</label>
+            <select id="LevelOrder" class="filter-select">
+                <option value="2">ثبت سفارش</option>
+                <option value="3">پرداخت</option>
+                <option value="4">پردازش سفارش</option>
+                <option value="5">بسته‌بندی و ارسال</option>
+                <option value="6">تحویل محصول به پست</option>
+                <option value="7">تحویل مشتری</option>
+            </select>
+        </div>
+
+        <input type="text" id="Command" placeholder="توضیحات">
+
+        <div style="display:flex;">
+            <label>وضعیت</label>
+            <input type="checkbox" id="Status" style="width: 10%;margin-top: 5px;">
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveRecommendation()">ذخیره</button>
+            <button class="btn-cancel" onclick="closeRecommendationModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     مودال Order (محصول سفارش)
+     ============================================================ -->
+<div class="modal-overlay" id="orderModal">
+    <div class="modal modelInput">
+        <h3 id="orderModalTitle">افزودن محصول به سفارش</h3>
+
+        <input type="text" id="orderCaption" placeholder="عنوان محصول سفارش">
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">محصول *</label>
+            <select id="orderProduct" class="filter-select"></select>
+        </div>
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">رنگ محصول *</label>
+            <select id="orderColor" class="filter-select"></select>
+        </div>
+
+        <input type="number" id="orderNumberProduct" placeholder="تعداد محصول *" min="1">
+
+        <div style="display:flex;">
+            <label>وضعیت</label>
+            <input type="checkbox" id="orderStatus" style="width: 10%;margin-top: 5px;" checked>
+        </div>
+
+        <input type="hidden" id="orderRecommendationsId">
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveOrder()">ذخیره</button>
+            <button class="btn-cancel" onclick="closeOrderModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     مودال Receipt (رسید پرداخت)
+     ============================================================ -->
+<div class="modal-overlay" id="receiptModal">
+    <div class="modal modelInput">
+        <h3 id="receiptModalTitle">افزودن رسید پرداخت</h3>
+
+        <input type="text" id="receiptCaption" placeholder="عنوان پرداخت">
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">نوع پرداخت *</label>
+            <select id="receiptTypePeyment" class="filter-select"></select>
+        </div>
+
+        <input type="number" id="receiptValuePeyment" placeholder="حجم پرداخت *">
+
+        <input type="date" id="receiptDateTimePeyment" placeholder="تاریخ پرداخت *">
+
+        <div style="display:flex;">
+            <label>وضعیت</label>
+            <input type="checkbox" id="receiptStatus" style="width: 10%;margin-top: 5px;" checked>
+        </div>
+
+        <input type="hidden" id="receiptRecommendationsId">
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveReceipt()">ذخیره</button>
+            <button class="btn-cancel" onclick="closeReceiptModal()">انصراف</button>
+        </div>
+    </div>
+</div>

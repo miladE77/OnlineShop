@@ -1,0 +1,85 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت تاریخچه عملیات</title>
+}
+@section scripts {
+    <script src="/js/SystemAct/SystemActs.js"></script>
+}
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<!-- مودال افزودن/ویرایش  تاریخچه عملیات -->
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-users"></i> مدیریت تاریخچه عملیات</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن تاریخچه عملیات جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchSystemAct" placeholder="جستجو بر اساس ایتم ها...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+                        <th>عنوان</th>
+                        <th>پرسنل</th>
+                        <th>نوع عملیات</th>
+                        <th>تاریخ عملیات</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="SystemActTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="SystemActModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن تاریخچه عملیات جدید</h3>
+
+        <input type="number" id="SystemActId" placeholder="شناسه">
+        <input type="text" id="SystemActCaption" placeholder="عنوان">
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: auto;">پرسنل</label>
+            <select id="Personel" class="filter-select">
+            </select>
+        </div>
+        <input type="number" id="TypeSystemAct" placeholder="نوع عملیات">
+        <input type="date" id="DateTime" placeholder="تاریخ عملیات">
+        <div style="display:flex;">
+            <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
+  margin-top: 5px;">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+
+
+

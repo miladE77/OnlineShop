@@ -1,0 +1,503 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none !important;
+}
+body {
+    font-family: 'Vazirmatn','Segoe UI',sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    padding: 0;
+    overflow-x: hidden;
+    transition: background .2s, color .2s;
+}
+
+
+
+/* رنگهای متغیر تم */
+:root {
+    --bg-body: #f4f6f9;
+    --bg-card: #ffffff;
+    --bg-sidebar: #ffffff;
+    --bg-card: #ffffff;
+    --border-light: #e2e8f0;
+    --bg-header: #ffffff;
+    --text-primary: #1e2a3a;
+    --text-secondary: #2c3e50;
+    --border-light: #e2e8f0;
+    --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.08);
+    --primary: #0f6bff;
+    --primary-dark: #0a5ad9;
+    --accent-gold: #eab308;
+    --accent-gold-light: #fef9e3;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --navbar-width-closed: 70px;
+    --navbar-width-open: 280px;
+    --gold-1: #f7e08a;
+    --gold-2: #d4af37;
+    --gold-3: #a67c00;
+    --gold-grad: linear-gradient(135deg,#f7e08a 0%,#d4af37 45%,#a67c00 100%);
+    --gold-soft: linear-gradient(135deg,#fff8e1,#f7e08a);
+    --gold-glow: 0 8px 26px rgba(212,175,55,.35);
+    --gradient-success : gray
+}
+
+/* تم تاریک */
+body.dark {
+    --bg-body: #121826;
+    --bg-card: #1e293b;
+    --bg-sidebar: #0f172a;
+    --bg-header: #0f172a;
+    --text-primary: #eef2ff;
+    --text-secondary: #cbd5e1;
+    --border-light: #334155;
+    --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 12px 26px rgba(0, 0, 0, 0.5);
+    --primary: #3b82f6;
+    --primary-dark: #60a5fa;
+    --accent-gold: #facc15;
+    --accent-gold-light: #2d2a1e;
+    --gold-1: #fde68a;
+    --gold-2: #facc15;
+    --gold-3: #b8860b;
+    --gold-grad: linear-gradient(135deg,#fde68a 0%,#facc15 45%,#b8860b 100%);
+    --gold-soft: linear-gradient(135deg,#2d2a1e,#3d3421);
+    --gold-glow: 0 8px 26px rgba(250,204,21,.25);
+    --gradient-success: green
+}
+
+
+
+/* محتوای اصلی */
+.main-content {
+    transition: margin-right 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    margin-right: var(--navbar-width-closed);
+    margin-left: 20px;
+    min-height: calc(100vh - 73px);
+}
+
+    .main-content.full-width {
+        margin-right: var(--navbar-width-open);
+    }
+
+    .main-content.full-width-mobile {
+        margin-right: 5px;
+    }
+
+.hidden {
+    display: none;
+}
+
+.backShadow {
+    position: fixed;
+    z-index: 997;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: none;
+    height: 120vh;
+    opacity: 0;
+    background-color: rgba(0,0,0,.5);
+}
+
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 16px 32px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    z-index: 3000;
+    opacity: 0;
+    transition: all 0.4s ease;
+    box-shadow: var(--shadow-lg);
+    pointer-events: none;
+}
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+        background: var(--success);
+    }
+
+    .toast.error {
+        background: var(--danger);
+    }
+
+    .toast.info {
+        background: var(--primary);
+    }
+/* ============ Overlay ============ */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.3);
+    backdrop-filter: blur(2px);
+    z-index: 84;
+    display: none;
+}
+
+    .overlay.active {
+        display: block;
+    }
+
+/* ============================================================
+   Persian DatePicker — ظاهر div-based بدون تغییر DOM
+   table.table-days → شبیه‌سازی div با CSS Grid
+   ============================================================ */
+
+/* ─── ظرف اصلی تقویم ─── */
+.datepicker-plot-area {
+    font-family: 'Vazirmatn', 'Segoe UI', sans-serif !important;
+    font-size: 13px !important;
+    background: var(--bg-card, #fff) !important;
+    color: var(--text-primary, #1e2a3a) !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--border-light, #e2e8f0) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+    padding: 10px !important;
+    z-index: 99999 !important;
+    direction: rtl !important;
+    width: 290px !important;
+    min-width: 270px !important;
+    max-width: 320px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+    .datepicker-plot-area *,
+    .datepicker-plot-area *::before,
+    .datepicker-plot-area *::after {
+        box-sizing: border-box !important;
+    }
+
+    /* ─── هدر ─── */
+    .datepicker-plot-area .datepicker-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 6px 4px !important;
+        border-bottom: 1px solid var(--border-light, #e2e8f0) !important;
+        margin-bottom: 10px !important;
+    }
+
+        .datepicker-plot-area .datepicker-header .btn-next,
+        .datepicker-plot-area .datepicker-header .btn-prev {
+            background: transparent !important;
+            border: none !important;
+            color: var(--primary, #0f6bff) !important;
+            cursor: pointer !important;
+            font-size: 1.1rem !important;
+            padding: 4px 12px !important;
+            border-radius: 8px !important;
+            transition: 0.2s !important;
+            line-height: 1 !important;
+            font-weight: 700 !important;
+        }
+
+            .datepicker-plot-area .datepicker-header .btn-next:hover,
+            .datepicker-plot-area .datepicker-header .btn-prev:hover {
+                background: var(--border-light, #e2e8f0) !important;
+            }
+
+        .datepicker-plot-area .datepicker-header .datepicker-title-text {
+            font-weight: 700 !important;
+            color: var(--text-primary, #1e2a3a) !important;
+            font-size: 0.95rem !important;
+            text-align: center !important;
+            flex: 1 !important;
+        }
+
+    /* ═══════════════════════════════════════════════════════════
+   ★★★ بخش اصلی: تبدیل table به Grid ★★★
+   ═══════════════════════════════════════════════════════════ */
+
+    /* ظرف wrapper */
+    .datepicker-plot-area .datepicker-day-view {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+        /* table → Grid با ۷ ستون مساوی */
+        .datepicker-plot-area .datepicker-day-view .table-days,
+        .datepicker-plot-area table.table-days {
+            display: grid !important;
+            grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            table-layout: fixed !important;
+            gap: 4px !important;
+            list-style: none !important;
+        }
+
+            /* tbody → wrapper شفاف */
+            .datepicker-plot-area table.table-days > tbody {
+                display: contents !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+                /* tr → wrapper شفاف */
+                .datepicker-plot-area table.table-days > tbody > tr {
+                    display: contents !important;
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+
+                    /* td → هر خونه Grid */
+                    .datepicker-plot-area table.table-days > tbody > tr > td {
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        width: auto !important;
+                        min-width: 0 !important;
+                        max-width: none !important;
+                        height: 34px !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        text-align: center !important;
+                        vertical-align: middle !important;
+                        overflow: hidden !important;
+                        border: none !important;
+                        background: transparent !important;
+                        font-size: inherit !important;
+                    }
+
+            /* th → هدر هفته */
+            .datepicker-plot-area table.table-days > thead,
+            .datepicker-plot-area table.table-days > thead > tr {
+                display: contents !important;
+            }
+
+                .datepicker-plot-area table.table-days > thead > tr > th {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    height: 30px !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    color: var(--text-secondary, #2c3e50) !important;
+                    font-weight: 700 !important;
+                    font-size: 0.72rem !important;
+                    text-align: center !important;
+                    border: none !important;
+                    background: transparent !important;
+                }
+
+            /* span داخل td → دایره */
+            .datepicker-plot-area table.table-days > tbody > tr > td > span {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 30px !important;
+                height: 30px !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 50% !important;
+                font-size: 0.8rem !important;
+                line-height: 1 !important;
+                text-align: center !important;
+                cursor: pointer !important;
+                transition: all 0.15s ease !important;
+                border: 1px solid transparent !important;
+                color: var(--text-primary, #1e2a3a) !important;
+                font-family: inherit !important;
+            }
+
+            /* hover */
+            .datepicker-plot-area table.table-days td:hover > span:not(.other-month):not(.disabled) {
+                background: var(--border-light, #e2e8f0) !important;
+            }
+
+            /* ماه قبل/بعد */
+            .datepicker-plot-area table.table-days td > span.other-month,
+            .datepicker-plot-area table.table-days td.disabled > span {
+                color: #cbd5e1 !important;
+                cursor: default !important;
+                opacity: 0.5 !important;
+            }
+
+                .datepicker-plot-area table.table-days td > span.other-month:hover,
+                .datepicker-plot-area table.table-days td.disabled > span:hover {
+                    background: transparent !important;
+                }
+
+            /* روز انتخاب‌شده */
+            .datepicker-plot-area table.table-days td.selected > span,
+            .datepicker-plot-area table.table-days td.selected:hover > span {
+                background: var(--primary, #0f6bff) !important;
+                color: #fff !important;
+                font-weight: 700 !important;
+                box-shadow: 0 4px 12px rgba(15, 107, 255, 0.4) !important;
+            }
+
+            /* امروز */
+            .datepicker-plot-area table.table-days td.today > span,
+            .datepicker-plot-area table.table-days td.is-today > span {
+                border: 2px solid var(--primary, #0f6bff) !important;
+                font-weight: 700 !important;
+                color: var(--primary, #0f6bff) !important;
+            }
+
+            .datepicker-plot-area table.table-days td.today.selected > span {
+                color: #fff !important;
+            }
+
+            /* جمعه */
+            .datepicker-plot-area table.table-days td.holiday > span,
+            .datepicker-plot-area table.table-days td.is-holiday > span,
+            .datepicker-plot-area table.table-days td.friday > span {
+                color: #ef4444 !important;
+            }
+
+        /* ─── فوتر (امروز / ماه میلادی) ─── */
+        .datepicker-plot-area .datepicker-day-view .datepicker-day-number-container {
+            display: none !important;
+        }
+
+        .datepicker-plot-area .datepicker-day-view .datepicker-day-footer,
+        .datepicker-plot-area .datepicker-day-view .datepicker-footer {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 8px 6px 4px !important;
+            margin-top: 10px !important;
+            border-top: 1px solid var(--border-light, #e2e8f0) !important;
+            font-size: 0.78rem !important;
+        }
+
+            .datepicker-plot-area .datepicker-day-view .datepicker-day-footer .btn-today,
+            .datepicker-plot-area .datepicker-day-view .datepicker-footer .btn-today {
+                color: var(--primary, #0f6bff) !important;
+                font-weight: 700 !important;
+                cursor: pointer !important;
+                padding: 5px 16px !important;
+                border-radius: 40px !important;
+                background: transparent !important;
+                border: none !important;
+                transition: 0.2s !important;
+                font-family: inherit !important;
+                font-size: 0.8rem !important;
+            }
+
+                .datepicker-plot-area .datepicker-day-view .datepicker-day-footer .btn-today:hover,
+                .datepicker-plot-area .datepicker-day-view .datepicker-footer .btn-today:hover {
+                    background: var(--primary, #0f6bff) !important;
+                    color: #fff !important;
+                }
+
+    /* ─── پنل ساعت (datetime-local) ─── */
+    .datepicker-plot-area .datepicker-time-view {
+        border-top: 1px solid var(--border-light, #e2e8f0) !important;
+        padding-top: 8px !important;
+        margin-top: 8px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+/* ─── تم تاریک ─── */
+body.dark .datepicker-plot-area {
+    background: var(--bg-card, #1e293b) !important;
+    border-color: var(--border-light, #334155) !important;
+    color: var(--text-primary, #eef2ff) !important;
+}
+
+    body.dark .datepicker-plot-area table.table-days td > span {
+        color: var(--text-primary, #eef2ff) !important;
+    }
+
+        body.dark .datepicker-plot-area table.table-days td > span.other-month {
+            color: #475569 !important;
+        }
+.datepicker-plot-area {
+    /* فاصله از بالا (input) */
+    margin-top: 6px !important;
+    /* اگه پلاگین از top/left استفاده می‌کنه، اینا override می‌شن */
+    /* (بعضی نسخه‌ها position: fixed می‌ذارن) */
+}
+/* ─── موبایل ─── */
+@media (max-width: 400px) {
+    .datepicker-plot-area {
+        width: 270px !important;
+        min-width: 250px !important;
+        max-width: 290px !important;
+        padding: 8px !important;
+    }
+
+        .datepicker-plot-area table.table-days > tbody > tr > td {
+            height: 32px !important;
+        }
+
+        .datepicker-plot-area table.table-days td span {
+            width: 28px !important;
+            height: 28px !important;
+            font-size: 0.75rem !important;
+        }
+}
+
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 16px 32px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    z-index: 99999;
+    opacity: 0;
+    transition: all 0.4s ease;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    font-family: inherit;
+    max-width: 90vw;
+    text-align: center;
+}
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+        background: var(--success, #10b981);
+    }
+
+    .toast.error {
+        background: var(--danger, #ef4444);
+    }
+
+    .toast.warning {
+        background: var(--warning, #f59e0b);
+    }
+
+    .toast.info {
+        background: var(--primary, #0f6bff);
+    }

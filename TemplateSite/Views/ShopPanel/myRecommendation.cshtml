@@ -1,0 +1,136 @@
+﻿@{
+    ViewData["Title"] = "پیگیری سفارشات";
+    Layout = "~/Views/Shared/_LayoutStore.cshtml";
+}
+
+@section heads
+{
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نِگارشاپ | پیگیری سفارشات</title>
+    <link rel="stylesheet" href="~/css/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="~/Store/css/StyleAllRecommendation.css">
+}
+
+@section scripts
+{
+    <script src="~/js/Store/StoresAllRecommendation.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<div class="main-content" id="mainContent">
+    <div class="orders-container">
+
+        <!-- ═══ Header ═══ -->
+        <div class="page-header">
+            <h2><i class="fas fa-truck"></i> پیگیری سفارشات</h2>
+            <span class="order-count" id="orderCount">
+                <i class="fas fa-clipboard-list"></i> در حال بارگذاری...
+            </span>
+        </div>
+
+        <!-- ═══ Filter Bar ═══ -->
+        <div class="filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchOrder" placeholder="جستجو بر اساس شماره سفارش...">
+            </div>
+            <select class="filter-select" id="levelFilter">
+                <option value="all">همه مراحل</option>
+                <option value="2">ثبت سفارش</option>
+                <option value="3">پرداخت</option>
+                <option value="4">پردازش سفارش</option>
+                <option value="5">بسته‌بندی و ارسال</option>
+                <option value="6">تحویل به پست</option>
+                <option value="7">تحویل مشتری</option>
+                <option value="8">ارجاع شده</option>
+            </select>
+        </div>
+
+        <!-- ═══ Orders List ═══ -->
+        <div class="orders-list" id="ordersList">
+            <div style="text-align:center;padding:60px;color:var(--text-secondary);">
+                <i class="fas fa-spinner fa-spin" style="font-size:2rem;display:block;margin-bottom:16px;"></i>
+                در حال بارگذاری سفارشات...
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Modal ارجاع سفارش
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="referModal">
+    <div class="modal modelInput">
+        <h3>
+            <i class="fas fa-share"></i>
+            ارجاع سفارش
+        </h3>
+
+        <input type="hidden" id="referOrderId" value="0" />
+
+        <div class="alert-warning">
+            <i class="fas fa-info-circle"></i>
+            با ارجاع، سفارش به وضعیت «ارجاع شده» تغییر می‌کند و نیاز به پیگیری دارد.
+        </div>
+
+        <div class="form-group">
+            <label>دلیل ارجاع <span class="required">*</span></label>
+            <textarea id="referText"
+                      rows="5"
+                      maxlength="1000"
+                      placeholder="مثال: نیاز به بررسی توسط مدیر، مشکل در محصول، درخواست مرجوعی، ..."></textarea>
+            <small class="hint-text">
+                حداکثر 1000 کاراکتر
+            </small>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveRefer()">
+                <i class="fas fa-share"></i> ارجاع
+            </button>
+            <button class="btn-cancel" onclick="closeReferModal()">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════════
+     Modal پرداخت سفارش
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="payModal">
+    <div class="modal modelInput">
+        <h3>
+            <i class="fas fa-credit-card"></i>
+            پرداخت سفارش
+        </h3>
+
+        <input type="hidden" id="payOrderId" value="0" />
+
+        <div class="alert-info">
+            <i class="fas fa-info-circle"></i>
+            با ثبت پرداخت، سفارش شما به مرحله «پرداخت شده» تغییر می‌کند و آماده‌ی پردازش می‌شود.
+        </div>
+
+        <div class="form-group">
+            <label>نوع پرداخت <span class="required">*</span></label>
+            <select id="payTypePeyment" class="filter-select">
+                <option value="">انتخاب نوع پرداخت...</option>
+            </select>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save btn-pay-save" id="paySubmitBtn" onclick="savePay()">
+                <i class="fas fa-check"></i> پرداخت
+            </button>
+            <button class="btn-cancel" onclick="closePayModal()">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>

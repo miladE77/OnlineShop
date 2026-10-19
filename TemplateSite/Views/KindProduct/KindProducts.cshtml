@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت دسته بندی محصولات</title>
+    <link rel="stylesheet" href="/css/TreeNodeStyle.css">
+}
+@section scripts {
+    <script src="/js/KindProduct/KindProducts.js"></script>
+}
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<!-- مودال افزودن/ویرایش  دسته بندی محصولات -->
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-users"></i> مدیریت دسته بندی محصولات</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن دسته بندی محصولات جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchKindProduct" placeholder="جستجو بر اساس ایتم ها...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+            <select id="typeShow" class="filter-select">
+                <option value="1">درختی</option>
+                <option value="2">جدول</option>
+            </select>
+        </div>
+        <div class="tree-wrapper" id="treeData">
+            <ul class="tree" id="categoryTree"></ul>
+        </div>
+
+        <div class="table-wrapper" id="tableData">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+                        <th>عنوان دسته بندی</th>
+                        <th>کد دسترسی داخلی</th>
+                        <th>مجموعه والد </th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="KindProductTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="KindProductModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن دسته بندی محصولات جدید</h3>
+
+        <input type="number" id="KindProductId" placeholder="شناسه">
+        <input type="text" id="KindProductCaption" placeholder="عنوان دسته بندی">
+        <input type="text" id="CodeInternalKindProducts" placeholder="کد دسترسی داخلی"><div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">مجموعه والد </label> <select id="ParentKindProduct" class="filter-select">
+            </select>
+        </div>
+        <div style="display:flex;">
+            <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
+  margin-top: 5px;">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+
+
+

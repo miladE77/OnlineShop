@@ -1,0 +1,49 @@
+﻿/* ============================================================
+   badge محصول و رنگ در جدول Orders
+   ============================================================ */
+.product-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 40px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+    .product-badge i {
+        font-size: 0.7rem;
+        opacity: 0.8;
+    }
+
+.color-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 40px;
+    background: #fff7ed;
+    color: #9a3412;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+    .color-badge i {
+        font-size: 0.7rem;
+        opacity: 0.8;
+    }
+
+/* تم تاریک */
+body.dark .product-badge {
+    background: #1e1b4b;
+    color: #c7d2fe;
+}
+
+body.dark .color-badge {
+    background: #431407;
+    color: #fed7aa;
+}

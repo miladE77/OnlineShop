@@ -1,0 +1,78 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت  تک صفحه نمایش</title>
+}
+@section scripts {
+    <script src="~/js/SitePages/SitePages.js"></script>
+}
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-users"></i> مدیریت  تک صفحه های نمایشی</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن  تک صفحه نمایش جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchSitePage" placeholder="جستجو بر اساس ایتم ها...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+                        <th>عنوان سایت</th>
+                        <th>کدهای html</th>
+                        <th>کد دسترسی داخلی</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="SitePageTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="SitePageModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن  تک صفحه نمایشی جدید</h3>
+
+        <input type="number" id="SitePageId" placeholder="شناسه">
+        <input type="text" id="SitePageCaption" placeholder="عنوان سایت">
+        <textarea id="SitePageHtml" class="extra" placeholder="کدهای html"></textarea>
+        <input type="text" id="CodePage" placeholder="کد دسترسی داخلی">
+        <div style="display:flex;">
+            <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
+  margin-top: 5px;">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+
+
+

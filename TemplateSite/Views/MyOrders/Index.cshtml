@@ -1,0 +1,145 @@
+@{
+    ViewData["Title"] = "مدیریت سفارشات";
+    Layout = "~/Views/Shared/_LayoutStore.cshtml";
+
+    var storeName = ViewData["StoreName"]?.ToString() ?? "فروشگاه";
+}
+
+@section heads
+{
+    <title>مدیریت سفارشات</title>
+    <link rel="stylesheet" href="/css/Shop/MyOrders.css">
+}
+
+@section scripts
+{
+    <script src="/js/MyOrders/MyOrders.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<main class="main-content" id="mainContent">
+    <div class="mo-container">
+
+        <!-- ═══ Header ═══ -->
+        <div class="mo-header">
+            <h2><i class="fas fa-shopping-bag"></i> مدیریت سفارشات</h2>
+            <div class="store-selector" id="storeSelector" style="display:none;"></div>
+        </div>
+
+        <!-- ═══ Stats ═══ -->
+        <div class="mo-stats">
+            <div class="mo-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statTotal">0</div>
+                    <div class="label">کل سفارشات</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+            </div>
+            <div class="mo-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statPending">0</div>
+                    <div class="label">در انتظار</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            </div>
+            <div class="mo-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statProcessing">0</div>
+                    <div class="label">در پردازش</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-cogs"></i></div>
+            </div>
+            <div class="mo-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statDelivered">0</div>
+                    <div class="label">تحویل شده</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+
+        <!-- ═══ Filter Bar ═══ -->
+        <div class="mo-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="moSearch" placeholder="جستجو بر اساس عنوان سفارش، شناسه...">
+            </div>
+            <select id="moLevelFilter" class="filter-select">
+                <option value="-1">همه مراحل</option>
+                <option value="2">در انتظار</option>
+                <option value="3">پرداخت</option>
+                <option value="4">در حال پردازش</option>
+                <option value="5">بسته‌بندی و ارسال</option>
+                <option value="6">تحویل به پست</option>
+                <option value="7">تحویل مشتری</option>
+                <option value="8">ارجاع</option>
+            </select>
+        </div>
+
+        <!-- ═══ Orders List ═══ -->
+        <div class="mo-orders-list" id="moOrdersList">
+            <div class="mo-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                در حال بارگذاری...
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- ═══ Modal جزئیات سفارش ═══ -->
+<div class="modal-overlay" id="orderModal">
+    <div class="modal modelInput" style="max-width:700px;">
+        <h3 id="orderModalTitle">جزئیات سفارش</h3>
+
+        <div class="mo-order-details" id="orderDetails">
+            <!-- JS پر می‌کند -->
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeModal('orderModal')">
+                بستن
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal تغییر وضعیت ═══ -->
+<div class="modal-overlay" id="statusModal">
+    <div class="modal modelInput">
+        <h3>تغییر وضعیت سفارش</h3>
+
+        <input type="hidden" id="statusOrderId" value="0" />
+
+        <div class="form-group">
+            <label>مرحله جدید <span style="color:red;">*</span></label>
+            <select id="newLevelOrder" class="filter-select">
+                <option value="2">در انتظار تایید</option>
+                <option value="3">تایید شده / پرداخت</option>
+                <option value="4">در حال پردازش</option>
+                <option value="5">بسته‌بندی و ارسال</option>
+                <option value="6">تحویل به پست</option>
+                <option value="7">تحویل مشتری</option>
+                <option value="8">ارجاع</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>یادداشت (اختیاری)</label>
+            <textarea id="commandNote" rows="3" placeholder="یادداشت برای این تغییر وضعیت..."></textarea>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveStatus()">
+                <i class="fas fa-check"></i> ذخیره
+            </button>
+            <button class="btn-cancel" onclick="closeModal('statusModal')">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>

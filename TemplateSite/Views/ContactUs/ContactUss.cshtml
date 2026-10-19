@@ -1,0 +1,106 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت  فرم تماس با ما</title>
+}
+@section scripts {
+    <script src="/js/ContactUs/ContactUss.js"></script>
+}
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<!-- مودال افزودن/ویرایش   فرم تماس با ما -->
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-users"></i> مدیریت  فرم تماس با ما</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن  فرم تماس با ما جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchContactUs" placeholder="جستجو بر اساس ایتم ها...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+	 <th>موضوع متن</th>
+	 <th>نام و نام خانوادگی</th>
+	 <th>ایمیل</th>
+	 <th>شماره تماس</th>
+	 <th>متن</th>
+	 <th>تاریخ ثبت</th>
+	 <th>فروشگاه</th>
+	 <th>پرسشگر</th>
+	 <th>IP</th>
+	 <th>وضعیت پاسخ دهی</th>
+	 <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="ContactUsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="ContactUsModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن  فرم تماس با ما جدید</h3>
+        
+ <input type="number" id="ContactUsId" placeholder="شناسه">
+ <input type="text" id="ContactUsCaption" placeholder="موضوع متن">
+ <input type="text" id="FullName" placeholder="نام و نام خانوادگی">
+ <input type="text" id="Email" placeholder="ایمیل">
+ <input type="text" id="PhoneNumber" placeholder="شماره تماس">
+ <input type="text" id="Messages" placeholder="متن">
+ <input type="date" id="CreatedDate" placeholder="تاریخ ثبت">
+<div style="display:flex;">
+ <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: auto;">فروشگاه</label> 
+<select id="Store" class="filter-select">
+</select>
+</div>
+<div style="display:flex;">
+ <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: auto;">پرسشگر</label> 
+<select id="Personel" class="filter-select">
+</select>
+</div>
+ <input type="text" id="UserIP" placeholder="IP">
+ <select id="Condetion" class="filter-select">
+ <option value="0">"در انتظار پاسخ"</option>
+ <option value="1">"پاسخ داده شده"</option>
+ <option value="2">"رد شده"</option>
+ <option value="3">"بایگانی"</option>
+</select>
+<div style="display:flex;">
+ <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
+  margin-top: 5px;">
+</div>
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+
+
+

@@ -1,0 +1,27 @@
+﻿@using Domain.ViewModels;
+@model VerifyPhoneViewModel
+
+@{
+    ViewData["Title"] = "بازیابی رمز عبور";
+
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="account-container">
+    <div class="account-box">
+        <h2 class="text-center mb-4">بازیابی رمز عبور</h2>
+        <form asp-action="VerifyPhone" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="PhoneNumber" class="form-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" placeholder="09121234567" dir="ltr" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <input type="submit" value="تایید" class="btn btn-success w-100 p-2" />
+            <div class="text-center mt-2">
+                <a asp-controller="Account" asp-action="Login" class="text-decoration-none mt-3">بازگشت</a>
+            </div>
+        </form>
+    </div>
+</div>

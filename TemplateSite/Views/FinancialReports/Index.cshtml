@@ -1,0 +1,334 @@
+﻿@{
+    ViewData["Title"] = "گزارشات مالی";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads {
+    <title>گزارشات مالی</title>
+    <link rel="stylesheet" href="/css/FinancialReportsStyle.css" />
+}
+
+@section html {
+ lang="fa" dir="rtl"
+}
+
+@section scripts {
+    <script src="/js/FinancialReports/FinancialReports.js"></script>
+}
+
+<div class="main-content" id="mainContent">
+    <div class="container fin-container">
+
+        <!-- ═══════════ هدر ═══════════ -->
+        <div class="fin-header">
+            <div class="fin-title">
+                <h1><i class="fas fa-chart-line"></i> گزارشات مالی</h1>
+                <p>تحلیل کامل درآمد، هزینه، موجودی و عملکرد فروشگاه</p>
+            </div>
+            <div class="fin-actions">
+                <button class="btn-refresh" onclick="refreshAll()">
+                    <i class="fas fa-sync-alt"></i> بروزرسانی
+                </button>
+                <button class="btn-print" onclick="window.print()">
+                    <i class="fas fa-print"></i> چاپ
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════ فیلتر بازه زمانی ═══════════ -->
+        <div class="fin-period-filter">
+            <label><i class="fas fa-calendar"></i> بازه زمانی:</label>
+            <button class="period-btn active" data-range="today">امروز</button>
+            <button class="period-btn" data-range="week">هفته</button>
+            <button class="period-btn" data-range="month">ماه</button>
+            <button class="period-btn" data-range="year">سال</button>
+            <button class="period-btn" data-range="all">همه</button>
+        </div>
+
+        <!-- ═══════════ KPI اصلی ═══════════ -->
+        <div class="kpi-grid-fin">
+            <div class="kpi-fin" style="--kpi-color:#10b981">
+                <i class="fas fa-wallet kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiTotalIncome">—</div>
+                <div class="kpi-fin-label">کل درآمد</div>
+            </div>
+
+            <div class="kpi-fin" style="--kpi-color:#0f6bff">
+                <i class="fas fa-calendar-day kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiTodayIncome">—</div>
+                <div class="kpi-fin-label">درآمد امروز</div>
+            </div>
+
+            <div class="kpi-fin" style="--kpi-color:#8b5cf6">
+                <i class="fas fa-calendar-alt kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiMonthIncome">—</div>
+                <div class="kpi-fin-label">درآمد این ماه</div>
+            </div>
+
+            <div class="kpi-fin" style="--kpi-color:#f59e0b">
+                <i class="fas fa-boxes kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiInventoryValue">—</div>
+                <div class="kpi-fin-label">ارزش موجودی انبار</div>
+            </div>
+
+            <div class="kpi-fin" style="--kpi-color:#06b6d4">
+                <i class="fas fa-shopping-cart kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiTotalOrders">—</div>
+                <div class="kpi-fin-label">تعداد سفارشات</div>
+            </div>
+
+            <div class="kpi-fin" style="--kpi-color:#ec4899">
+                <i class="fas fa-chart-bar kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiAvgOrder">—</div>
+                <div class="kpi-fin-label">میانگین هر سفارش</div>
+            </div>
+
+            <div class="kpi-fin" style="--kpi-color:#14b8a6">
+                <i class="fas fa-cube kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiTotalProducts">—</div>
+                <div class="kpi-fin-label">محصولات فعال</div>
+            </div>
+
+            <div class="kpi-fin" style="--kpi-color:#6366f1">
+                <i class="fas fa-store kpi-fin-icon"></i>
+                <div class="kpi-fin-value" id="kpiTotalStores">—</div>
+                <div class="kpi-fin-label">فروشگاه‌ها</div>
+            </div>
+        </div>
+
+        <!-- ═══════════ نمودار درآمد ماهانه ═══════════ -->
+        <div class="fin-chart-card">
+            <h3><i class="fas fa-chart-area"></i> روند درآمد ماهانه (سال جاری)</h3>
+            <div id="monthlyIncomeChart" class="fin-chart"></div>
+        </div>
+
+        <!-- ═══════════ ردیف دو نمودار ═══════════ -->
+        <div class="fin-row">
+            <div class="fin-chart-card">
+                <h3><i class="fas fa-chart-line"></i> درآمد روزانه (۳۰ روز اخیر)</h3>
+                <div id="dailyIncomeChart" class="fin-chart"></div>
+            </div>
+            <div class="fin-chart-card">
+                <h3><i class="fas fa-credit-card"></i> درآمد بر اساس نوع پرداخت</h3>
+                <div id="incomeByTypeChart" class="fin-chart"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════ گزارش سود و مالیات ═══════════ -->
+        <div class="fin-row fin-profit-row">
+            <div class="profit-card revenue">
+                <i class="fas fa-arrow-down"></i>
+                <div class="profit-value" id="profitRevenue">—</div>
+                <div class="profit-label">کل درآمد</div>
+            </div>
+            <div class="profit-card cost">
+                <i class="fas fa-arrow-up"></i>
+                <div class="profit-value" id="profitCost">—</div>
+                <div class="profit-label">هزینه تخمینی (۷۰٪)</div>
+            </div>
+            <div class="profit-card profit">
+                <i class="fas fa-chart-pie"></i>
+                <div class="profit-value" id="profitNet">—</div>
+                <div class="profit-label">سود تخمینی (۳۰٪)</div>
+            </div>
+            <div class="profit-card tax">
+                <i class="fas fa-percent"></i>
+                <div class="profit-value" id="profitTax">—</div>
+                <div class="profit-label">مالیات (۹٪)</div>
+            </div>
+        </div>
+
+        <!-- ═══════════ مقایسه ماه جاری با قبل ═══════════ -->
+        <div class="fin-card">
+            <h3><i class="fas fa-balance-scale"></i> مقایسه ماه جاری با ماه قبل</h3>
+            <div class="comparison-grid">
+                <div class="compare-item">
+                    <div class="compare-title">درآمد</div>
+                    <div class="compare-values">
+                        <div class="compare-this">
+                            <span class="label">این ماه</span>
+                            <span class="value" id="compareThisMonth">—</span>
+                        </div>
+                        <div class="compare-arrow" id="compareIncomeArrow">
+                            <i class="fas fa-arrow-left"></i>
+                        </div>
+                        <div class="compare-last">
+                            <span class="label">ماه قبل</span>
+                            <span class="value" id="compareLastMonth">—</span>
+                        </div>
+                    </div>
+                    <div class="compare-percent" id="compareIncomePercent">—</div>
+                </div>
+
+                <div class="compare-item">
+                    <div class="compare-title">تعداد سفارش</div>
+                    <div class="compare-values">
+                        <div class="compare-this">
+                            <span class="label">این ماه</span>
+                            <span class="value" id="compareThisOrders">—</span>
+                        </div>
+                        <div class="compare-arrow" id="compareOrdersArrow">
+                            <i class="fas fa-arrow-left"></i>
+                        </div>
+                        <div class="compare-last">
+                            <span class="label">ماه قبل</span>
+                            <span class="value" id="compareLastOrders">—</span>
+                        </div>
+                    </div>
+                    <div class="compare-percent" id="compareOrdersPercent">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ پیش‌بینی فروش ═══════════ -->
+        <div class="fin-card forecast-card">
+            <h3><i class="fas fa-crystal-ball"></i> پیش‌بینی فروش ماه آینده</h3>
+            <div class="forecast-grid">
+                <div class="forecast-item">
+                    <div class="forecast-label">فروش ۳۰ روز اخیر</div>
+                    <div class="forecast-value" id="forecastLast30">—</div>
+                </div>
+                <div class="forecast-item">
+                    <div class="forecast-label">فروش ۳۰ روز قبل</div>
+                    <div class="forecast-value" id="forecastPrevious30">—</div>
+                </div>
+                <div class="forecast-item highlight">
+                    <div class="forecast-label">پیش‌بینی ماه آینده</div>
+                    <div class="forecast-value" id="forecastNext">—</div>
+                </div>
+                <div class="forecast-item">
+                    <div class="forecast-label">میانگین هر سفارش</div>
+                    <div class="forecast-value" id="forecastAvgOrder">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ جدول محصولات پرفروش ═══════════ -->
+        <div class="fin-table-card">
+            <div class="fin-table-header">
+                <h3><i class="fas fa-fire"></i> محصولات پرفروش (بر اساس درآمد)</h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="fin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام محصول</th>
+                            <th>تعداد فروش</th>
+                            <th>میانگین قیمت</th>
+                            <th>کل درآمد</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ جدول مشتریان برتر ═══════════ -->
+        <div class="fin-table-card">
+            <div class="fin-table-header">
+                <h3><i class="fas fa-crown"></i> مشتریان برتر</h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="fin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام مشتری</th>
+                            <th>تعداد سفارش</th>
+                            <th>مجموع خرید</th>
+                            <th>آخرین خرید</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topCustomersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ جدول ارزش انبار به تفکیک فروشگاه ═══════════ -->
+        <div class="fin-table-card">
+            <div class="fin-table-header">
+                <h3><i class="fas fa-warehouse"></i> ارزش موجودی انبار به تفکیک فروشگاه</h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="fin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام فروشگاه</th>
+                            <th>تعداد محصولات</th>
+                            <th>تعداد اقلام</th>
+                            <th>ارزش کل انبار</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryByStoreBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ جدول فروش به تفکیک فروشگاه ═══════════ -->
+        <div class="fin-table-card">
+            <div class="fin-table-header">
+                <h3><i class="fas fa-store-alt"></i> فروش به تفکیک فروشگاه</h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="fin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام فروشگاه</th>
+                            <th>کد</th>
+                            <th>تعداد سفارش</th>
+                            <th>کل درآمد</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesByStoreBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ جدول پرداخت‌های معلق ═══════════ -->
+        <div class="fin-table-card">
+            <div class="fin-table-header">
+                <h3><i class="fas fa-hourglass-half"></i> پرداخت‌های معلق</h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="fin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>عنوان سفارش</th>
+                            <th>مشتری</th>
+                            <th>مبلغ انتظاری</th>
+                            <th>وضعیت</th>
+                            <th>تاریخ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingPaymentsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════ جدول محصولات راکد ═══════════ -->
+        <div class="fin-table-card">
+            <div class="fin-table-header">
+                <h3><i class="fas fa-snowflake"></i> محصولات راکد (بدون فروش ۳۰ روز)</h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="fin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام محصول</th>
+                            <th>فروشگاه</th>
+                            <th>موجودی</th>
+                            <th>فروش ۳۰ روز اخیر</th>
+                        </tr>
+                    </thead>
+                    <tbody id="slowMovingBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,315 @@
+@{
+    ViewData["Title"] = "مدیریت محصولات";
+    Layout = "~/Views/Shared/_LayoutStore.cshtml";
+
+    var storeName = ViewData["StoreName"]?.ToString() ?? "فروشگاه";
+}
+
+@section heads
+{
+    <title>مدیریت محصولات — @storeName</title>
+    <link rel="stylesheet" href="~/css/Shop/MyProduct.css">
+}
+
+@section scripts
+{
+    <script src="/js/MyProduct/MyProduct.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<main class="main-content" id="mainContent">
+    <div class="mp-container">
+
+        <!-- ═══ Header ═══ -->
+        <div class="mp-header">
+            <h2><i class="fas fa-boxes"></i> مدیریت محصولات</h2>
+
+            <div class="mp-header-actions">
+
+                <!-- Store Selector -->
+                <div class="store-selector" id="storeSelector" style="display:none;"></div>
+
+                <!-- ⭐ دکمه مدیریت دسته‌بندی -->
+                <button class="btn-secondary" onclick="openKindModal()">
+                    <i class="fas fa-tags"></i> افزودن دسته‌بندی
+                </button>
+
+                <!-- ⭐ دکمه لیست دسته‌بندی -->
+                <button class="btn-secondary" onclick="toggleKindList()">
+                    <i class="fas fa-list"></i> لیست دسته‌بندی‌ها
+                </button>
+
+                <!-- Button Add Product -->
+                <button class="btn-add" onclick="openProductModal()">
+                    <i class="fas fa-plus"></i> افزودن محصول
+                </button>
+
+            </div>
+        </div>
+
+        <div class="mp-kind-list-wrapper" id="kindListWrapper" style="display:none;">
+            <div class="kind-list-header">
+                <h3><i class="fas fa-tags"></i> دسته‌بندی‌ها</h3>
+                <button class="close-btn" onclick="toggleKindList()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="kind-list" id="kindList">
+                <div style="text-align:center;padding:20px;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Stats ═══ -->
+        <div class="mp-stats" id="mpStats">
+            <div class="mp-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statTotal">0</div>
+                    <div class="label">کل محصولات</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
+            </div>
+            <div class="mp-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statActive">0</div>
+                    <div class="label">فعال</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+            <div class="mp-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statInactive">0</div>
+                    <div class="label">غیرفعال</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-ban"></i></div>
+            </div>
+            <div class="mp-stat-card">
+                <div class="stat-info">
+                    <div class="number" id="statColors">0</div>
+                    <div class="label">رنگ‌بندی</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-palette"></i></div>
+            </div>
+        </div>
+
+        <!-- ═══ Search ═══ -->
+        <div class="mp-search-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="mpSearch" placeholder="جستجو بر اساس نام، کد...">
+            </div>
+            <select id="mpKindFilter" class="filter-select">
+                <option value="all">همه دسته‌بندی‌ها</option>
+            </select>
+            <select id="mpStatusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="active">فعال</option>
+                <option value="inactive">غیرفعال</option>
+            </select>
+        </div>
+
+        <!-- ═══ Table ═══ -->
+        <div class="mp-table-wrapper">
+            <table class="mp-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>نام محصول</th>
+                        <th>کد داخلی</th>
+                        <th>دسته‌بندی</th>
+                        <th>قیمت</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="mpTableBody"></tbody>
+            </table>
+        </div>
+
+    </div>
+</main>
+
+<!-- ═══ Modal محصول ═══ -->
+<div class="modal-overlay" id="productModal">
+    <div class="modal modelInput">
+        <h3 id="productModalTitle">افزودن محصول جدید</h3>
+
+        <input type="hidden" id="productId" value="0" />
+
+        <div class="form-group" id="modalStoreGroup" style="display:none;">
+            <label>فروشگاه <span style="color:red;">*</span></label>
+            <select id="modalStoreId" class="filter-select">
+                <option value="">انتخاب فروشگاه...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>نام محصول <span style="color:red;">*</span></label>
+            <input type="text" id="productCaption" placeholder="نام محصول" maxlength="200" />
+        </div>
+
+        <div class="form-group">
+            <label>دسته‌بندی <span style="color:red;">*</span></label>
+            <select id="productKind" class="filter-select">
+                <option value="">انتخاب دسته‌بندی...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>قیمت پایه (تومان)</label>
+            <input type="number" id="productPrice" placeholder="مثال: 250000" min="0" />
+        </div>
+
+        <div class="form-group">
+            <label>توضیحات</label>
+            <textarea id="productDetail" rows="3" placeholder="توضیحات محصول..." maxlength="1000"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="productStatus" checked />
+                فعال
+            </label>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveProduct()">
+                <i class="fas fa-check"></i> ذخیره
+            </button>
+            <button class="btn-cancel" onclick="closeModal('productModal')">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal رنگ ═══ -->
+<div class="modal-overlay" id="colorModal">
+    <div class="modal modelInput">
+        <h3 id="colorModalTitle">افزودن رنگ</h3>
+
+        <input type="hidden" id="colorId" value="0" />
+        <input type="hidden" id="colorProductId" value="0" />
+
+        <div class="form-group">
+            <label>نام رنگ <span style="color:red;">*</span></label>
+            <input type="text" id="colorCaption" placeholder="مثال: قرمز" maxlength="100" />
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>قیمت (تومان)</label>
+                <input type="number" id="colorPrice" placeholder="250000" min="0" />
+            </div>
+            <div class="form-group">
+                <label>تخفیف (٪)</label>
+                <input type="number" id="colorOffer" placeholder="0" min="0" max="100" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>موجودی انبار</label>
+            <input type="number" id="colorInStore" placeholder="0" min="0" />
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveColor()">
+                <i class="fas fa-check"></i> ذخیره
+            </button>
+            <button class="btn-cancel" onclick="closeModal('colorModal')">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal فایل ═══ -->
+<div class="modal-overlay" id="fileModal">
+    <div class="modal modelInput">
+        <h3><i class="fas fa-image"></i> افزودن تصویر</h3>
+
+        <input type="hidden" id="fileProductId" value="0" />
+
+        <div class="drop-zone" id="dropZone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>فایل را اینجا رها کنید یا کلیک کنید</p>
+            <span>حداکثر 400 KB — PNG یا JPEG</span>
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/jpg" hidden />
+        </div>
+
+        <div id="filePreview" class="file-preview" style="display:none;"></div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" id="saveFileBtn" onclick="saveFile()" disabled>
+                <i class="fas fa-upload"></i> آپلود
+            </button>
+            <button class="btn-cancel" onclick="closeModal('fileModal')">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal جزئیات ═══ -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal modelInput">
+        <h3 id="detailModalTitle">افزودن جزئیات</h3>
+
+        <input type="hidden" id="detailId" value="0" />
+        <input type="hidden" id="detailProductId" value="0" />
+
+        <div class="form-group">
+            <label>مشخصه فنی <span style="color:red;">*</span></label>
+            <select id="detailOption" class="filter-select">
+                <option value="">انتخاب مشخصه...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>مقدار <span style="color:red;">*</span></label>
+            <input type="text" id="detailCaption" placeholder="مثال: 6.1 اینچ" maxlength="1000" />
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveDetail()">
+                <i class="fas fa-check"></i> ذخیره
+            </button>
+            <button class="btn-cancel" onclick="closeModal('detailModal')">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal دسته‌بندی (بدون کد، بدون ویرایش) ═══ -->
+<div class="modal-overlay" id="kindModal">
+    <div class="modal modelInput">
+        <h3 id="kindModalTitle">افزودن دسته‌بندی جدید</h3>
+
+        <div class="form-group">
+            <label>عنوان دسته‌بندی <span style="color:red;">*</span></label>
+            <input type="text" id="kindCaption" placeholder="مثال: گوشی موبایل" maxlength="100" />
+        </div>
+
+        <div class="form-group">
+            <label>دسته والد (اختیاری)</label>
+            <select id="kindParent" class="filter-select">
+                <option value="">بدون والد (ریشه)</option>
+            </select>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveKind()">
+                <i class="fas fa-check"></i> ذخیره
+            </button>
+            <button class="btn-cancel" onclick="closeModal('kindModal')">
+                انصراف
+            </button>
+        </div>
+    </div>
+</div>

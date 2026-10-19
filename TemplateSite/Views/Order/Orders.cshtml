@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section heads
+{
+    <title>مدیریت سفارش</title>
+}
+
+@section scripts {
+    <script src="/js/Order/Orders.js"></script>
+}
+
+@section html
+{
+    lang="fa" dir="rtl"
+}
+
+<div class="main-content" id="mainContent">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-shopping-cart"></i> مدیریت سفارش</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن سفارش جدید</button>
+        </div>
+
+        <div class="stats-cards" id="statsCards"></div>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchOrder" placeholder="جستجو بر اساس عنوان، محصول، رنگ...">
+            </div>
+            <select id="statusFilter" class="filter-select">
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="true">فعال</option>
+                <option value="false">غیرفعال</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="personelTable">
+                <thead>
+                    <tr>
+                        <th>شناسه</th>
+                        <th>عنوان سفارش</th>
+                        <th>محصول</th>
+                        <th>رنگ</th>
+                        <th>تعداد</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="OrderTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="OrderModal" class="modal-overlay">
+    <div class="modal modelInput">
+        <h3 id="modalTitle">افزودن سفارش جدید</h3>
+
+        <input type="number" id="OrderId" placeholder="شناسه">
+        <input type="text" id="OrderCaption" placeholder="عنوان سفارش">
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">محصول</label>
+            <select id="Product" class="filter-select"></select>
+        </div>
+
+        <div style="display:flex;">
+            <label style="align-content: center;padding: 12px;margin-bottom: 16px;width: 40%;">رنگ محصول</label>
+            <select id="ColorPriceProduct" class="filter-select"></select>
+        </div>
+
+        <input type="number" id="NumberProduct" placeholder="تعداد محصول">
+
+        <div style="display:flex;">
+            <label>وضعیت</label>
+            <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%; margin-top: 5px;">
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
+            <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
+        </div>
+    </div>
+</div>
