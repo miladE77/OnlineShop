@@ -1,0 +1,36 @@
+C:\Users\Milad\source\repos\tempSite1\Domain\bin\Debug\net8.0\Domain.deps.json
+C:\Users\Milad\source\repos\tempSite1\Domain\bin\Debug\net8.0\Domain.dll
+C:\Users\Milad\source\repos\tempSite1\Domain\bin\Debug\net8.0\Domain.pdb
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\Domain.csproj.AssemblyReference.cache
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\Domain.AssemblyInfoInputs.cache
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\Domain.AssemblyInfo.cs
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\Domain.csproj.CoreCompileInputs.cache
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\Domain.dll
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\refint\Domain.dll
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\Domain.pdb
+C:\Users\Milad\source\repos\tempSite1\Domain\obj\Debug\net8.0\ref\Domain.dll
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\bin\Debug\net8.0\Domain.deps.json
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\bin\Debug\net8.0\Domain.dll
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\bin\Debug\net8.0\Domain.pdb
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\Domain.csproj.AssemblyReference.cache
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\Domain.AssemblyInfoInputs.cache
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\Domain.AssemblyInfo.cs
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\Domain.csproj.CoreCompileInputs.cache
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\Domain.dll
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\refint\Domain.dll
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\Domain.pdb
+C:\Users\Milad\source\repos\tempSite1 - Copy - Copy\Domain\obj\Debug\net8.0\ref\Domain.dll
+C:\Users\Milad\source\repos\OnlineShop\Domain\bin\Debug\net8.0\Domain.deps.json
+C:\Users\Milad\source\repos\OnlineShop\Domain\bin\Debug\net8.0\Domain.dll
+C:\Users\Milad\source\repos\OnlineShop\Domain\bin\Debug\net8.0\Domain.pdb
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\Domain.csproj.AssemblyReference.cache
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\Domain.AssemblyInfoInputs.cache
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\Domain.AssemblyInfo.cs
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\Domain.csproj.CoreCompileInputs.cache
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\Domain.dll
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\refint\Domain.dll
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\Domain.pdb
+C:\Users\Milad\source\repos\OnlineShop\Domain\obj\Debug\net8.0\ref\Domain.dll

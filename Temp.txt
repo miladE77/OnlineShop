@@ -1,0 +1,8 @@
+Application/Services/ServiceTemp.cs ==> 2
+DataLayer/Context/DBContext.cs ==> 5
+TemplateSite/Controllers/TempController.cs ==> 3
+TemplateSite/Views/TempView.cshtml ==> 4
+TemplateSite/wwwroot/js/tempJS.js ==> 4
+Domain/Models/Temp.cs ==> 1
+TemplateSite/Controllers/ReletiveTempController.cs ==> 6
+TemplateSite/Views/Shared/_LayoutMain.cshtml ==> 7
