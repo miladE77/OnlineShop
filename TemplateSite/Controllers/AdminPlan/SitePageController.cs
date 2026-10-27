@@ -63,49 +63,25 @@ namespace TemplateSite.Controllers.Management
         [HttpPost]
         [Route("SitePages/AddData")]
         [CheckAccessData(PageName, "A")]
-        public async Task<ServiseResult<string>> Add(SitePageModel SitePageNew)
+        public async Task<ServiseResult<string>> Add(SitePage SitePageNew)
         {
-            //if (SitePageNew.SitePageId != 0) return ServiseResult<string>.Failure("این داده قبلا ثبت شده است");
-            //if (SitePageNew.File.Length > 400000)
-            //{
-            //    return ServiseResult<string>.Failure("حداکثر حجم مجاز برای آپلود 400 KB است.");
-            //}
-            //else if (SitePageNew.File.ContentType.IndexOf("jpeg") == -1 && SitePageNew.File.ContentType.IndexOf("png") == -1)
-            //{
-            //    return ServiseResult<string>.Failure("فرمت فایل ورودی درست نمی باشد.");
-            //}
-            //SitePageNew.SitePageCaption = SitePageNew.File.FileName;
-            //var result = await _serviceSitePage.UpdateSitePage(SitePageNew);
-            //if (result.IsSuccess)
-            //{
-            //    uploadfile uploadfile = new uploadfile(_environment);
-            //    uploadfile.upload(SitePageNew.File, result.Data, 2);
-            //}
-            return ServiseResult<string>.Success("SaveData");
+            if(SitePageNew.SitePageId == 0)
+            {
+                return ServiseResult<string>.Failure("این رکورد در دیتابیس وجود دارد");
+            }
+            return await _serviceSitePage.UpdateSitePage(SitePageNew);
         }
 
         [HttpPost]
         [Route("SitePages/UpdateData")]
         [CheckAccessData(PageName, "U")]
-        public async Task<ServiseResult<string>> Update(SitePageModel SitePageNew)
+        public async Task<ServiseResult<string>> Update(SitePage SitePageNew)
         {
-            //if (SitePageNew.SitePageId == 0) return ServiseResult<string>.Failure("این داده در دیتابیس وجود ندارد");
-            //if (SitePageNew.File.Length > 400000)
-            //{
-            //    return ServiseResult<string>.Failure("حداکثر حجم مجاز برای آپلود 400 KB است.");
-            //}
-            //else if (SitePageNew.File.ContentType.IndexOf("jpeg") == -1 && SitePageNew.File.ContentType.IndexOf("png") == -1)
-            //{
-            //    return ServiseResult<string>.Failure("فرمت فایل ورودی درست نمی باشد.");
-            //}
-            //SitePageNew.SitePageCaption = SitePageNew.File.FileName;
-            //var result = await _serviceSitePage.UpdateSitePage(SitePageNew);
-            //if (result.IsSuccess)
-            //{
-            //    uploadfile uploadfile = new uploadfile(_environment);
-            //    uploadfile.upload(SitePageNew.File, result.Data, 2);
-            //}
-            return ServiseResult<string>.Success("SaveData");
+            if (SitePageNew.SitePageId == 0)
+            {
+                return ServiseResult<string>.Failure("این رکورد در دیتابیس یافت نشد");
+            }
+            return await _serviceSitePage.UpdateSitePage(SitePageNew);
         }
 
         [HttpPost]

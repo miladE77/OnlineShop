@@ -1,25 +1,33 @@
 ﻿@{
-    ViewData["Title"] = "VitrinShop";
+    ViewData["Title"] = "ویترین محصولات";
     Layout = "~/Views/Shared/_LayoutStore.cshtml";
 }
 
 @section heads
 {
-    <title>محصولات</title>
+    <title>ویترین محصولات | @ViewData["ShopName"]</title>
     <link rel="stylesheet" href="/Store/css/StyleVitrin.css">
 }
+
 @section scripts {
     <script src="/js/Store/StoresVitrin.js"></script>
 }
+
 @section html
 {
     lang="fa" dir="rtl"
 }
 
-<main class="main-content" id="mainContent">
-    <div class="vitrin-head">
-        <h2><i class="fas fa-store-alt"></i> ویترین محصولات</h2>
-        <span class="vitrin-count" id="resultCount"></span>
+<main class="main-wrap" id="mainContent">
+    <div class="page-head">
+        <h1>
+            <i class="fas fa-store-alt"></i>
+            ویترین محصولات
+        </h1>
+        <div class="page-head-actions">
+            <span class="count" id="resultCount">۰ محصول</span>
+        </div>
     </div>
-    <div id="productsGrid" class="products-container"></div>
+
+    <div class="products-grid" id="productsGrid" aria-live="polite"></div>
 </main>

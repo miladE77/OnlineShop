@@ -14,5 +14,6 @@ namespace TemplateSite.Controllers
         {
             return RedirectToAction("VitrinShop", "ShopVitrin");
         }
+
     }
 }

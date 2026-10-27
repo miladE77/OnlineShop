@@ -29,7 +29,7 @@ namespace Application.Services
             {
                 if (Data.ProductId == 0)
                 {
-                    var ResultCode = await _serviceCodeAccess.CreateCodeAccess(2);
+                    var ResultCode = await _serviceCodeAccess.CreateCodeAccess(0);
                     if (ResultCode.IsSuccess)
                     {
                         Data.CodeInternalProducts = ResultCode.Data;

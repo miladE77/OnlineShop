@@ -30,7 +30,7 @@ namespace Application.Services
             {
                 if (Data.SitePageId == 0)
                 {
-                    var ResultCode = await _serviceCodeAccess.CreateCodeAccess(3);
+                    var ResultCode = await _serviceCodeAccess.CreateCodeAccess(2);
                     if (ResultCode.IsSuccess)
                     {
                         Data.CodePage = ResultCode.Data;

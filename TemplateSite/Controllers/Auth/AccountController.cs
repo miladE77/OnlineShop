@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Domain.ViewModels;
 using Application.Services;
 using Newtonsoft.Json;
+using Domain.ServiseResult;
 
 namespace TemplateSite.Controllers.Auth
 {
@@ -204,6 +205,81 @@ namespace TemplateSite.Controllers.Auth
             }
 
             return View(model);
+        }
+        [HttpPost]
+        [Route("ShopQuickRegister/Register")]
+        public async Task<ServiseResult<string>> RegisterFast(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ServiseResult<string>.Failure("");
+            }
+
+            // بررسی تکراری بودن شماره تماس (به عنوان UserName)
+            var userCheck = await userManager.FindByNameAsync(model.PhoneNumber);
+            if (userCheck != null)
+            {
+                return ServiseResult<string>.Failure("کاربری با این شماره تماس وجود دارد");
+            }
+
+            var personel = new Personel()
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                PhoneNumber = model.PhoneNumber,
+
+            };
+
+            var response = await _servisePersonel.UpdatePersonel(personel);
+
+            if (!response.IsSuccess)
+            {
+                return ServiseResult<string>.Failure(response.ErrorTitle);
+            }
+
+            var user = new Userapp
+            {
+                PersonelId = Convert.ToInt32(response.Data),
+                FullName = model.FirstName + " " + model.LastName,
+                UserName = model.PhoneNumber,           
+                NormalizedUserName = model.PhoneNumber, 
+                PhoneNumber = model.PhoneNumber,        
+                Email = null                            
+            };
+
+            var result = await userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                // نقش User
+                var roleExistUser = await roleManager.RoleExistsAsync("User");
+                if (!roleExistUser)
+                {
+                    await roleManager.CreateAsync(new IdentityRole("User"));
+                }
+
+                // نقش Admin
+                var roleExistAdmin = await roleManager.RoleExistsAsync("Admin");
+                if (!roleExistAdmin)
+                {
+                    await roleManager.CreateAsync(new IdentityRole("Admin"));
+                    await userManager.AddToRoleAsync(user, "Admin");
+                }
+                else
+                {
+                    await userManager.AddToRoleAsync(user, "User");
+                }
+
+                await signInManager.SignInAsync(user, isPersistent: false);
+                return ServiseResult<string>.Success("ثبت نام انجام شد.");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                return ServiseResult<string>.Failure(error.Description);
+            }
+
+            return ServiseResult<string>.Failure(response.ErrorTitle);
         }
 
         // ═══════════════════════════════════════════════════════════

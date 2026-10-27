@@ -23,7 +23,7 @@ namespace TemplateSite.Controllers.ShopPanel
 
         // ═══════════════════════════════════════════════════════
         // ورود با کد اختصاصی
-        // GET: /ShopPanel/OnlineShop?Code=XYZ
+        // GET: /ShopPanel/OnlineShop?Code=8TZU8F6X
         // ═══════════════════════════════════════════════════════
         [HttpGet("OnlineShop")]
         public async Task<IActionResult> OnlineShop(string Code)
@@ -91,16 +91,7 @@ namespace TemplateSite.Controllers.ShopPanel
         // ═══════════════════════════════════════════════════════════
         private async Task<IActionResult> RedirectToStore(string code)
         {
-            var store = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                $"select * from Store where CodeStore = '{code}'");
-
-            if (store.IsSuccess && store.Data?.Count > 0)
-            {
-                string storeCaption = store.Data[0].StoreCaption?.ToString() ?? "";
-                return await VitrinShop(storeCaption);
-            }
-
-            return RedirectToAction("E505", "Error");
+            return await VitrinShop(code);
         }
 
         // ═══════════════════════════════════════════════════════════

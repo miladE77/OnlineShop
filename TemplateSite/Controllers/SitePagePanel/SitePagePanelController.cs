@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace TemplateSite.Controllers.ShopPanel
 {
-    [Route("ShopPanel/SitePage")]
+    [Route("Page")]
     public class SitePagePanelController : ShopBaseController
     {
         private readonly IServiceQueryDB _serviceQueryDB;
@@ -25,7 +25,7 @@ namespace TemplateSite.Controllers.ShopPanel
         // نمایش صفحه HTML
         // GET: /ShopPanel/SitePage/Show/5
         // ═══════════════════════════════════════════════════════
-        [HttpGet("Show/{id:int}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> Show(int id)
         {
             if (id <= 0)

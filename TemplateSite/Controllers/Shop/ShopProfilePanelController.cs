@@ -100,6 +100,7 @@ namespace TemplateSite.Controllers.ShopPanel
         [ValidateAntiForgeryToken]
         public async Task<ServiseResult<string>> Add(Store StoreNew)
         {
+            
             if (StoreNew.StoreId != 0) return ServiseResult<string>.Failure("این داده قبلا ثبت شده است");
 
             var personelId = await GetCurrentPersonelIdAsync();

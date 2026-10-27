@@ -26,12 +26,12 @@
                         <input type="text" id="qrLastName" placeholder="نام خانوادگی" maxlength="50">
                     </div>
                 </div>
-
+                @*
                 <div class="form-group">
-                    <label>کد ملی <span class="required">*</span></label>
-                    <input type="text" id="qrLationalCode" placeholder="۱۰ رقم" maxlength="10"
-                           pattern="\d{10}" inputmode="numeric">
-                </div>
+                <label>کد ملی <span class="required">*</span></label>
+                <input type="text" id="qrLationalCode" placeholder="۱۰ رقم" maxlength="10"
+                pattern="\d{10}" inputmode="numeric">
+                </div> *@
 
                 <div class="form-group">
                     <label>شماره تماس <span class="required">*</span></label>
@@ -39,6 +39,16 @@
                            pattern="09\d{9}" inputmode="numeric">
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رمز عبور<span class="required">*</span></label>
+                        <input type="password" id="qrPasswordCode" placeholder="6 حداقل" minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>تکرار رمز عبور<span class="required">*</span></label>
+                        <input type="password" id="qrRPasswordCode" placeholder="6 حداقل" minlength="6">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>آدرس <span class="required">*</span></label>
                     <textarea id="qrAddress" placeholder="آدرس محل سکونت" rows="2" maxlength="500"></textarea>
@@ -61,7 +71,7 @@
 
 <link rel="stylesheet" href="~/css/QuickRegisterStyle.css">
 
-   
+
 
 <script>
     (function () {
@@ -120,16 +130,20 @@
                 // ═══ اعتبارسنجی سمت کلاینت ═══
                 const firstName = document.getElementById('qrFirstName').value.trim();
                 const lastName = document.getElementById('qrLastName').value.trim();
-                const lationalCode = document.getElementById('qrLationalCode').value.trim();
+                const Password = document.getElementById('qrPasswordCode').value.trim();
+                const RPassword = document.getElementById('qrRPasswordCode').value.trim();
+                // const lationalCode = document.getElementById('qrLationalCode').value.trim();
                 const phoneNumber = document.getElementById('qrPhoneNumber').value.trim();
                 const address = document.getElementById('qrAddress').value.trim();
 
                 const errors = [];
                 if (firstName.length < 2) errors.push('نام نامعتبر');
                 if (lastName.length < 2) errors.push('نام خانوادگی نامعتبر');
-                if (!/^\d{10}$/.test(lationalCode)) errors.push('کد ملی باید ۱۰ رقم باشد');
+                // if (!/^\d{10}$/.test(lationalCode)) errors.push('کد ملی باید ۱۰ رقم باشد');
                 if (!/^09\d{9}$/.test(phoneNumber)) errors.push('شماره تماس نامعتبر');
                 if (address.length < 5) errors.push('آدرس نامعتبر');
+                if (Password.length < 6) errors.push('رمز عبور نامعتبر');
+                if (RPassword != Password) errors.push('رمز عبورها یکسان نیست');
 
                 if (errors.length > 0) {
                     errorBox.textContent = errors.join(' - ');
@@ -148,8 +162,10 @@
                     const formData = new FormData();
                     formData.append('FirstName', firstName);
                     formData.append('LastName', lastName);
-                    formData.append('LationalCode', lationalCode);
+                    // formData.append('LationalCode', lationalCode);
                     formData.append('PhoneNumber', phoneNumber);
+                    formData.append('Password', Password);
+                    formData.append('ConfirmPassword', RPassword);
                     formData.append('Address', address);
                     formData.append('__RequestVerificationToken', token);
 
@@ -162,7 +178,6 @@
                     const result = await response.json();
 
                     if (result.isSuccess) {
-                        // ✅ موفق — reload کن
                         window.location.reload();
                     } else {
                         errorBox.textContent = result.errorTitle || 'خطا در ثبت‌نام';

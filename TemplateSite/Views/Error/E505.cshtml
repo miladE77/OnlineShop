@@ -1,23 +1,103 @@
-﻿@{
-    ViewBag.Title = "Department Management";
-    Layout = "/Views/Shared/_AccountLayout.cshtml";
+﻿﻿@{
+    Layout = null;
+    ViewBag.Title = "خطا در بارگیری صفحه";
 }
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
-<div class="row">
-    <div class="col s12">
-        <div class="container">
-            <div class="section p-0 m-0 height-100vh section-maintenance">
-                <div class="row">
-                    <!-- Maintenance -->
-                    <div id="maintenance" class="col s12 center-align white">
-                        <img src="/Images/Program/error-connect.png" class="responsive-img maintenance-img" alt="">
-                        <h6 class="mb-2 mt-2">خطا در بارگیری صفحه.<br> لطفا بعداً دوباره بررسی کنید.</h6>
-                        <a class="btn waves-effect waves-light" >بازگشت به خانه</a>
-                    </div>
-                </div>
-            </div>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Tahoma, "Segoe UI", sans-serif;
+            background: #f5f7fa;
+        }
+
+        .error-wrap {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .error-card {
+            max-width: 520px;
+            width: 100%;
+            background: #fff;
+            border-radius: 14px;
+            padding: 2.5rem 1.75rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .error-card img {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 1.25rem;
+            display: block;
+            object-fit: contain;
+        }
+
+        .error-card h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #d32f2f;
+            margin: 0 0 0.75rem;
+            line-height: 1.8;
+        }
+
+        .error-card p {
+            font-size: 1rem;
+            color: #546e7a;
+            line-height: 1.9;
+            margin: 0 0 1.75rem;
+        }
+
+        .error-card .btn-home {
+            display: inline-block;
+            background: #1976d2;
+            color: #fff;
+            padding: 0.7rem 1.8rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: background 0.25s ease, transform 0.15s ease;
+            box-shadow: 0 4px 14px rgba(25, 118, 210, 0.35);
+        }
+
+        .error-card .btn-home:hover {
+            background: #1565c0;
+            transform: translateY(-1px);
+        }
+
+        @@media (max-width: 480px) {
+            .error-card { padding: 1.75rem 1.25rem; }
+            .error-card img { max-width: 150px; }
+            .error-card h1 { font-size: 1.15rem; }
+            .error-card p { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-wrap">
+        <div class="error-card">
+            <img src="/Images/Program/error-connect.png" alt="خطا">
+            <h1>خطا در بارگیری صفحه</h1>
+            <p>لطفاً بعداً دوباره بررسی کنید.</p>
+            <a class="btn-home" href="/ShopPanel/Profile">بازگشت به خانه</a>
         </div>
-        <div class="content-overlay"></div>
     </div>
-</div>
+</body>
+</html>

@@ -76,7 +76,13 @@
 
         if (returnUrl) sessionStorage.setItem('returnUrl', returnUrl);
 
-        if (typeof window.openQuickRegister === 'function') {
+        if (typeof window.openQuick
+
+
+
+
+
+            === 'function') {
             window.openQuickRegister();
         } else {
             const url = returnUrl || window.location.pathname + window.location.search;

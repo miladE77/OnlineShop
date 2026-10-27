@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace TemplateSite.Controllers.Management
+namespace TemplateSite.Controllers.Error
 {
     public class ErrorController : Controller
     {
