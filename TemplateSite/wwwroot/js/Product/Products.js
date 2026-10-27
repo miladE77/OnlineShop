@@ -484,7 +484,7 @@ function addDetail(productId, optionId, caption, status) {
         ProductId: productId,
         Status: status === "true"
     }
-    $.post('/DetailProducts/UpdateData', newDetail, function (response) {
+    $.post('/DetailProducts/AddData', newDetail, function (response) {
         if (response.isSuccess) {
             alert(response.data);
             product.Details.push(newDetail);

@@ -1,4 +1,4 @@
-using Domain.Models;
+﻿using Domain.Models;
 using Domain.ServiseResult;
 using DataLayer.Context;
 using System.Data;
@@ -27,16 +27,26 @@ namespace Application.Services
         {
             try
             {
+
                 if (Data.KindProductId == 0)
                 {
-                    _db.KindProduct.Add(Data);
+                    var ResultCode = await _serviceCodeAccess.CreateCodeAccess(3);
+                    if (ResultCode.IsSuccess)
+                    {
+                        Data.CodeInternalKindProducts = ResultCode.Data;
+                        _db.KindProduct.Add(Data);
+                    }
+                    else
+                    {
+                        return ServiseResult<string>.Failure("خطا در ثبت مجدد امتحان کنید");
+                    }
                 }
                 else
                 {
                     var P_DB = await _db.KindProduct.SingleOrDefaultAsync(p => p.KindProductId == Data.KindProductId);
                     if (P_DB != null)
                     {
-                        _mapper.Map(Data, P_DB);
+                        _mapper.Map(Data, P_DB, ["CodeInternalKindProducts"]);
                     }
                 }
                 await _db.SaveChangesAsync();

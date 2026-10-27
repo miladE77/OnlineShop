@@ -57,11 +57,14 @@ namespace TemplateSite.Controllers.ShopPanel
 
                 // ─── ۱. فروشگاه ───
                 case 1:
-                    return await RedirectToStore(Code);
-
+                  
                 // ─── ۲. صفحه HTML اختصاصی ───
                 case 2:
                     return await RedirectToSitePage(Code);
+
+                // ─── ۱. فروشگاه ───
+                case 3:
+                    return await RedirectToStore(Code);
 
                 // ─── نامشخص ───
                 default:
@@ -135,12 +138,12 @@ namespace TemplateSite.Controllers.ShopPanel
         // POST: /ShopPanel/Products/GetAll
         // ═══════════════════════════════════════════════════════
         [HttpPost("Products/GetAll")]
-        public async Task<ServiseResult<string>> GetVitrinProducts(string shop)
+        public async Task<ServiseResult<string>> GetVitrinProducts(string Code)
         {
-            shop = string.IsNullOrWhiteSpace(shop) ? "" : shop.Replace("'", "''").Trim();
+            Code = string.IsNullOrWhiteSpace(Code) ? "" : Code.Replace("'", "''").Trim();
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(
-                $"Exec dbo.VitrinShop '{shop}'");
+                $"Exec dbo.VitrinShop '{Code}'");
         }
 
 

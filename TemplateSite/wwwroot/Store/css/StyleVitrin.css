@@ -1,307 +1,182 @@
-/* ═══════════════════════════════════════════════════════════
-   VitrinShop v2 — Design System
-   ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   VitrinShop
+   ═══════════════════════════════════════════════════════════════ */
 
-/* ─── Design Tokens ─── */
 :root {
-    --font: 'Vazirmatn', 'IRANSans', system-ui, -apple-system, sans-serif;
-    --bg: #F8FAFC;
-    --bg-elevated: #FFFFFF;
-    --bg-muted: #F1F5F9;
-    --fg: #0F172A;
-    --fg-muted: #64748B;
-    --border: #E2E8F0;
-    --border-strong: #CBD5E1;
-    --gold-1: #F5E6A8;
-    --gold-2: #D4AF37;
-    --gold-3: #B8860B;
-    --gold-soft: #FEF9E7;
-    --gold-grad: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 50%, var(--gold-3) 100%);
-    --success: #10B981;
-    --danger: #EF4444;
-    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .06), 0 1px 3px rgba(15, 23, 42, .04);
-    --shadow-md: 0 4px 12px rgba(15, 23, 42, .08), 0 2px 4px rgba(15, 23, 42, .04);
-    --shadow-lg: 0 16px 40px rgba(15, 23, 42, .12), 0 4px 12px rgba(15, 23, 42, .06);
+    --font: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+    --bg-page: #F5F6F8;
+    --bg-card: #FFFFFF;
+    --text-primary: #1A1A1A;
+    --text-secondary: #8E8E93;
+    --btn-blue: #1A2B88;
+    --discount-red: #D92D20;
+    --star-yellow: #F5B041;
+    --border-color: #EAEAEA;
+    --gold-main: #D4AF37;
     --radius: 16px;
-    --radius-pill: 999px;
-    --container: 1280px;
     --gap: 20px;
-    --media-h: 240px;
-    /* --- Map شده به متغیرهای LayoutStore (اگر وجود دارند) --- */
-    --bg-card: var(--bg-elevated);
-    --bg-body: var(--bg);
-    --text-primary: var(--fg);
-    --text-secondary: var(--fg-muted);
-    --border-light: var(--border);
 }
 
-/* ─── Dark Theme ─── */
-[data-theme="dark"] {
-    --bg: #0B1220;
-    --bg-elevated: #111A2C;
-    --bg-muted: #16213A;
-    --fg: #F1F5F9;
-    --fg-muted: #94A3B8;
-    --border: #1E293B;
-    --border-strong: #334155;
-    --gold-soft: #1E1A0E;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, .5);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, .6);
+.vitrin-head {
+    margin: 15px 0 20px;
+    text-align: center;
 }
 
-/* ─── Base ─── */
-.products-container,
-.main-wrap {
-    max-width: var(--container);
-    margin: 0 auto;
-    padding: 24px 16px 64px;
-}
-
-/* ─── Header ─── */
-.page-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-}
-
-    .page-head h1 {
-        font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+    .vitrin-head h2 {
+        font-size: 1.2rem;
         font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        color: var(--text-primary);
+        margin: 0;
     }
 
-        .page-head h1 i {
-            color: var(--gold-2);
-            font-size: .85em;
-        }
-
-.page-head-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.count {
-    font-size: .8rem;
-    color: var(--fg-muted);
-    background: var(--bg-elevated);
-    padding: 6px 14px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--border);
-    font-weight: 600;
-}
-
-.theme-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: var(--radius-pill);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    display: grid;
-    place-items: center;
-    color: var(--fg);
-    transition: transform .2s, box-shadow .2s;
-}
-
-    .theme-btn:hover {
-        transform: rotate(15deg) scale(1.05);
-        box-shadow: var(--shadow-md);
-    }
-
-/* ═══════════ Grid — همه کارت‌ها یکسان ═══════════ */
+/* ═══════════════════════════════════════════════════════════════
+   گرید اصلی — حالت دسکتاپ (عمودی)
+   ═══════════════════════════════════════════════════════════════ */
 .products-grid {
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
     gap: var(--gap);
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    align-items: stretch;
+    margin-bottom: 32px;
 }
 
-@media (max-width: 1023px) {
-    .products-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-    }
-}
-
-@media (max-width: 400px) {
-    .products-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ═══════════ Product Card ═══════════ */
-.card {
+.product-card {
     position: relative;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
+    background: var(--bg-card);
     border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: transform .3s cubic-bezier(.2, .9, .3, 1.1), box-shadow .3s;
+    border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    height: 100%;
-}
-
-    .card:hover {
-        transform: translateY(-6px);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--border-strong);
-    }
-
-    /* gold border on hover */
-    .card::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1.5px;
-        background: var(--gold-grad);
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        opacity: 0;
-        transition: opacity .3s;
-        pointer-events: none;
-    }
-
-    .card:hover::after {
-        opacity: 1;
-    }
-
-/* ─── Media ─── */
-.card__media {
-    position: relative;
-    height: var(--media-h);
-    background: var(--bg-muted);
     overflow: hidden;
-    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-    .card__media a {
+    /* ✨ افکت طلایی روی کارت */
+    .product-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--gold-main);
+        box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3), 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+/* تصویر (دسکتاپ) */
+.product-gallery {
+    width: 100%;
+    height: 240px; /* ارتفاع کمی بیشتر برای گالری */
+    flex-shrink: 0;
+    position: relative;
+    background: #F9F9F9;
+}
+
+    .product-gallery > a {
         display: block;
         width: 100%;
         height: 100%;
     }
 
-    .card__media img {
+    .product-gallery .slides {
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        transition: transform .6s cubic-bezier(.2, .9, .3, 1.1);
+        position: relative;
     }
 
-.card:hover .card__media img {
-    transform: scale(1.06);
-}
+    .product-gallery .slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+    }
 
-/* ─── Badge ─── */
-.card__badge {
+        .product-gallery .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .product-gallery .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 12px;
+            mix-blend-mode: multiply;
+        }
+
+/* ─── فلش‌های گالری آلبومی (دسکتاپ و موبایل) ─── */
+.gallery-nav {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(15, 23, 42, .75);
-    color: #fff;
-    font-size: .7rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    backdrop-filter: blur(8px);
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    z-index: 10;
+    color: #333;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: background 0.2s;
 }
 
-.card__badge--out {
-    background: rgba(239, 68, 68, .9);
-}
+    .gallery-nav:hover {
+        background: #fff;
+        color: var(--gold-main);
+    }
 
-.card__badge--in {
-    background: rgba(16, 185, 129, .9);
-}
+    .gallery-nav.prev {
+        right: 8px;
+    }
+    /* در RTL فلش قبلی سمت راست است */
+    .gallery-nav.next {
+        left: 8px;
+    }
+/* در RTL فلش بعدی سمت چپ است */
 
-/* ─── Gallery Controls ─── */
-.card__gallery-ctrl {
+/* نقطه‌های پایین عکس */
+.gallery-controls {
     position: absolute;
-    bottom: 10px;
+    bottom: 8px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     gap: 4px;
-    background: rgba(15, 23, 42, .6);
-    padding: 4px 8px;
-    border-radius: var(--radius-pill);
-    backdrop-filter: blur(6px);
-    z-index: 3;
-    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 3px 8px;
+    border-radius: 12px;
+    z-index: 5;
 }
 
-    .card__gallery-ctrl button {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, .2);
-        color: #fff;
-        display: grid;
-        place-items: center;
-        font-size: .65rem;
-        transition: background .2s;
-    }
-
-        .card__gallery-ctrl button:hover {
-            background: rgba(255, 255, 255, .5);
-            color: #0F172A;
-        }
-
-.dots {
-    display: flex;
-    gap: 3px;
-    align-items: center;
-    padding: 0 4px;
-}
-
-.dot {
+.gallery-dots .dot {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, .4);
-    transition: .2s;
+    background: #ccc;
+    transition: 0.2s;
+    cursor: pointer;
 }
 
-    .dot.active {
-        background: var(--gold-2);
-        width: 12px;
+    .gallery-dots .dot.active {
+        background: var(--btn-blue);
+        width: 10px;
         border-radius: 3px;
     }
 
-/* ─── Body ─── */
-.card__body {
-    padding: 14px 14px 16px;
+/* اطلاعات (دسکتاپ) */
+.product-info {
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
     flex: 1;
 }
 
-.card__title {
-    font-size: .95rem;
+.product-title {
+    font-size: 0.95rem;
     font-weight: 700;
+    color: var(--text-primary);
     line-height: 1.4;
-    color: var(--fg);
+    margin-bottom: 8px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -309,139 +184,247 @@
     min-height: 2.8em;
 }
 
-.card__meta {
-    font-size: .7rem;
-    color: var(--fg-muted);
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    min-height: 1.4em;
+.product-code {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-    .card__meta span {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-    }
+.product-detail {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.1em;
+}
 
-/* ─── Price ─── */
-.card__price {
-    font-size: 1.1rem;
-    font-weight: 800;
-    background: var(--gold-grad);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+.product-colors {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 4px;
-    margin-top: auto;
 }
 
-    .card__price small {
-        font-size: .7rem;
-        color: var(--fg-muted);
-        -webkit-text-fill-color: var(--fg-muted);
-        font-weight: 500;
+.product-rating-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.rating-box {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+    .rating-box i {
+        color: var(--star-yellow);
+        font-size: 0.85rem;
     }
 
-/* ─── Actions ─── */
-.card__actions {
+.color-dots {
+    display: flex;
+    gap: 4px;
+}
+
+    .color-dots span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+.product-price-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 4px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-    min-height: 44px;
+    margin-bottom: 12px;
+    margin-top: auto;
+    flex-wrap: wrap;
 }
 
-.btn-cart {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: var(--gold-grad);
-    color: #1E2A3A;
-    font-weight: 700;
-    font-size: .8rem;
-    padding: 8px 14px;
-    border-radius: var(--radius-pill);
-    border: none;
-    cursor: pointer;
-    transition: transform .2s, box-shadow .2s, filter .2s;
-    box-shadow: 0 2px 8px rgba(212, 175, 55, .3);
-    font-family: inherit;
+.price-current {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
-    .btn-cart:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(212, 175, 55, .45);
+    .price-current small {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-secondary);
     }
 
-    .btn-cart:disabled {
-        background: var(--bg-muted);
-        color: var(--fg-muted);
+.discount-badge {
+    background: var(--discount-red);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.price-old {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-decoration: line-through;
+}
+
+.product-meta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+/* ═══════════ دکمه افزودن ═══════════ */
+.add-to-cart-btn {
+    background: var(--btn-blue);
+    color: #fff;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(26, 43, 136, 0.25);
+}
+
+    .add-to-cart-btn:hover:not(:disabled) {
+        border-color: var(--gold-main);
+        box-shadow: 0 6px 15px rgba(212, 175, 55, 0.5), 0 4px 10px rgba(26, 43, 136, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .add-to-cart-btn.added {
+        background: #10B981;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .add-to-cart-btn:disabled {
+        background: #E5E7EB;
+        color: #9CA3AF;
         box-shadow: none;
         cursor: not-allowed;
-        opacity: .7;
     }
 
-    .btn-cart.added {
-        background: linear-gradient(135deg, #6EE7B7, #10B981);
-        color: #fff;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, .3);
-    }
-
-.stock-pill {
-    font-size: .7rem;
-    color: var(--fg-muted);
-    display: inline-flex;
+.product-stock {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    display: flex;
     align-items: center;
-    gap: 3px;
-    white-space: nowrap;
+    gap: 4px;
 }
 
-    .stock-pill.in {
-        color: var(--success);
+    .product-stock .out-stock {
+        color: var(--discount-red);
     }
 
-    .stock-pill.out {
-        color: var(--danger);
-    }
-
-/* ═══════════ A11y ═══════════ */
-:focus-visible {
-    outline: 2px solid var(--gold-2);
-    outline-offset: 2px;
-    border-radius: 6px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: .01ms !important;
-        transition-duration: .01ms !important;
-    }
-}
-
-/* ═══════════ Empty State ═══════════ */
 .no-products {
     grid-column: 1 / -1;
     text-align: center;
-    padding: 60px 20px;
-    color: var(--fg-muted);
+    padding: 40px 20px;
+    color: var(--text-secondary);
 }
 
-    .no-products i {
-        font-size: 3rem;
-        color: var(--border-strong);
-        margin-bottom: 12px;
-        display: block;
+
+/* ═══════════════════════════════════════════════════════════════
+   📱 حالت موبایل (حداکثر ۷۶۸ پیکسل): افقی و ردیفی
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    .products-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
 
-    .no-products h3 {
-        font-size: 1.1rem;
-        color: var(--fg);
-        margin-bottom: 6px;
+    .product-card {
+        flex-direction: row;
+        padding: 10px;
+        gap: 10px;
+        align-items: stretch;
+        border-radius: 12px;
     }
+
+    .product-gallery {
+        width: 38%; /* کمی پهن‌تر برای دیده شدن فلش‌ها */
+        height: auto;
+        min-height: 120px;
+        order: 1;
+        border-radius: 10px;
+    }
+
+        .product-gallery .slide img {
+            padding: 4px;
+        }
+
+    .product-info {
+        flex: 1;
+        order: 2;
+        padding: 0;
+        justify-content: flex-start;
+    }
+
+    .product-title {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+        min-height: auto;
+    }
+
+    .product-code, .product-detail, .product-colors {
+        display: none;
+    }
+
+    .product-rating-row {
+        margin-bottom: 8px;
+        margin-top: 4px;
+    }
+
+    .product-price-row {
+        margin-bottom: 8px;
+    }
+
+    .product-meta {
+        margin-top: auto;
+    }
+
+    .add-to-cart-btn {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+
+    .product-stock {
+        font-size: 0.65rem;
+    }
+
+    /* تغییر اندازه فلش‌ها در موبایل */
+    .gallery-nav {
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
+    }
+
+        .gallery-nav.prev {
+            right: 4px;
+        }
+
+        .gallery-nav.next {
+            left: 4px;
+        }
+}

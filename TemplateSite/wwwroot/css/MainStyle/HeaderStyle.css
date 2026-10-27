@@ -120,3 +120,16 @@ body.dark .main-header {
 }
 
 
+@media (max-width: 650px) {
+    .header-container {
+        justify-content: center;
+    }
+
+}
+@media (max-width: 316px) {
+
+    .logo-area .logo-Star {
+        display: none
+    }
+
+}
