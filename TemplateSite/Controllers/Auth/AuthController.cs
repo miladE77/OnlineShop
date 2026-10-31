@@ -6,7 +6,9 @@ using Domain.ServiseResult;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
+using System.Data;
 
 namespace TemplateSite.Controllers.Auth
 {
@@ -40,6 +42,7 @@ namespace TemplateSite.Controllers.Auth
         // پاسخ: { isAuthenticated, personelId, fullName, isAdmin, hasStore, storeCount, redirectTo }
         // ═══════════════════════════════════════════════════════
         [HttpPost("Status")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> Status()
         {
             if (!_signInManager.IsSignedIn(User))
@@ -108,6 +111,7 @@ namespace TemplateSite.Controllers.Auth
         // پاسخ: { hasAccess, message }
         // ═══════════════════════════════════════════════════════
         [HttpPost("CheckAccess")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> CheckAccess(string pageName, string accessType = "V")
         {
             if (string.IsNullOrWhiteSpace(pageName))
@@ -156,6 +160,7 @@ namespace TemplateSite.Controllers.Auth
         // Body: { items: [{pageName, accessType}, ...] }
         // ═══════════════════════════════════════════════════════
         [HttpPost("CheckAccessBatch")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> CheckAccessBatch([FromBody] List<AccessCheckItem> items)
         {
             if (items == null || items.Count == 0)
@@ -200,6 +205,7 @@ namespace TemplateSite.Controllers.Auth
         // POST: /Auth/GetStoreById
         // ═══════════════════════════════════════════════════════
         [HttpPost("GetStoreById")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> GetStoreById()
         {
             if (!_signInManager.IsSignedIn(User))
@@ -217,6 +223,7 @@ namespace TemplateSite.Controllers.Auth
         // POST: /Auth/GetMyStoreIds
         // ═══════════════════════════════════════════════════════
         [HttpPost("GetMyStoreIds")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> GetMyStoreIds()
         {
             if (!_signInManager.IsSignedIn(User))
@@ -234,6 +241,7 @@ namespace TemplateSite.Controllers.Auth
         // POST: /Auth/HasStore
         // ═══════════════════════════════════════════════════════
         [HttpPost("HasStore")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> HasStore()
         {
             if (!_signInManager.IsSignedIn(User))
@@ -251,6 +259,7 @@ namespace TemplateSite.Controllers.Auth
         // POST: /Auth/GetMyStoreById
         // ═══════════════════════════════════════════════════════
         [HttpPost("GetMyStoreById")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> GetMyStoreById([FromForm] int id)
         {
             if (!_signInManager.IsSignedIn(User))
@@ -285,6 +294,7 @@ namespace TemplateSite.Controllers.Auth
         // GET: /Auth/StoreInformation
         // ═══════════════════════════════════════════════════════
         [HttpGet("StoreInformation")]
+        [IgnoreAntiforgeryToken]
         [AllowAnonymous]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<ServiseResult<string>> StoreInformation([FromQuery] string code = null)
@@ -314,7 +324,7 @@ namespace TemplateSite.Controllers.Auth
             {
                 // ─── اجرای SP ───
                 var Result = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                    $"Exec dbo.StoreInformation '{code}'");
+                    $"Exec dbo.StoreInformation @Code and Status = 1", new SqlParameter($"@Code", SqlDbType.NVarChar) { Value = code });
 
                 if (Result == null)
                     return ServiseResult<string>.Success(defaultJson);

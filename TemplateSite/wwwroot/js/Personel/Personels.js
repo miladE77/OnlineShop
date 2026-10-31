@@ -1,34 +1,60 @@
+// ═══ Personels.js ═══
+
 let PersonelList = [];
 let editingPersonel = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 GetRoleData(); function GetRoleData() {
-    $.post('/Roles/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.RoleId}\">${item.RoleCaption}</option>`;
-            });
-            document.getElementById("Role").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/Roles/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.RoleId}\">${item.RoleCaption}</option>`;
+                });
+                document.getElementById("Role").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function saveToStorage() {
-    $.post('/Personels/GetAllData', function (response) {
-        if (response.isSuccess) {
-            PersonelList = JSON.parse(response.data);
-            localStorage.setItem("Personels", JSON.stringify(PersonelList));
-            renderTable();
-            nextId = Math.max(...PersonelList.map(i => i.PersonelId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/Personels/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                PersonelList = JSON.parse(response.data);
+                localStorage.setItem("Personels", JSON.stringify(PersonelList));
+                renderTable();
+                nextId = Math.max(...PersonelList.map(i => i.PersonelId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("Personels");
@@ -49,14 +75,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchPersonel").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...PersonelList];
-    if (searchTerm) filtered = filtered.filter(p =>p.FirstName.toLowerCase().includes(searchTerm) || p.LastName.toLowerCase().includes(searchTerm) || p.Lational_code.toLowerCase().includes(searchTerm) || p.Address.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.FirstName.toLowerCase().includes(searchTerm) || p.LastName.toLowerCase().includes(searchTerm) || p.Lational_code.toLowerCase().includes(searchTerm) || p.Address.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("PersonelTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -79,27 +105,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deletePersonel(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deletePersonel(PersonelId) {
-    $.post('/Personels/DeleteData', { 'id': PersonelId }, function (response) {
-        if (response.isSuccess) {
-            PersonelList = PersonelList.filter(data => data.PersonelId !== PersonelId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Personels/DeleteData', { 'id': PersonelId })
+        .then(response => {
+            if (response.isSuccess) {
+                PersonelList = PersonelList.filter(data => data.PersonelId !== PersonelId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("PersonelModal");
 const modalTitle = document.getElementById("modalTitle");
-const empPersonelId = document.getElementById("PersonelId");const empFirstName = document.getElementById("FirstName");const empLastName = document.getElementById("LastName");const empDate_of_birth = document.getElementById("Date_of_birth");const empLational_code = document.getElementById("Lational_code");const empAddress = document.getElementById("Address");const empDetail = document.getElementById("Detail");const empStatus = document.getElementById("Status");const empRoleId = document.getElementById("Role");
+const empPersonelId = document.getElementById("PersonelId"); const empFirstName = document.getElementById("FirstName"); const empLastName = document.getElementById("LastName"); const empDate_of_birth = document.getElementById("Date_of_birth"); const empLational_code = document.getElementById("Lational_code"); const empAddress = document.getElementById("Address"); const empDetail = document.getElementById("Detail"); const empStatus = document.getElementById("Status"); const empRoleId = document.getElementById("Role");
 
 function openAddModal() {
     editingPersonel = false;
@@ -110,16 +140,16 @@ function openEditModal(PersonelId) {
     const data = PersonelList.find(data => data.PersonelId === PersonelId);
     if (data) {
         editingPersonel = true;
-        
-	 empPersonelId.value = data.PersonelId;
-	 empFirstName.value = data.FirstName;
-	 empLastName.value = data.LastName;
-	 empDate_of_birth.value = data.Date_of_birth;
-	 empLational_code.value = data.Lational_code;
-	 empAddress.value = data.Address;
-	 empDetail.value = data.Detail;
-	 empStatus.checked = Boolean(data.Status);
-	 empRoleId.value = data.RoleId;
+
+        empPersonelId.value = data.PersonelId;
+        empFirstName.value = data.FirstName;
+        empLastName.value = data.LastName;
+        empDate_of_birth.value = data.Date_of_birth;
+        empLational_code.value = data.Lational_code;
+        empAddress.value = data.Address;
+        empDetail.value = data.Detail;
+        empStatus.checked = Boolean(data.Status);
+        empRoleId.value = data.RoleId;
         modalTitle.innerText = "ویرایش رکورد";
         openModal("PersonelModal");
     }
@@ -129,63 +159,71 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const PersonelId = empPersonelId.value.trim();
-	 const FirstName = empFirstName.value.trim();
-	 const LastName = empLastName.value.trim();
-	 const Date_of_birth = empDate_of_birth.value.trim();
-	 const Lational_code = empLational_code.value.trim();
-	 const Address = empAddress.value.trim();
-	 const Detail = empDetail.value.trim();
-	 const Status = empStatus.checked;
-	 const RoleId = empRoleId.value.trim();
-    if (!FirstName || !LastName || !Date_of_birth || !Lational_code || !Address || !Detail ) {
+
+    const PersonelId = empPersonelId.value.trim();
+    const FirstName = empFirstName.value.trim();
+    const LastName = empLastName.value.trim();
+    const Date_of_birth = empDate_of_birth.value.trim();
+    const Lational_code = empLational_code.value.trim();
+    const Address = empAddress.value.trim();
+    const Detail = empDetail.value.trim();
+    const Status = empStatus.checked;
+    const RoleId = empRoleId.value.trim();
+    if (!FirstName || !LastName || !Date_of_birth || !Lational_code || !Address || !Detail) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingPersonel) { updatePersonel(PersonelId,FirstName,LastName,Date_of_birth,Lational_code,Address,Detail,Status,RoleId); } else { addPersonel(PersonelId,FirstName,LastName,Date_of_birth,Lational_code,Address,Detail,Status,RoleId); }
+    if (editingPersonel) { updatePersonel(PersonelId, FirstName, LastName, Date_of_birth, Lational_code, Address, Detail, Status, RoleId); } else { addPersonel(PersonelId, FirstName, LastName, Date_of_birth, Lational_code, Address, Detail, Status, RoleId); }
     closeModal("PersonelModal");
 }
-function addPersonel(PersonelId,FirstName,LastName,Date_of_birth,Lational_code,Address,Detail,Status,RoleId) {
+function addPersonel(PersonelId, FirstName, LastName, Date_of_birth, Lational_code, Address, Detail, Status, RoleId) {
     const newPersonel = {
-        PersonelId,FirstName,LastName,Date_of_birth,Lational_code,Address,Detail,Status,RoleId
+        PersonelId, FirstName, LastName, Date_of_birth, Lational_code, Address, Detail, Status, RoleId
     };
     newPersonel.PersonelId = 0;
     SendData(newPersonel, true);
 }
-function updatePersonel(PersonelId,FirstName,LastName,Date_of_birth,Lational_code,Address,Detail,Status,RoleId) {
+function updatePersonel(PersonelId, FirstName, LastName, Date_of_birth, Lational_code, Address, Detail, Status, RoleId) {
     const idx = PersonelList.findIndex(data => data.PersonelId == PersonelId);
     if (idx !== -1) {
-        PersonelList[idx] = { PersonelId,FirstName,LastName,Date_of_birth,Lational_code,Address,Detail,Status,RoleId };
+        PersonelList[idx] = { PersonelId, FirstName, LastName, Date_of_birth, Lational_code, Address, Detail, Status, RoleId };
         SendData(PersonelList[idx], false);
     }
 }
 function SendData(newPersonel, typeRequst) {
-    $.post('/Personels/UpdateData', newPersonel, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                PersonelList.push(newPersonel);
+    const url = typeRequst
+        ? '/Personels/AddData'
+        : '/Personels/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newPersonel)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    PersonelList.push(newPersonel);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empPersonelId.value = "";
- empFirstName.value = "";
- empLastName.value = "";
- empDate_of_birth.value = "";
- empLational_code.value = "";
- empAddress.value = "";
- empDetail.value = "";
- empStatus.checked = false;
- empRoleId.value = "";
+
+    empPersonelId.value = "";
+    empFirstName.value = "";
+    empLastName.value = "";
+    empDate_of_birth.value = "";
+    empLational_code.value = "";
+    empAddress.value = "";
+    empDetail.value = "";
+    empStatus.checked = false;
+    empRoleId.value = "";
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -200,9 +238,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("PersonelModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

@@ -1,26 +1,31 @@
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "مدیریت دسترسی سیستم";
     Layout = "~/Views/Shared/_LayoutMain.cshtml";
 }
 
 @section heads
 {
     <title>مدیریت دسترسی سیستم</title>
+    <link rel="stylesheet" href="/css/PeoductStyle.css">
+    <link rel="stylesheet" href="/css/LevelAccessStyle.css">
 }
+
 @section scripts {
     <script src="/js/LevelAccess/LevelAccesss.js"></script>
 }
+
 @section html
 {
     lang="fa" dir="rtl"
 }
 
-<!-- مودال افزودن/ویرایش  دسترسی سیستم -->
 <div class="main-content" id="mainContent">
     <div class="container">
         <div class="page-header">
-            <h2><i class="fas fa-users"></i> مدیریت دسترسی سیستم</h2>
-            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن دسترسی سیستم جدید</button>
+            <h2><i class="fas fa-user-shield"></i> مدیریت دسترسی سیستم</h2>
+            <button class="btn-add" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> افزودن دسترسی جدید
+            </button>
         </div>
 
         <div class="stats-cards" id="statsCards"></div>
@@ -28,7 +33,7 @@
         <div class="search-filter-bar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchLevelAccess" placeholder="جستجو بر اساس ایتم ها...">
+                <input type="text" id="searchLevelAccess" placeholder="جستجو بر اساس عنوان، نوع عملیات...">
             </div>
             <select id="statusFilter" class="filter-select">
                 <option value="all">همه وضعیت‌ها</option>
@@ -38,13 +43,14 @@
         </div>
 
         <div class="table-wrapper">
-            <table id="personelTable">
+            <table id="levelAccessTable">
                 <thead>
                     <tr>
                         <th>شناسه</th>
-	 <th>عنوان دسترسی</th>
-	 <th>نوع عملیات</th>
-	 <th>وضعیت</th>
+                        <th>عنوان دسترسی</th>
+                        <th>نوع عملیات</th>
+                        <th>صفحات مرتبط</th>
+                        <th>وضعیت</th>
                         <th>عملیات</th>
                     </tr>
                 </thead>
@@ -54,61 +60,101 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════
+     Modal افزودن/ویرایش
+     ═══════════════════════════════════════════════════════ -->
 <div id="LevelAccessModal" class="modal-overlay">
     <div class="modal modelInput">
-        <h3 id="modalTitle">افزودن دسترسی سیستم جدید</h3>
-        
- <input type="number" id="LevelAccessId" placeholder="شناسه">
- <input type="text" id="LevelAccessCaption" placeholder="عنوان دسترسی">
- <input type="text" id="CodeAccess" placeholder="نوع عملیات">
-<div style="display:flex;">
- <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
-  margin-top: 5px;">
+        <h3 id="modalTitle">افزودن دسترسی جدید</h3>
+
+        <input type="hidden" id="LevelAccessId" value="0" />
+
+        <input type="text" id="LevelAccessCaption" placeholder="عنوان دسترسی *" maxlength="100" />
+
+        <!-- ═══════════════════════════════════════════════════════
+             نوع عملیات — چک‌باکس‌های V/A/U/D/F + رزرو
+             ═══════════════════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════════
+     نوع عملیات — چک‌باکس‌های V/A/U/D/F + رزرو
+     ═══════════════════════════════════════════════════════ -->
+<div style="margin-bottom:16px;">
+    <label style="display:block; margin-bottom:10px; font-weight:600;">نوع عملیات *</label>
+
+    <div class="code-access-grid">
+        <label class="code-check-item">
+            <input type="checkbox" class="code-access-checkbox" value="V" />
+            <span class="code-check-box"><i class="fas fa-check"></i></span>
+            <span class="code-check-letter">V</span>
+            <span class="code-check-text">مشاهده</span>
+        </label>
+
+        <label class="code-check-item">
+            <input type="checkbox" class="code-access-checkbox" value="A" />
+            <span class="code-check-box"><i class="fas fa-check"></i></span>
+            <span class="code-check-letter">A</span>
+            <span class="code-check-text">افزودن</span>
+        </label>
+
+        <label class="code-check-item">
+            <input type="checkbox" class="code-access-checkbox" value="U" />
+            <span class="code-check-box"><i class="fas fa-check"></i></span>
+            <span class="code-check-letter">U</span>
+            <span class="code-check-text">ویرایش</span>
+        </label>
+
+        <label class="code-check-item">
+            <input type="checkbox" class="code-access-checkbox" value="D" />
+            <span class="code-check-box"><i class="fas fa-check"></i></span>
+            <span class="code-check-letter">D</span>
+            <span class="code-check-text">حذف</span>
+        </label>
+
+        <label class="code-check-item">
+            <input type="checkbox" class="code-access-checkbox" value="F" />
+            <span class="code-check-box"><i class="fas fa-check"></i></span>
+            <span class="code-check-letter">F</span>
+            <span class="code-check-text">فیلتر</span>
+        </label>
+
+        <label class="code-check-item reserve-item">
+            <input type="checkbox" id="codeAccessReserve" />
+            <span class="code-check-box"><i class="fas fa-check"></i></span>
+            <span class="code-check-letter"><i class="fas fa-edit"></i></span>
+            <span class="code-check-text">رزرو <small>دلخواه</small></span>
+        </label>
+    </div>
+
+    <!-- ═══ فیلد رزرو ═══ -->
+    <div id="reserveInputWrapper" style="display:none;">
+        <label>کاراکترهای دلخواه (فقط حروف انگلیسی)</label>
+        <input type="text" id="CodeAccessReserveInput"
+               placeholder="XZY"
+               maxlength="10" />
+    </div>
+
+    <!-- ═══ پیش‌نمایش ═══ -->
+    <div class="code-access-preview">
+        <span class="code-access-preview-label">مقدار نهایی:</span>
+        <code class="code-access-preview-value" id="codeAccessPreview">—</code>
+    </div>
 </div>
+        <div style="margin-bottom:16px;">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">صفحات مرتبط</label>
+            <div id="pagesList" style="max-height:200px; overflow-y:auto; background:var(--bg-body); padding:10px; border-radius:12px; border:1px solid var(--border-light);">
+                <div style="text-align:center; color:var(--text-secondary); padding:10px;">
+                    <i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; align-items:center; margin-bottom:16px;">
+            <label style="margin:0 8px 0 0;">وضعیت</label>
+            <input type="checkbox" id="Status" style="width:20px; height:20px;" />
+        </div>
+
         <div class="modal-buttons">
             <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
             <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
         </div>
     </div>
 </div>
-
-
-<div id="LevelAccessPageModal" class="modal-overlay">
-    <div class="modal modelTable">
-        <div class="modelRelative">
-            <div style="align-content: center;">
-                <h3 id="modalLevelAccessPageTitle">صفحه سایت مرتبط</h3>
-            </div><div>
-                <button onclick="openModal('AddLevelAccessPageModal')" class="btn-add">
-                    افزودن
-                </button>
-            </div>
-        </div>
-        <div class="table-wrapper">
-            <table id="LevelAccessPageTable">
-                <thead>
-                    <tr>
-                        <th>عنوان صفحه سایت</th>
-                        <th>عملیات</th>
-                    </tr>
-                </thead>
-                <tbody id="LevelAccessPageTableBody">
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-<div id="AddLevelAccessPageModal" class="modal-overlay">
-    <div class="modal modelInput">
-        <h3 id="modalTitle">افزودن صفحه سایت مرتبط جدید</h3>
-        <select id="LevelAccessPageId" class="filter-select">
-        </select>
-        <div class="modal-buttons">
-            <button class="btn-save" onclick="saveLevelAccessPage()">ذخیره</button>
-            <button class="btn-cancel" onclick="closeModal('AddLevelAccessPageModal')">انصراف</button>
-        </div>
-    </div>
-</div>
-
-
-

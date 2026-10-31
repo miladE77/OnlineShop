@@ -149,16 +149,34 @@
         },
 
         setActiveByUrl() {
-            const currentPage = (window.location.pathname
-                .split('/')
-                .filter(Boolean)[0] || '').toLowerCase();
+            const path = window.location.pathname.toLowerCase();
+            const segments = path.split('/').filter(Boolean);
+
+            // ═══ آخرین بخش مسیر = action (مثل "stores" یا "products") ═══
+            const action = (segments[segments.length - 1] || '').toLowerCase();
+
+            // ═══ بخش قبل از action = controller (مثل "store" یا "product") ═══
+            const controller = (segments[segments.length - 2] || '').toLowerCase();
 
             document.querySelectorAll('[data-page]').forEach(item => {
                 const page = (item.dataset.page || '').toLowerCase();
-                item.classList.toggle('active', page === currentPage);
+                if (!page) return;
+
+                // ═══ ⭐ تطبیق دقیق: action یا controller ═══
+                // - action دقیقاً برابر page (مثل "stores" == "stores")
+                // - یا controller دقیقاً برابر page (مثل "store" == "store")
+                const isActive =
+                    action === page ||
+                    controller === page;
+
+                item.classList.toggle('active', isActive);
+
+                if (isActive) {
+                    const group = item.closest('.nav-group');
+                    if (group) group.classList.add('open');
+                }
             });
         },
-
         autoOpenActiveGroup() {
             const active = document.querySelector('.nav-item.active');
             const group = active?.closest('.nav-group');

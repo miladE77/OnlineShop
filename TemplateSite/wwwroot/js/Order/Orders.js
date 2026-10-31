@@ -1,3 +1,5 @@
+// ═══ Orders.js ═══
+
 /* ============================================================
    Orders.js — مدیریت سفارشات
    ------------------------------------------------------------
@@ -10,33 +12,58 @@ let ProductList = [];
 let AllColorPriceProducts = [];     // همه‌ی رنگ‌ها
 let editingOrder = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
+
 // ============================================================
 // دریافت محصولات + همه‌ی رنگ‌ها
 // ============================================================
 function GetInitialData() {
     // محصولات
-    $.post('/Products/GetAllData', function (response) {
-        if (response.isSuccess) {
-            ProductList = JSON.parse(response.data);
 
-            let options = '<option value="">انتخاب محصول</option>';
-            ProductList.forEach(function (item) {
-                options += `<option value="${item.ProductId}">${item.ProductCaption || 'بدون عنوان'}</option>`;
-            });
-            document.getElementById("Product").innerHTML = options;
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Products/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                ProductList = JSON.parse(response.data);
+
+                let options = '<option value="">انتخاب محصول</option>';
+                ProductList.forEach(function (item) {
+                    options += `<option value="${item.ProductId}">${item.ProductCaption || 'بدون عنوان'}</option>`;
+                });
+                document.getElementById("Product").innerHTML = options;
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 
     // همه‌ی رنگ‌بندی‌ها
-    $.post('/ColorPriceProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            AllColorPriceProducts = JSON.parse(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/ColorPriceProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                AllColorPriceProducts = JSON.parse(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 GetInitialData();
@@ -67,18 +94,22 @@ function loadColorsByProduct(productId) {
 // localStorage
 // ============================================================
 function saveToStorage() {
-    $.post('/Orders/GetAllData', function (response) {
-        if (response.isSuccess) {
-            OrderList = JSON.parse(response.data);
-            localStorage.setItem("Orders", JSON.stringify(OrderList));
-            renderTable();
-            if (OrderList.length > 0) {
-                nextId = Math.max(...OrderList.map(i => i.OrderId));
+    showLoading();
+    Http.postSecure('/Orders/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                OrderList = JSON.parse(response.data);
+                localStorage.setItem("Orders", JSON.stringify(OrderList));
+                renderTable();
+                if (OrderList.length > 0) {
+                    nextId = Math.max(...OrderList.map(i => i.OrderId));
+                }
+            } else {
+                alert(response.errorTitle);
             }
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 function loadFromStorage() {
@@ -177,16 +208,20 @@ function renderTable() {
 // حذف
 // ============================================================
 function deleteOrder(orderId) {
-    $.post('/Orders/DeleteData', { 'id': orderId }, function (response) {
-        if (response.isSuccess) {
-            OrderList = OrderList.filter(d => d.OrderId !== orderId);
-            localStorage.setItem("Orders", JSON.stringify(OrderList));
-            renderTable();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Orders/DeleteData', { 'id': orderId })
+        .then(response => {
+            if (response.isSuccess) {
+                OrderList = OrderList.filter(d => d.OrderId !== orderId);
+                localStorage.setItem("Orders", JSON.stringify(OrderList));
+                renderTable();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -314,16 +349,22 @@ function updateOrder(OrderId, OrderCaption, ColorPriceProductId, NumberProduct, 
 }
 
 function SendData(order, isAdd) {
-    $.post('/Orders/UpdateData', order, function (response) {
-        if (response.isSuccess) {
-            saveToStorage();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    }).fail(function () {
-        alert("خطا در ارتباط با سرور");
-    });
+    const url = isAdd
+        ? '/Orders/AddData'
+        : '/Orders/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, order)
+        .then(response => {
+            if (response.isSuccess) {
+                saveToStorage();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================

@@ -14,37 +14,37 @@ using TemplateSite.Filters;
 
 namespace TemplateSite.Controllers.Management
 {
-    public class StoreRoleOrderController : Controller
+    public class LevelAccessRoleOrderController : Controller
     {
         private IServiceQueryDB _serviceQueryDB;
-        private const string PageName = "StoreRole";
-        public StoreRoleOrderController(IServiceQueryDB serviceQueryDB)
+        private const string PageName = "LevelAccessRole";
+        public LevelAccessRoleOrderController(IServiceQueryDB serviceQueryDB)
         {
             _serviceQueryDB = serviceQueryDB;
         }
 
         [HttpPost]
-        [Route("StoreRoleOrder/GetData")]
+        [Route("LevelAccessRole/GetData")]
         [CheckAccessData(PageName, "V")]
-        public async Task<ServiseResult<string>> GetAll_StoreRoleOrder(int id)
+        public async Task<ServiseResult<string>> GetAll_LevelAccessRoleOrder(int id)
         {
-            string Query = "select * from StoreRole_Order where OrderId =" + id;
+            string Query = "select * from LevelAccess_Role where RoleId = " + id;
             return await _serviceQueryDB.GetsJsonDataViewByQuery(Query);
         }
         [HttpPost]
-        [Route("StoreRoleOrder/AddData")]
-        [CheckAccessData(PageName, "V")]
-        public async Task<ServiseResult<string>> Add_NewStoreRoleOrder(int StoreId, int RoleId)
+        [Route("LevelAccessRole/AddData")]
+        [CheckAccessData(PageName, "A")]
+        public async Task<ServiseResult<string>> Add_NewLevelAccessRoleOrder(int LevelAccessId, int RoleId)
         {
-            string Query = $"DELETE FROM StoreRole WHERE StoreId = {StoreId} AND RoleId = {RoleId}";
+            string Query = $"Insert FROM LevelAccess_Role WHERE LevelAccessId = {LevelAccessId} AND RoleId = {RoleId}";
             return await _serviceQueryDB.GetsJsonDataViewByQuery(Query);
         }
         [HttpPost]
-        [Route("StoreRoleOrder/DeleteData")]
-        [CheckAccessData(PageName, "V")]
-        public async Task<ServiseResult<string>> Delete_StoreRoleOrder(int StoreId, int RoleId)
+        [Route("LevelAccessRole/DeleteData")]
+        [CheckAccessData(PageName, "D")]
+        public async Task<ServiseResult<string>> Delete_LevelAccessRoleOrder(int LevelAccessId, int RoleId)
         {
-            string Query = $"DELETE FROM StoreRole WHERE StoreId = {StoreId} AND RoleId = {RoleId}";
+            string Query = $"DELETE FROM LevelAccess_Role WHERE LevelAccessId = {LevelAccessId} AND RoleId = {RoleId}";
             return await _serviceQueryDB.GetsJsonDataViewByQuery(Query);
         }
 

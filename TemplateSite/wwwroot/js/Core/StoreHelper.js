@@ -1,4 +1,3 @@
-
 (function (window) {
     'use strict';
 
@@ -12,7 +11,7 @@
         storeId: 0,
         storeCode: '',
         storeCaption: 'فروشگاه',
-        contacts: []   // [{ contactId, contactCaption, typeContactId, typeContactCaption, typeContactArm }]
+        contacts: []
     };
 
     let _storeData = null;
@@ -65,9 +64,7 @@
     }
 
     // ═══════════════════════════════════════════════════════
-    // درخواست به سرور
-    // خروجی سرور: ServiseResult<string> →
-    //   { data: "<JSON string>", errorTitle: null, isSuccess: true }
+    // درخواست به سرور (GET — عمومی)
     // ═══════════════════════════════════════════════════════
     async function fetchFromServer(code) {
         try {
@@ -203,25 +200,18 @@
     }
 
     // ═══════════════════════════════════════════════════════
-    // hideOptionalSections — مخفی کردن بخش‌های خالی در فوتر
-    // ───────────────────────────────────────────────────────
-    // اگر فروشگاه هیچ Contactی ندارد → بلوک «تماس با ما» مخفی شود
-    // اگر فروشگاه پیش‌فرض است (storeId=0) → خبرنامه هم مخفی شود
+    // hideOptionalSections
     // ═══════════════════════════════════════════════════════
     function hideOptionalSections(data) {
         const hasContacts = Array.isArray(data.contacts) && data.contacts.length > 0;
         const isDefault = !data.storeId || Number(data.storeId) <= 0;
 
-        // ─── بلوک «همراه ما باشید / تماس با ما» ───
-        // عنصر والد socialList را پیدا می‌کنیم
         const socialList = document.getElementById('socialList');
         const socialBox = socialList ? socialList.closest('.footer-box') : null;
         if (socialBox) {
             socialBox.style.display = hasContacts ? '' : 'none';
         }
 
-        // ─── بلوک «خبرنامه ایمیلی» ───
-        // جستجو بر اساس input#emailNews
         const emailInput = document.getElementById('emailNews');
         const emailBox = emailInput ? emailInput.closest('.email-box') : null;
         const emailLabel = emailBox
@@ -231,7 +221,6 @@
                 : null)
             : null;
 
-        // اگر فروشگاه پیش‌فرض است → خبرنامه بی‌معنی است، مخفی شود
         if (isDefault) {
             if (emailBox) emailBox.style.display = 'none';
             if (emailLabel) emailLabel.style.display = 'none';
@@ -242,21 +231,21 @@
     }
 
     // ═══════════════════════════════════════════════════════
-    // SendEmail — ارسال ایمیل خبرنامه
+    // SendEmail — ارسال ایمیل خبرنامه (با HttpHelper)
     // ═══════════════════════════════════════════════════════
-    function SendEmail() {
+    async function SendEmail() {
         const emailInput = document.getElementById('emailNews');
         if (!emailInput) return;
 
         const email = emailInput.value.trim();
 
+        // ─── اعتبارسنجی ساده ───
         if (!email) {
             if (window.UICore) UICore.showToast('لطفاً ایمیل خود را وارد کنید', 'warning');
             else alert('لطفاً ایمیل خود را وارد کنید');
             return;
         }
 
-        // اعتبارسنجی ساده ایمیل
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             if (window.UICore) UICore.showToast('ایمیل وارد شده معتبر نیست', 'warning');
@@ -266,23 +255,33 @@
 
         const storeId = window.currentStoreId || 0;
 
-        $.post('/EmailNewss/NewEmail',
-            { email: email, StoreId: storeId },
-            function (response) {
-                if (response && response.isSuccess) {
-                    if (window.UICore) UICore.showToast(response.data || 'ایمیل شما ثبت شد', 'success');
-                    else alert(response.data);
-                    emailInput.value = '';
-                } else {
-                    const msg = (response && response.errorTitle) || 'خطا در ثبت ایمیل';
-                    if (window.UICore) UICore.showToast(msg, 'error');
-                    else alert(msg);
-                }
+        // ─── ارسال به سرور ───
+        try {
+            // NewEmail یک اکشن عمومی است (بدون احراز هویت)
+            const response = await H.post('/EmailNewss/NewEmail', {
+                email: email,
+                StoreId: storeId
+            });
+
+            if (response && response.isSuccess) {
+                if (window.UICore) UICore.showToast(response.data || 'ایمیل شما ثبت شد', 'success');
+                else alert(response.data);
+                emailInput.value = '';
+            } else {
+                const msg = (response && response.errorTitle) || 'خطا در ثبت ایمیل';
+                if (window.UICore) UICore.showToast(msg, 'error');
+                else alert(msg);
             }
-        ).fail(function () {
+        } catch (err) {
+            if (err.message === 'AUTH_REQUIRED') return;
+            if (err.message === 'CSRF_OR_BAD_REQUEST') {
+                if (window.UICore) UICore.showToast('نشست شما منقضی شده. صفحه را رفرش کنید.', 'error');
+                else alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+                return;
+            }
             if (window.UICore) UICore.showToast('خطا در ارتباط با سرور', 'error');
             else alert('خطا در ارتباط با سرور');
-        });
+        }
     }
 
     // ═══════════════════════════════════════════════════════
@@ -304,23 +303,14 @@
     // Export
     // ═══════════════════════════════════════════════════════
     window.StoreHelper = {
-        // بارگذاری
         loadStoreInfo,
         loadByCode,
         reload,
-
-        // DOM و داده
         applyStoreInfo,
         getStoreInfo,
         hideOptionalSections,
-
-        // localStorage
         clearStoredStore,
-
-        // ایمیل
         SendEmail,
-
-        // ابزار
         getCodeFromUrl,
         STORAGE_KEY,
         DEFAULTS

@@ -206,6 +206,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -262,6 +263,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -289,6 +291,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -321,6 +324,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -389,6 +393,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -420,6 +425,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -455,6 +461,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -496,6 +503,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -528,6 +536,7 @@ namespace TemplateSite.Controllers.Management
             ";
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
     }
 }

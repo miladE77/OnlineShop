@@ -1,20 +1,41 @@
+// ═══ CodeAccesss.js ═══
+
 let CodeAccessList = [];
 let editingCodeAccess = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
 
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 function saveToStorage() {
-    $.post('/CodeAccesss/GetAllData', function (response) {
-        if (response.isSuccess) {
-            CodeAccessList = JSON.parse(response.data);
-            localStorage.setItem("CodeAccesss", JSON.stringify(CodeAccessList));
-            renderTable();
-            nextId = Math.max(...CodeAccessList.map(i => i.CodeAccessId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+
+    showLoading();
+    Http.postSecure('/CodeAccesss/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                CodeAccessList = JSON.parse(response.data);
+                localStorage.setItem("CodeAccesss", JSON.stringify(CodeAccessList));
+                renderTable();
+                nextId = Math.max(...CodeAccessList.map(i => i.CodeAccessId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("CodeAccesss");
@@ -35,14 +56,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchCodeAccess").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...CodeAccessList];
-    if (searchTerm) filtered = filtered.filter(p =>p.CodeAccessCaption.toLowerCase().includes(searchTerm) || p.TypeCode.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.CodeAccessCaption.toLowerCase().includes(searchTerm) || p.TypeCode.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("CodeAccessTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -60,27 +81,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteCodeAccess(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deleteCodeAccess(CodeAccessId) {
-    $.post('/CodeAccesss/DeleteData', { 'id': CodeAccessId }, function (response) {
-        if (response.isSuccess) {
-            CodeAccessList = CodeAccessList.filter(data => data.CodeAccessId !== CodeAccessId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/CodeAccesss/DeleteData', { 'id': CodeAccessId })
+        .then(response => {
+            if (response.isSuccess) {
+                CodeAccessList = CodeAccessList.filter(data => data.CodeAccessId !== CodeAccessId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("CodeAccessModal");
 const modalTitle = document.getElementById("modalTitle");
-const empCodeAccessId = document.getElementById("CodeAccessId");const empCodeAccessCaption = document.getElementById("CodeAccessCaption");const empTypeCode = document.getElementById("TypeCode");const empStatus = document.getElementById("Status");
+const empCodeAccessId = document.getElementById("CodeAccessId"); const empCodeAccessCaption = document.getElementById("CodeAccessCaption"); const empTypeCode = document.getElementById("TypeCode"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingCodeAccess = false;
@@ -91,11 +116,11 @@ function openEditModal(CodeAccessId) {
     const data = CodeAccessList.find(data => data.CodeAccessId === CodeAccessId);
     if (data) {
         editingCodeAccess = true;
-        
-	 empCodeAccessId.value = data.CodeAccessId;
-	 empCodeAccessCaption.value = data.CodeAccessCaption;
-	 empTypeCode.value = data.TypeCode;
-	 empStatus.checked = Boolean(data.Status);
+
+        empCodeAccessId.value = data.CodeAccessId;
+        empCodeAccessCaption.value = data.CodeAccessCaption;
+        empTypeCode.value = data.TypeCode;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("CodeAccessModal");
     }
@@ -105,53 +130,61 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const CodeAccessId = empCodeAccessId.value.trim();
-	 const CodeAccessCaption = empCodeAccessCaption.value.trim();
-	 const TypeCode = empTypeCode.value.trim();
-	 const Status = empStatus.checked;
+
+    const CodeAccessId = empCodeAccessId.value.trim();
+    const CodeAccessCaption = empCodeAccessCaption.value.trim();
+    const TypeCode = empTypeCode.value.trim();
+    const Status = empStatus.checked;
     if (!CodeAccessCaption || !TypeCode) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingCodeAccess) { updateCodeAccess(CodeAccessId,CodeAccessCaption,TypeCode,Status); } else { addCodeAccess(CodeAccessId,CodeAccessCaption,TypeCode,Status); }
+    if (editingCodeAccess) { updateCodeAccess(CodeAccessId, CodeAccessCaption, TypeCode, Status); } else { addCodeAccess(CodeAccessId, CodeAccessCaption, TypeCode, Status); }
     closeModal("CodeAccessModal");
 }
-function addCodeAccess(CodeAccessId,CodeAccessCaption,TypeCode,Status) {
+function addCodeAccess(CodeAccessId, CodeAccessCaption, TypeCode, Status) {
     const newCodeAccess = {
-        CodeAccessId,CodeAccessCaption,TypeCode,Status
+        CodeAccessId, CodeAccessCaption, TypeCode, Status
     };
     newCodeAccess.CodeAccessId = 0;
     SendData(newCodeAccess, true);
 }
-function updateCodeAccess(CodeAccessId,CodeAccessCaption,TypeCode,Status) {
+function updateCodeAccess(CodeAccessId, CodeAccessCaption, TypeCode, Status) {
     const idx = CodeAccessList.findIndex(data => data.CodeAccessId == CodeAccessId);
     if (idx !== -1) {
-        CodeAccessList[idx] = { CodeAccessId,CodeAccessCaption,TypeCode,Status };
+        CodeAccessList[idx] = { CodeAccessId, CodeAccessCaption, TypeCode, Status };
         SendData(CodeAccessList[idx], false);
     }
 }
 function SendData(newCodeAccess, typeRequst) {
-    $.post('/CodeAccesss/UpdateData', newCodeAccess, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                CodeAccessList.push(newCodeAccess);
+    const url = typeRequst
+        ? '/CodeAccesss/AddData'
+        : '/CodeAccesss/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newCodeAccess)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    CodeAccessList.push(newCodeAccess);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empCodeAccessId.value = "";
- empCodeAccessCaption.value = "";
- empTypeCode.value = "";
- empStatus.checked = false;
+
+    empCodeAccessId.value = "";
+    empCodeAccessCaption.value = "";
+    empTypeCode.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -166,9 +199,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("CodeAccessModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

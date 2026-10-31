@@ -6,6 +6,12 @@ namespace Application.Services
 {
     public interface IServiceQueryDB
     {
+        // ═══════════════════════════════════════════════════════
+        // اجرای DML امن (INSERT/UPDATE/DELETE)
+        // ═══════════════════════════════════════════════════════
+        Task<ServiseResult<string>> ExecuteQuerySafe(
+            string query,
+            params SqlParameter[] parameters);
         // ═══════════════════════════════════════════════════
         // Dictionary — گروه‌بندی بر اساس یک ستون
         // ═══════════════════════════════════════════════════
@@ -79,5 +85,6 @@ namespace Application.Services
         Task<ServiseResult<List<dynamic>>> GetsDynamicDataViewByQuery(
             string query,
             params SqlParameter[] parameters);
+
     }
 }

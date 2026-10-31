@@ -14,15 +14,11 @@
     @RenderSection("heads", required: false)
 </head>
 <body data-signed-in="@(User.Identity?.IsAuthenticated.ToString().ToLower() ?? "false")">
+    @Html.AntiForgeryToken()
     <header class="main-header full-width">
         <div class="header-container">
             <div class="logo-area" id="logoAreaHeader" style="margin-right:60px;display:flex;">
                 <h1>✨AMJ✨</h1>
-                <button class="menu-btn btnColorGradian" id="menuBtn" aria-label="منو">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
             </div>
             <div class="header-actions">
                 <div onclick="toggleDropdownMenuStatus()" class="dropdown icon-btn">
@@ -49,6 +45,11 @@
                 </div>
                 <a href="@Url.Action("VitrinShop","ShopPanel")" id="shopLinkBtn" class="icon-btn"><i class="fas fa-store"></i></a>
                 <div class="icon-btn theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i></div>
+                <button class="menu-btn btnColorGradian" id="menuBtn" aria-label="منو">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
     </header>
@@ -61,7 +62,11 @@
                 <i class="fas fa-tachometer-alt"></i>
                 <h3>داشبورد مدیریتی</h3>
             </div>
-            <i id="toggleNavbarBtn" class="toggle btnColorGradian">...</i>
+            <button id="toggleNavbarBtn" class="toggle btnColorGradian" aria-label="تغییر وضعیت منو">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
 
         <div class="nav-links">
@@ -149,15 +154,8 @@
                 </button>
                 <div class="nav-group-items">
 
-                    <a href="@Url.Action("Pages", "Page")" class="nav-item" data-page="Pages" data-charAuth="V">
-                        <i class="fas fa-file"></i><span>صفحات سایت</span>
-                    </a>
-                    <a href="@Url.Action("EmailNewss", "EmailNews")" class="nav-item" data-page="EmailNewss" data-charAuth="V">
-                        <i class="fas fa-envelope"></i><span>ایمیل اخبار</span>
-                    </a>
-
                     <a href="@Url.Action("SitePages", "SitePage")" class="nav-item" data-page="SitePages" data-charAuth="V">
-                        <i class="fas fa-file-code"></i><span>صفحات HTML</span>
+                        <i class="fas fa-file-code"></i><span>صفحات Portfolio</span>
                     </a>
 
                 </div>
@@ -171,6 +169,11 @@
                     <i class="fas fa-chevron-down arrow"></i>
                 </button>
                 <div class="nav-group-items">
+
+                    <a href="@Url.Action("EmailNewss", "EmailNews")" class="nav-item" data-page="EmailNewss" data-charAuth="V">
+                        <i class="fas fa-envelope"></i><span>ایمیل اخبار</span>
+                    </a>
+
                     <a href="@Url.Action("ContactUss", "ContactUs")" class="nav-item" data-page="ContactUss" data-charAuth="V">
                         <i class="fas fa-envelope-open-text"></i><span>فرم تماس با ما</span>
                     </a>
@@ -194,6 +197,11 @@
                     <i class="fas fa-chevron-down arrow"></i>
                 </button>
                 <div class="nav-group-items">
+
+                    <a href="@Url.Action("Pages", "Page")" class="nav-item" data-page="Pages" data-charAuth="V">
+                        <i class="fas fa-file"></i><span>صفحات سایت</span>
+                    </a>
+
                     <a href="@Url.Action("LevelAccesss", "LevelAccess")" class="nav-item" data-page="LevelAccesss" data-charAuth="V">
                         <i class="fas fa-user-shield"></i><span>دسترسی سیستم</span>
                     </a>

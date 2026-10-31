@@ -1,13 +1,7 @@
-﻿using System;
+﻿using Application.Services;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Domain.ViewModels;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Identity.Client;
-using Azure.Core;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Application.Services;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace TemplateSite.Filters
@@ -36,20 +30,32 @@ namespace TemplateSite.Filters
 
             var user = context.HttpContext.User;
 
+            // ═══ ⭐ چک لاگین با returnUrl ═══
             if (!_signInManager.IsSignedIn(user))
             {
+                var returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
                 context.Result = new RedirectToActionResult(
-                    "Login", "Account", null);
+                    "Login", "Account", new { returnUrl });
                 return;
             }
 
-            if (user.IsInRole("Admin"))
+            // ═══ Admin → عبور ═══
+            if (user.IsInRole("Admin") || user.IsInRole("Administrator"))
             {
                 await next();
                 return;
             }
 
+            // ═══ چک دسترسی ═══
             var appUser = await _userManager.FindByNameAsync(user.Identity.Name);
+            if (appUser == null)
+            {
+                var returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                context.Result = new RedirectToActionResult(
+                    "Login", "Account", new { returnUrl });
+                return;
+            }
+
             bool allowAccess = await checker.CheckAccessToAction(appUser.PersonelId, _pageName, _accessType);
 
             if (allowAccess)

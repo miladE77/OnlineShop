@@ -8,6 +8,8 @@ using Site.Filters;
 using System.Text.Json;
 using TemplateSite.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace TemplateSite.Controllers.ShopPanel
 {
@@ -132,7 +134,7 @@ namespace TemplateSite.Controllers.ShopPanel
         public async Task<ServiseResult<string>> myRecommendation()
         {
             var personelId = await GetCurrentPersonelIdAsync();
-            return await _serviceQueryDB.GetsJsonDataViewByQuery($"select top 5 * from RecommendationsView where PersonelId = {personelId}");
+            return await _serviceQueryDB.GetsJsonDataViewByQuery($"select top 5 * from RecommendationsView where PersonelId = @Code", new SqlParameter($"@Code", SqlDbType.Int) { Value = personelId });
         }
         // ─────────────────────────────────────────────────────
         // دریافت لیست فروشگاه من
@@ -144,7 +146,7 @@ namespace TemplateSite.Controllers.ShopPanel
         public async Task<ServiseResult<string>> myStore()
         {
             var personelId = await GetCurrentPersonelIdAsync();
-            return await _serviceQueryDB.GetsJsonDataViewByQuery($"select * from StoreView where PersonelId = {personelId}");
+            return await _serviceQueryDB.GetsJsonDataViewByQuery($"select * from StoreView where PersonelId = @Code", new SqlParameter($"@Code", SqlDbType.Int) { Value = personelId });
         }
 
         // ─────────────────────────────────────────────────────
@@ -349,7 +351,8 @@ namespace TemplateSite.Controllers.ShopPanel
 
                     // ─── چک موجودی + قیمت ───
                     var colorInfo = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                        $"SELECT PriceProduct, InStore FROM ColorPriceProduct WHERE ColorPriceProductId = {item.ColorPriceProductId}");
+                        $"SELECT PriceProduct, InStore FROM ColorPriceProduct WHERE ColorPriceProductId = @Code",
+                        new SqlParameter($"@Code", SqlDbType.NVarChar) { Value = item.ColorPriceProductId });
 
                     if (!colorInfo.IsSuccess || colorInfo.Data?.Count == 0)
                         return ServiseResult<string>.Failure($"رنگ {item.ColorPriceProductId} یافت نشد");
@@ -611,7 +614,8 @@ namespace TemplateSite.Controllers.ShopPanel
                 foreach (var order in rec.OrderId)
                 {
                     var colorInfo = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                        $"SELECT PriceProduct, Offer FROM ColorPriceProduct WHERE ColorPriceProductId = {order.ColorPriceProductId}");
+                        $"SELECT PriceProduct, Offer FROM ColorPriceProduct WHERE ColorPriceProductId  = @Code",
+                        new SqlParameter($"@Code", SqlDbType.NVarChar) { Value = order.ColorPriceProductId });
 
                     if (colorInfo.IsSuccess && colorInfo.Data?.Count > 0)
                     {

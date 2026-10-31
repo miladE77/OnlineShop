@@ -169,9 +169,9 @@
                 UI.showToast(response.errorTitle || 'خطا در دریافت اطلاعات', 'error');
                 return false;
             }
-
             const data = JSON.parse(response.data);
             State.availableProducts = data.Products || [];
+
 
             // ─── paymentTypes ───
             if (!State.paymentTypes || State.paymentTypes.length === 0) {

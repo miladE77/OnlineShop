@@ -65,9 +65,9 @@ namespace TemplateSite.Controllers.Management
         [CheckAccessData(PageName, "A")]
         public async Task<ServiseResult<string>> Add(SitePage SitePageNew)
         {
-            if(SitePageNew.SitePageId == 0)
+            if (SitePageNew.SitePageId != 0)
             {
-                return ServiseResult<string>.Failure("این رکورد در دیتابیس وجود دارد");
+                return ServiseResult<string>.Failure("این داده قبلا ثبت شده است");
             }
             return await _serviceSitePage.UpdateSitePage(SitePageNew);
         }
@@ -79,7 +79,7 @@ namespace TemplateSite.Controllers.Management
         {
             if (SitePageNew.SitePageId == 0)
             {
-                return ServiseResult<string>.Failure("این رکورد در دیتابیس یافت نشد");
+                return ServiseResult<string>.Failure("این رکورد در دیتابیس برای ویرایش یافت نشد");
             }
             return await _serviceSitePage.UpdateSitePage(SitePageNew);
         }

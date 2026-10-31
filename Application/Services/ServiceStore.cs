@@ -41,7 +41,6 @@ namespace Application.Services
                     {
                         return ServiseResult<string>.Failure("خطا در ثبت مجدد امتحان کنید");
                     }
-                    _db.Store.Add(Data);
                 }
                 else
                 {

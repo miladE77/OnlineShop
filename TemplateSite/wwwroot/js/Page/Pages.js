@@ -1,20 +1,40 @@
+// ═══ Pages.js ═══
+
 let PageList = [];
 let editingPage = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
 
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 function saveToStorage() {
-    $.post('/Pages/GetAllData', function (response) {
-        if (response.isSuccess) {
-            PageList = JSON.parse(response.data);
-            localStorage.setItem("Pages", JSON.stringify(PageList));
-            renderTable();
-            nextId = Math.max(...PageList.map(i => i.PageId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/Pages/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                PageList = JSON.parse(response.data);
+                localStorage.setItem("Pages", JSON.stringify(PageList));
+                renderTable();
+                nextId = Math.max(...PageList.map(i => i.PageId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("Pages");
@@ -35,14 +55,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchPage").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...PageList];
-    if (searchTerm) filtered = filtered.filter(p =>p.PageCaption.toLowerCase().includes(searchTerm) || p.TitlePage.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.PageCaption.toLowerCase().includes(searchTerm) || p.TitlePage.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("PageTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -61,27 +81,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deletePage(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deletePage(PageId) {
-    $.post('/Pages/DeleteData', { 'id': PageId }, function (response) {
-        if (response.isSuccess) {
-            PageList = PageList.filter(data => data.PageId !== PageId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Pages/DeleteData', { 'id': PageId })
+        .then(response => {
+            if (response.isSuccess) {
+                PageList = PageList.filter(data => data.PageId !== PageId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("PageModal");
 const modalTitle = document.getElementById("modalTitle");
-const empPageId = document.getElementById("PageId");const empPageCaption = document.getElementById("PageCaption");const empTitlePage = document.getElementById("TitlePage");const empDetailPage = document.getElementById("DetailPage");const empStatus = document.getElementById("Status");
+const empPageId = document.getElementById("PageId"); const empPageCaption = document.getElementById("PageCaption"); const empTitlePage = document.getElementById("TitlePage"); const empDetailPage = document.getElementById("DetailPage"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingPage = false;
@@ -92,12 +116,12 @@ function openEditModal(PageId) {
     const data = PageList.find(data => data.PageId === PageId);
     if (data) {
         editingPage = true;
-        
-	 empPageId.value = data.PageId;
-	 empPageCaption.value = data.PageCaption;
-	 empTitlePage.value = data.TitlePage;
-	 empDetailPage.value = data.DetailPage;
-	 empStatus.checked = Boolean(data.Status);
+
+        empPageId.value = data.PageId;
+        empPageCaption.value = data.PageCaption;
+        empTitlePage.value = data.TitlePage;
+        empDetailPage.value = data.DetailPage;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("PageModal");
     }
@@ -107,55 +131,63 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const PageId = empPageId.value.trim();
-	 const PageCaption = empPageCaption.value.trim();
-	 const TitlePage = empTitlePage.value.trim();
-	 const DetailPage = empDetailPage.value.trim();
-	 const Status = empStatus.checked;
+
+    const PageId = empPageId.value.trim();
+    const PageCaption = empPageCaption.value.trim();
+    const TitlePage = empTitlePage.value.trim();
+    const DetailPage = empDetailPage.value.trim();
+    const Status = empStatus.checked;
     if (!PageCaption || !TitlePage || !DetailPage) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingPage) { updatePage(PageId,PageCaption,TitlePage,DetailPage,Status); } else { addPage(PageId,PageCaption,TitlePage,DetailPage,Status); }
+    if (editingPage) { updatePage(PageId, PageCaption, TitlePage, DetailPage, Status); } else { addPage(PageId, PageCaption, TitlePage, DetailPage, Status); }
     closeModal("PageModal");
 }
-function addPage(PageId,PageCaption,TitlePage,DetailPage,Status) {
+function addPage(PageId, PageCaption, TitlePage, DetailPage, Status) {
     const newPage = {
-        PageId,PageCaption,TitlePage,DetailPage,Status
+        PageId, PageCaption, TitlePage, DetailPage, Status
     };
     newPage.PageId = 0;
     SendData(newPage, true);
 }
-function updatePage(PageId,PageCaption,TitlePage,DetailPage,Status) {
+function updatePage(PageId, PageCaption, TitlePage, DetailPage, Status) {
     const idx = PageList.findIndex(data => data.PageId == PageId);
     if (idx !== -1) {
-        PageList[idx] = { PageId,PageCaption,TitlePage,DetailPage,Status };
+        PageList[idx] = { PageId, PageCaption, TitlePage, DetailPage, Status };
         SendData(PageList[idx], false);
     }
 }
 function SendData(newPage, typeRequst) {
-    $.post('/Pages/UpdateData', newPage, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                PageList.push(newPage);
+    const url = typeRequst
+        ? '/Pages/AddData'
+        : '/Pages/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newPage)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    PageList.push(newPage);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empPageId.value = "";
- empPageCaption.value = "";
- empTitlePage.value = "";
- empDetailPage.value = "";
- empStatus.checked = false;
+
+    empPageId.value = "";
+    empPageCaption.value = "";
+    empTitlePage.value = "";
+    empDetailPage.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -170,9 +202,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("PageModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

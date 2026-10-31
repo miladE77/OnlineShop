@@ -3,6 +3,8 @@ using Domain.Models;
 using Domain.ServiseResult;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using System.Data;
 using System.Text.Json;
 
 namespace TemplateSite.Controllers.ShopPanel
@@ -33,7 +35,9 @@ namespace TemplateSite.Controllers.ShopPanel
 
             // ─── دریافت SitePage ───
             var data = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                $"select * from SitePage where SitePageId = {id} and Status = 1");
+                $"select * from SitePage where SitePageId = @id and Status = 1", 
+                new SqlParameter($"@id", SqlDbType.Int) { Value = id }
+            );
 
             if (!data.IsSuccess || data.Data == null || data.Data.Count == 0)
                 return RedirectToAction("E505", "Error");
@@ -55,6 +59,7 @@ namespace TemplateSite.Controllers.ShopPanel
         // POST: /ShopPanel/SitePage/GetData
         // ═══════════════════════════════════════════════════════
         [HttpPost("GetData")]
+        [IgnoreAntiforgeryToken]
         public async Task<ServiseResult<string>> GetData(int id)
         {
             if (id <= 0)
@@ -62,7 +67,8 @@ namespace TemplateSite.Controllers.ShopPanel
 
             var data = await _serviceQueryDB.GetsJsonDataViewByQuery(
                 $"select SitePageId, SitePageCaption, SitePageHtml, CodePage " +
-                $"from SitePage where SitePageId = {id} and Status = 1");
+                $"from SitePage where SitePageId = @id and Status = 1",
+                new SqlParameter($"@id", SqlDbType.Int) { Value = id });
 
             return data;
         }

@@ -1,34 +1,59 @@
+// ═══ KindProducts.js ═══
+
 let KindProductList = [];
 let editingKindProduct = false;
+const Http = window.HttpHelper;
+const UI = window.UICore;
 
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 GetParentKindProductData(); function GetParentKindProductData() {
-    $.post('/KindProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.KindProductId}\">${item.KindProductCaption}</option>`;
-            });
-            document.getElementById("ParentKindProduct").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+
+    showLoading();
+    Http.postSecure('/KindProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.KindProductId}\">${item.KindProductCaption}</option>`;
+                });
+                document.getElementById("ParentKindProduct").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function saveToStorage() {
-    $.post('/KindProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            KindProductList = JSON.parse(response.data);
-            localStorage.setItem("KindProducts", JSON.stringify(KindProductList));
-            renderData();
-            nextId = Math.max(...KindProductList.map(i => i.KindProductId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/KindProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                KindProductList = JSON.parse(response.data);
+                localStorage.setItem("KindProducts", JSON.stringify(KindProductList));
+                renderData();
+                nextId = Math.max(...KindProductList.map(i => i.KindProductId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("KindProducts");
@@ -152,10 +177,10 @@ function renderTable() {
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("KindProductTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -174,26 +199,30 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteKindProduct(parseInt(btn.dataset.id)); }));
 }
 function deleteKindProduct(KindProductId) {
-    $.post('/KindProducts/DeleteData', { 'id': KindProductId }, function (response) {
-        if (response.isSuccess) {
-            KindProductList = KindProductList.filter(data => data.KindProductId !== KindProductId);
-            saveToStorage();
-            renderData();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/KindProducts/DeleteData', { 'id': KindProductId })
+        .then(response => {
+            if (response.isSuccess) {
+                KindProductList = KindProductList.filter(data => data.KindProductId !== KindProductId);
+                saveToStorage();
+                renderData();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("KindProductModal");
 const modalTitle = document.getElementById("modalTitle");
-const empKindProductId = document.getElementById("KindProductId");const empKindProductCaption = document.getElementById("KindProductCaption");const empCodeInternalKindProducts = document.getElementById("CodeInternalKindProducts");const empParentKindProductId = document.getElementById("ParentKindProduct");const empStatus = document.getElementById("Status");
+const empKindProductId = document.getElementById("KindProductId"); const empKindProductCaption = document.getElementById("KindProductCaption"); const empCodeInternalKindProducts = document.getElementById("CodeInternalKindProducts"); const empParentKindProductId = document.getElementById("ParentKindProduct"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingKindProduct = false;
@@ -204,12 +233,12 @@ function openEditModal(KindProductId) {
     const data = KindProductList.find(data => data.KindProductId === KindProductId);
     if (data) {
         editingKindProduct = true;
-        
-	 empKindProductId.value = data.KindProductId;
-	 empKindProductCaption.value = data.KindProductCaption;
-	 empCodeInternalKindProducts.value = data.CodeInternalKindProducts;
-	 empParentKindProductId.value = data.ParentKindProductId;
-	 empStatus.checked = Boolean(data.Status);
+
+        empKindProductId.value = data.KindProductId;
+        empKindProductCaption.value = data.KindProductCaption;
+        empCodeInternalKindProducts.value = data.CodeInternalKindProducts;
+        empParentKindProductId.value = data.ParentKindProductId;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("KindProductModal");
     }
@@ -219,56 +248,64 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const KindProductId = empKindProductId.value.trim();
-	 const KindProductCaption = empKindProductCaption.value.trim();
-	 const CodeInternalKindProducts = empCodeInternalKindProducts.value.trim();
-	 const ParentKindProductId = empParentKindProductId.value;
+
+    const KindProductId = empKindProductId.value.trim();
+    const KindProductCaption = empKindProductCaption.value.trim();
+    const CodeInternalKindProducts = empCodeInternalKindProducts.value.trim();
+    const ParentKindProductId = empParentKindProductId.value;
     const Status = empStatus.checked;
     console.log(ParentKindProductId);
     if (!KindProductCaption || !CodeInternalKindProducts) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingKindProduct) { updateKindProduct(KindProductId,KindProductCaption,CodeInternalKindProducts,ParentKindProductId,Status); } else { addKindProduct(KindProductId,KindProductCaption,CodeInternalKindProducts,ParentKindProductId,Status); }
+    if (editingKindProduct) { updateKindProduct(KindProductId, KindProductCaption, CodeInternalKindProducts, ParentKindProductId, Status); } else { addKindProduct(KindProductId, KindProductCaption, CodeInternalKindProducts, ParentKindProductId, Status); }
     closeModal("KindProductModal");
 }
-function addKindProduct(KindProductId,KindProductCaption,CodeInternalKindProducts,ParentKindProductId,Status) {
+function addKindProduct(KindProductId, KindProductCaption, CodeInternalKindProducts, ParentKindProductId, Status) {
     const newKindProduct = {
-        KindProductId,KindProductCaption,CodeInternalKindProducts,ParentKindProductId,Status
+        KindProductId, KindProductCaption, CodeInternalKindProducts, ParentKindProductId, Status
     };
     newKindProduct.KindProductId = 0;
     SendData(newKindProduct, true);
 }
-function updateKindProduct(KindProductId,KindProductCaption,CodeInternalKindProducts,ParentKindProductId,Status) {
+function updateKindProduct(KindProductId, KindProductCaption, CodeInternalKindProducts, ParentKindProductId, Status) {
     const idx = KindProductList.findIndex(data => data.KindProductId == KindProductId);
     if (idx !== -1) {
-        KindProductList[idx] = { KindProductId,KindProductCaption,CodeInternalKindProducts,ParentKindProductId,Status };
+        KindProductList[idx] = { KindProductId, KindProductCaption, CodeInternalKindProducts, ParentKindProductId, Status };
         SendData(KindProductList[idx], false);
     }
 }
 function SendData(newKindProduct, typeRequst) {
-    $.post('/KindProducts/UpdateData', newKindProduct, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                KindProductList.push(newKindProduct);
+    const url = typeRequst
+        ? '/KindProducts/AddData'
+        : '/KindProducts/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newKindProduct)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    KindProductList.push(newKindProduct);
+                }
+                saveToStorage();
+                renderData();
+                alert(response.data);
             }
-            saveToStorage();
-            renderData();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empKindProductId.value = "";
- empKindProductCaption.value = "";
- empCodeInternalKindProducts.value = "";
- empParentKindProductId.value = "";
- empStatus.checked = false;
+
+    empKindProductId.value = "";
+    empKindProductCaption.value = "";
+    empCodeInternalKindProducts.value = "";
+    empParentKindProductId.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -284,9 +321,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderD
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("KindProductModal"); });
 
 loadFromStorage(); renderData();
-
-
-
-
-
-

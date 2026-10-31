@@ -1,9 +1,10 @@
 let FileProductList = [];
 let editingFileProduct = false;
-
+const H = window.HttpHelper;
 
 GetProductData(); function GetProductData() {
-    $.post('/Products/GetAllData', function (response) {
+
+    $.post('Products/GetAllData', function (response) {
         if (response.isSuccess) {
             let dataConvert = JSON.parse(response.data);
             let options = "";

@@ -1,7 +1,8 @@
+// ═══ Products.js ═══
 
-
-
-let optionProducts = [];
+let optionProducts = []; const H = window.HttpHelper;
+const Http = window.HttpHelper;
+const UI = window.UICore;
 let kindProducts = [];
 let products = [];
 
@@ -11,46 +12,72 @@ let nextFileId = 4;
 let nextDetailId = 5;
 let nextOptionId = 8;
 
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
+
 // ============================================================
 // ذخیره در localStorage
 // ============================================================
 
 GetKindProductData(); function GetKindProductData() {
-    $.post('/KindProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            kindProducts = dataConvert;
-            populateKindSelect();
-            GetOptionProductsData();
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+
+    showLoading();
+    Http.postSecure('/KindProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                kindProducts = dataConvert;
+                populateKindSelect();
+                GetOptionProductsData();
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function GetOptionProductsData() {
-    $.post('/OptionProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            optionProducts = dataConvert;
-            loadFromServer();
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/OptionProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                optionProducts = dataConvert;
+                loadFromServer();
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 function loadFromServer() {
-    $.post('/Products/GetAllData', function (response) {
-        if (response.isSuccess) {
-            products = JSON.parse(response.data);
-            renderProductsTable();
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Products/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                products = JSON.parse(response.data);
+                renderProductsTable();
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -295,16 +322,20 @@ function toggleProductStatus(id) {
 }
 
 function deleteProduct(id) {
-    $.post('/Products/DeleteData', { 'id': id }, function (response) {
-        if (response.isSuccess) {
-            alert(response.data);
-            products = products.filter(p => p.ProductId !== id);
-            renderProductsTable();
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Products/DeleteData', { 'id': id })
+        .then(response => {
+            if (response.isSuccess) {
+                alert(response.data);
+                products = products.filter(p => p.ProductId !== id);
+                renderProductsTable();
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 function addProduct(caption, code, kindId, price, status) {
@@ -321,16 +352,20 @@ function addProduct(caption, code, kindId, price, status) {
         Files: [],
         Details: []
     };
-    $.post('/Products/UpdateData', newProduct, function (response) {
-        if (response.isSuccess) {
-            alert(response.data);
-            product.push(newProduct);
-            loadFromServer();
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Products/UpdateData', newProduct)
+        .then(response => {
+            if (response.isSuccess) {
+                alert(response.data);
+                product.push(newProduct);
+                loadFromServer();
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 function updateProduct(id, caption, code, kindId, price, status) {
@@ -344,15 +379,19 @@ function updateProduct(id, caption, code, kindId, price, status) {
             PriceProduct: price ? parseInt(price) : null,
             Status: status === "true"
         };
-        $.post('/Products/UpdateData', products[idx], function (response) {
-            if (response.isSuccess) {
-                alert(response.data);
-                loadFromServer();
-            }
-            else {
-                alert(response.errorTitle);
-            }
-        });
+        showLoading();
+        Http.postSecure('/Products/UpdateData', products[idx])
+            .then(response => {
+                if (response.isSuccess) {
+                    alert(response.data);
+                    loadFromServer();
+                }
+                else {
+                    alert(response.errorTitle);
+                }
+            })
+            .catch(handleHttpError)
+            .finally(hideLoading);
     }
 }
 
@@ -364,42 +403,54 @@ function removeSubItem(type, id, productId) {
     const product = products.find(p => p.ProductId === productId);
     if (!product) return;
     if (type === 'color') {
-        $.post('/ColorPriceProducts/DeleteData', { 'id': id }, function (response) {
-            if (response.isSuccess) {
-                alert(response.data);
-                product.Colors = (product.Colors || []).filter(c => c.ColorPriceProductId !== id);
-                renderProductsTable();
-            }
-            else {
-                alert(response.errorTitle);
-            }
-        });
+        showLoading();
+        Http.postSecure('/ColorPriceProducts/DeleteData', { 'id': id })
+            .then(response => {
+                if (response.isSuccess) {
+                    alert(response.data);
+                    product.Colors = (product.Colors || []).filter(c => c.ColorPriceProductId !== id);
+                    renderProductsTable();
+                }
+                else {
+                    alert(response.errorTitle);
+                }
+            })
+            .catch(handleHttpError)
+            .finally(hideLoading);
     } else if (type === 'file') {
-        $.post('/FileProducts/DeleteData', { 'id': id }, function (response) {
-            if (response.isSuccess) {
-                alert(response.data);
-                product.Files = (product.Files || []).filter(f => f.FileProductId !== id);
-                renderProductsTable();
-            }
-            else {
-                alert(response.errorTitle);
-            }
-        });
-        
+        showLoading();
+        Http.postSecure('/FileProducts/DeleteData', { 'id': id })
+            .then(response => {
+                if (response.isSuccess) {
+                    alert(response.data);
+                    product.Files = (product.Files || []).filter(f => f.FileProductId !== id);
+                    renderProductsTable();
+                }
+                else {
+                    alert(response.errorTitle);
+                }
+            })
+            .catch(handleHttpError)
+            .finally(hideLoading);
+
     } else if (type === 'detail') {
-        $.post('/DetailProducts/DeleteData', { 'id': id }, function (response) {
-            if (response.isSuccess) {
-                alert(response.data);
-                product.Details = (product.Details || []).filter(d => d.DetailProductId !== id);
-                renderProductsTable();
-            }
-            else {
-                alert(response.errorTitle);
-            }
-        });
-        
+        showLoading();
+        Http.postSecure('/DetailProducts/DeleteData', { 'id': id })
+            .then(response => {
+                if (response.isSuccess) {
+                    alert(response.data);
+                    product.Details = (product.Details || []).filter(d => d.DetailProductId !== id);
+                    renderProductsTable();
+                }
+                else {
+                    alert(response.errorTitle);
+                }
+            })
+            .catch(handleHttpError)
+            .finally(hideLoading);
+
     }
-    
+
 }
 
 function addColor(productId, caption, price, offer, stock, status) {
@@ -415,17 +466,21 @@ function addColor(productId, caption, price, offer, stock, status) {
         InStore: stock ? parseInt(stock) : null,
         Status: status === "true"
     }
-    $.post('/ColorPriceProducts/UpdateData', newColor, function (response) {
-        if (response.isSuccess) {
-            alert(response.data);
-            product.Colors.push(newColor);
-            loadFromServer();
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-    
+    showLoading();
+    Http.postSecure('/ColorPriceProducts/UpdateData', newColor)
+        .then(response => {
+            if (response.isSuccess) {
+                alert(response.data);
+                product.Colors.push(newColor);
+                loadFromServer();
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
+
 }
 
 function addFile(productId, FileProduct, status) {
@@ -440,16 +495,20 @@ function addFile(productId, FileProduct, status) {
         if (type == "png" || type == "jpeg") {
             var Data = new FormData();
             Data.append('FileProductId', 0);
-            Data.append('File', FileProduct );
+            Data.append('File', FileProduct);
             Data.append('ProductId', productId);
             Data.append('Status', status === "true");
-            $.ajax({
-                type: "post",
-                url: '/FileProducts/UpdateData',
-                data: Data,
-                contentType: false,
-                processData: false,
-                success: function (response) {
+            showLoading();
+            fetch('/FileProducts/UpdateData', {
+                method: 'POST',
+                body: Data,
+                headers: {
+                    'RequestVerificationToken': Http.getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(r => r.json())
+                .then(response => {
                     if (response.isSuccess) {
                         alert(response.data);
                         const newFile = {};
@@ -463,13 +522,14 @@ function addFile(productId, FileProduct, status) {
                     else {
                         alert(response.errorTitle);
                     }
-                }
-            });
+                })
+                .catch(handleHttpError)
+                .finally(hideLoading);
         } else {
             alert("فرمت فایل ورودی درست نمی باشد.");
         }
     }
-    
+
 }
 
 function addDetail(productId, optionId, caption, status) {
@@ -484,16 +544,20 @@ function addDetail(productId, optionId, caption, status) {
         ProductId: productId,
         Status: status === "true"
     }
-    $.post('/DetailProducts/AddData', newDetail, function (response) {
-        if (response.isSuccess) {
-            alert(response.data);
-            product.Details.push(newDetail);
-            loadFromServer();
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/DetailProducts/AddData', newDetail)
+        .then(response => {
+            if (response.isSuccess) {
+                alert(response.data);
+                product.Details.push(newDetail);
+                loadFromServer();
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -709,6 +773,3 @@ detailModal.addEventListener("click", (e) => { if (e.target === detailModal) clo
 document.getElementById("searchProduct").addEventListener("input", () => renderProductsTable());
 document.getElementById("kindFilter").addEventListener("change", () => renderProductsTable());
 document.getElementById("statusFilter").addEventListener("change", () => renderProductsTable());
-
-
-

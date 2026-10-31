@@ -50,6 +50,8 @@ namespace TemplateSite.Controllers.ShopPanel
         // شامل: محصول + دسته‌بندی‌ها + مشخصات فنی
         // ═══════════════════════════════════════════════════════
         [HttpPost("GetBaseData")]
+        [IgnoreAntiforgeryToken]
+
         public async Task<ServiseResult<string>> GetBaseData(int id)
         {
             if (id <= 0)
@@ -100,6 +102,8 @@ namespace TemplateSite.Controllers.ShopPanel
         // POST: /ShopPanel/Product/GetOptions
         // ═══════════════════════════════════════════════════════
         [HttpPost("GetOptions")]
+        [IgnoreAntiforgeryToken]
+
         public async Task<ServiseResult<string>> GetOptions()
         {
             try
@@ -122,6 +126,8 @@ namespace TemplateSite.Controllers.ShopPanel
         // POST: /ShopPanel/Product/GetKinds
         // ═══════════════════════════════════════════════════════
         [HttpPost("GetKinds")]
+        [IgnoreAntiforgeryToken]
+
         public async Task<ServiseResult<string>> GetKinds()
         {
             try

@@ -51,7 +51,7 @@ namespace Application.Services
                     Status = true
                 };
                 _db.CodeAccess.Add(CodeAccess);
-                _db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
                 return ServiseResult<string>.Success(code);
             }
             catch (Exception ex)

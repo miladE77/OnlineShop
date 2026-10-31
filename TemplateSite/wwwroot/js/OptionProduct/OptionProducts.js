@@ -1,34 +1,58 @@
+// ═══ OptionProducts.js ═══
+
 let OptionProductList = [];
 let editingOptionProduct = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 GetKindProductData(); function GetKindProductData() {
-    $.post('/KindProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.KindProductId}\">${item.KindProductCaption}</option>`;
-            });
-            document.getElementById("KindProduct").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/KindProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.KindProductId}\">${item.KindProductCaption}</option>`;
+                });
+                document.getElementById("KindProduct").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function saveToStorage() {
-    $.post('/OptionProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            OptionProductList = JSON.parse(response.data);
-            localStorage.setItem("OptionProducts", JSON.stringify(OptionProductList));
-            renderTable();
-            nextId = Math.max(...OptionProductList.map(i => i.OptionProductId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/OptionProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                OptionProductList = JSON.parse(response.data);
+                localStorage.setItem("OptionProducts", JSON.stringify(OptionProductList));
+                renderTable();
+                nextId = Math.max(...OptionProductList.map(i => i.OptionProductId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("OptionProducts");
@@ -49,14 +73,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchOptionProduct").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...OptionProductList];
-    if (searchTerm) filtered = filtered.filter(p =>p.OptionProductCaption.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.OptionProductCaption.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("OptionProductTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -74,27 +98,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteOptionProduct(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deleteOptionProduct(OptionProductId) {
-    $.post('/OptionProducts/DeleteData', { 'id': OptionProductId }, function (response) {
-        if (response.isSuccess) {
-            OptionProductList = OptionProductList.filter(data => data.OptionProductId !== OptionProductId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/OptionProducts/DeleteData', { 'id': OptionProductId })
+        .then(response => {
+            if (response.isSuccess) {
+                OptionProductList = OptionProductList.filter(data => data.OptionProductId !== OptionProductId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("OptionProductModal");
 const modalTitle = document.getElementById("modalTitle");
-const empOptionProductId = document.getElementById("OptionProductId");const empOptionProductCaption = document.getElementById("OptionProductCaption");const empKindProductId = document.getElementById("KindProduct");const empStatus = document.getElementById("Status");
+const empOptionProductId = document.getElementById("OptionProductId"); const empOptionProductCaption = document.getElementById("OptionProductCaption"); const empKindProductId = document.getElementById("KindProduct"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingOptionProduct = false;
@@ -105,11 +133,11 @@ function openEditModal(OptionProductId) {
     const data = OptionProductList.find(data => data.OptionProductId === OptionProductId);
     if (data) {
         editingOptionProduct = true;
-        
-	 empOptionProductId.value = data.OptionProductId;
-	 empOptionProductCaption.value = data.OptionProductCaption;
-	 empKindProductId.value = data.KindProductId;
-	 empStatus.checked = Boolean(data.Status);
+
+        empOptionProductId.value = data.OptionProductId;
+        empOptionProductCaption.value = data.OptionProductCaption;
+        empKindProductId.value = data.KindProductId;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("OptionProductModal");
     }
@@ -119,53 +147,61 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const OptionProductId = empOptionProductId.value.trim();
-	 const OptionProductCaption = empOptionProductCaption.value.trim();
-	 const KindProductId = empKindProductId.value.trim();
-	 const Status = empStatus.checked;
+
+    const OptionProductId = empOptionProductId.value.trim();
+    const OptionProductCaption = empOptionProductCaption.value.trim();
+    const KindProductId = empKindProductId.value.trim();
+    const Status = empStatus.checked;
     if (!OptionProductCaption || !KindProductId) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingOptionProduct) { updateOptionProduct(OptionProductId,OptionProductCaption,KindProductId,Status); } else { addOptionProduct(OptionProductId,OptionProductCaption,KindProductId,Status); }
+    if (editingOptionProduct) { updateOptionProduct(OptionProductId, OptionProductCaption, KindProductId, Status); } else { addOptionProduct(OptionProductId, OptionProductCaption, KindProductId, Status); }
     closeModal("OptionProductModal");
 }
-function addOptionProduct(OptionProductId,OptionProductCaption,KindProductId,Status) {
+function addOptionProduct(OptionProductId, OptionProductCaption, KindProductId, Status) {
     const newOptionProduct = {
-        OptionProductId,OptionProductCaption,KindProductId,Status
+        OptionProductId, OptionProductCaption, KindProductId, Status
     };
     newOptionProduct.OptionProductId = 0;
     SendData(newOptionProduct, true);
 }
-function updateOptionProduct(OptionProductId,OptionProductCaption,KindProductId,Status) {
+function updateOptionProduct(OptionProductId, OptionProductCaption, KindProductId, Status) {
     const idx = OptionProductList.findIndex(data => data.OptionProductId == OptionProductId);
     if (idx !== -1) {
-        OptionProductList[idx] = { OptionProductId,OptionProductCaption,KindProductId,Status };
+        OptionProductList[idx] = { OptionProductId, OptionProductCaption, KindProductId, Status };
         SendData(OptionProductList[idx], false);
     }
 }
 function SendData(newOptionProduct, typeRequst) {
-    $.post('/OptionProducts/UpdateData', newOptionProduct, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                OptionProductList.push(newOptionProduct);
+    const url = typeRequst
+        ? '/OptionProducts/AddData'
+        : '/OptionProducts/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newOptionProduct)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    OptionProductList.push(newOptionProduct);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empOptionProductId.value = "";
- empOptionProductCaption.value = "";
- empKindProductId.value = "";
- empStatus.checked = false;
+
+    empOptionProductId.value = "";
+    empOptionProductCaption.value = "";
+    empKindProductId.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -180,9 +216,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("OptionProductModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

@@ -1,250 +1,316 @@
+/* ═══════════════════════════════════════════════════════
+   Tockens.js — مدیریت توکن دسترسی
+   ═══════════════════════════════════════════════════════ */
+
 let TockenList = [];
+let LevelAccessesList = [];
 let editingTocken = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
 
-
-function saveToStorage() {
-    $.post('/Tockens/GetAllData', function (response) {
-        if (response.isSuccess) {
-            TockenList = JSON.parse(response.data);
-            localStorage.setItem("Tockens", JSON.stringify(TockenList));
-            renderTable();
-            nextId = Math.max(...TockenList.map(i => i.TockenId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+function handleHttpError(err) {
+    console.error('[Tocken] HTTP error:', err);
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
 }
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
+
+function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ═══════════════════════════════════════════════════════
+// GetLevelAccesses — برای پر کردن چک‌باکس‌ها
+// ═══════════════════════════════════════════════════════
+function GetLevelAccesses() {
+    return Http.postSecure('/Tockens/GetLevelAccesses')
+        .then(res => {
+            if (res.isSuccess) {
+                LevelAccessesList = JSON.parse(res.data);
+                renderLevelAccessCheckboxes();
+            }
+        })
+        .catch(handleHttpError);
+}
+
+function renderLevelAccessCheckboxes(selectedIds = []) {
+    const container = document.getElementById('levelAccessList');
+    if (!container) return;
+
+    if (!LevelAccessesList || LevelAccessesList.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:10px;">هیچ دسترسی‌ای ثبت نشده است</div>';
+        return;
+    }
+
+    container.innerHTML = LevelAccessesList.map(l => {
+        const checked = selectedIds.includes(l.LevelAccessId) ? 'checked' : '';
+        return `
+            <label style="display:flex; align-items:center; padding:6px; cursor:pointer; border-bottom:1px solid var(--border-light);">
+                <input type="checkbox" class="levelaccess-checkbox" value="${l.LevelAccessId}" ${checked} style="margin-left:8px; width:18px; height:18px;">
+                <span>${escapeHtml(l.LevelAccessCaption)} <code style="font-size:0.7rem; color:var(--primary);">${escapeHtml(l.CodeAccess || '')}</code></span>
+            </label>
+        `;
+    }).join('');
+}
+
+function getSelectedLevelAccessIds() {
+    const checkboxes = document.querySelectorAll('.levelaccess-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value).join(',');
+}
+
+// ═══════════════════════════════════════════════════════
+// GetAllData
+// ═══════════════════════════════════════════════════════
+function saveToStorage() {
+    showLoading();
+    Http.postSecure('/Tockens/GetAllData')
+        .then(res => {
+            if (res.isSuccess) {
+                TockenList = JSON.parse(res.data);
+                localStorage.setItem("Tockens", JSON.stringify(TockenList));
+                renderTable();
+            } else {
+                alert(res.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
+}
+
 function loadFromStorage() {
     const saved = localStorage.getItem("Tockens");
     if (saved) {
-        TockenList = JSON.parse(saved);
+        try {
+            TockenList = JSON.parse(saved);
+            renderTable();
+        } catch {
+            saveToStorage();
+        }
+    } else {
+        saveToStorage();
     }
-    else saveToStorage();
 }
+
+// ═══════════════════════════════════════════════════════
+// آمار
+// ═══════════════════════════════════════════════════════
 function renderStats() {
-    const total = TockenList.length, active = TockenList.filter(data => data.Status).length, inactive = TockenList.filter(data => !data.Status).length;
-    document.getElementById("statsCards").innerHTML = `
-            <div class="stat-card"><div class="stat-info"><div class="number">${total}</div><div class="label">کل توکن دسترسی</div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
-            <div class="stat-card"><div class="stat-info"><div class="number">${active}</div><div class="label">فعال</div></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div>
-            <div class="stat-card"><div class="stat-info"><div class="number">${inactive}</div><div class="label">غیرفعال</div></div><div class="stat-icon"><i class="fas fa-ban"></i></div></div>
-        `;
+    const total = TockenList.length;
+    const active = TockenList.filter(d => d.Status).length;
+    const inactive = TockenList.filter(d => !d.Status).length;
+
+    const el = document.getElementById("statsCards");
+    if (!el) return;
+
+    el.innerHTML = `
+        <div class="stat-card"><div class="stat-info"><div class="number">${total}</div><div class="label">کل توکن‌ها</div></div><div class="stat-icon"><i class="fas fa-key"></i></div></div>
+        <div class="stat-card"><div class="stat-info"><div class="number">${active}</div><div class="label">فعال</div></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div>
+        <div class="stat-card"><div class="stat-info"><div class="number">${inactive}</div><div class="label">غیرفعال</div></div><div class="stat-icon"><i class="fas fa-ban"></i></div></div>
+    `;
 }
+
+// ═══════════════════════════════════════════════════════
+// جدول
+// ═══════════════════════════════════════════════════════
 function renderTable() {
-    const searchTerm = document.getElementById("searchTocken").value.toLowerCase();
-    const statusFilter = document.getElementById("statusFilter").value;
-    let filtered = [...TockenList];
-    if (searchTerm) filtered = filtered.filter(p =>p.TockenCaption.toLowerCase().includes(searchTerm) || p.TockenDetail.toLowerCase().includes(searchTerm));
-    if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
+    const searchEl = document.getElementById("searchTocken");
+    const statusEl = document.getElementById("statusFilter");
     const tbody = document.getElementById("TockenTableBody");
-    if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+    if (!tbody) return;
+
+    const searchTerm = (searchEl?.value || "").toLowerCase().trim();
+    const statusFilter = statusEl?.value || "all";
+
+    let filtered = [...TockenList];
+
+    if (searchTerm) {
+        filtered = filtered.filter(p =>
+            (p.TockenCaption || "").toLowerCase().includes(searchTerm) ||
+            (p.TockenDetail || "").toLowerCase().includes(searchTerm)
+        );
+    }
+
+    if (statusFilter !== "all") {
+        filtered = filtered.filter(p => p.Status.toString() === statusFilter);
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="6">هیچ رکورد یافت نشد</td></tr>`;
+        renderStats();
+        return;
+    }
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+        const statusText = data.Status === true ? "فعال" : "غیرفعال";
+        const levelAccessIds = (data.LevelAccessIds || "").split(',').filter(x => x);
+        const count = levelAccessIds.length;
+
         return `<tr>
-                <td>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <div><strong>${data.TockenId}</strong></div>
-                  </div>
-                </td>
-                
- <td>${data.TockenCaption}</td>
- <td>${data.TockenDetail}</td>
- <td>${statusStatus}</td>
-                <td class="action-buttons">
-                    
-
-<button class="action-btn LevelAccessTocken-btn" data-id="${data.TockenId}" title="ویرایش"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn edit-btn" data-id="${data.TockenId}" title="ویرایش"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete-btn" data-id="${data.TockenId}" title="حذف"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>`;
+            <td><strong>${data.TockenId}</strong></td>
+            <td>${escapeHtml(data.TockenCaption || '—')}</td>
+            <td>${escapeHtml(data.TockenDetail || '—')}</td>
+            <td><span class="badge">${count} دسترسی</span></td>
+            <td>${statusText}</td>
+            <td class="action-buttons">
+                <button class="action-btn edit-btn" data-id="${data.TockenId}" title="ویرایش"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete-btn" data-id="${data.TockenId}" title="حذف"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>`;
     }).join('');
-    
 
-document.querySelectorAll('.LevelAccessTocken-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); GetLevelAccessTockenData(id); }));
-    document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
-    document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteTocken(parseInt(btn.dataset.id)); }));
+    document.querySelectorAll('.edit-btn').forEach(btn =>
+        btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id))));
+
+    document.querySelectorAll('.delete-btn').forEach(btn =>
+        btn.addEventListener('click', () => {
+            if (confirm("حذف رکورد؟")) deleteTocken(parseInt(btn.dataset.id));
+        }));
+
     renderStats();
 }
-function deleteTocken(TockenId) {
-    $.post('/Tockens/DeleteData', { 'id': TockenId }, function (response) {
-        if (response.isSuccess) {
-            TockenList = TockenList.filter(data => data.TockenId !== TockenId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+// ═══════════════════════════════════════════════════════
+// حذف
+// ═══════════════════════════════════════════════════════
+function deleteTocken(id) {
+    showLoading();
+    Http.postSecure('/Tockens/DeleteData', { 'id': id })
+        .then(res => {
+            if (res.isSuccess) {
+                TockenList = TockenList.filter(d => d.TockenId !== id);
+                saveToStorage();
+                renderTable();
+                alert(res.data);
+            } else {
+                alert(res.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
+
+// ═══════════════════════════════════════════════════════
+// Modal
+// ═══════════════════════════════════════════════════════
 const modal = document.getElementById("TockenModal");
 const modalTitle = document.getElementById("modalTitle");
-const empTockenId = document.getElementById("TockenId");const empTockenCaption = document.getElementById("TockenCaption");const empTockenDetail = document.getElementById("TockenDetail");const empStatus = document.getElementById("Status");
+const empTockenId = document.getElementById("TockenId");
+const empTockenCaption = document.getElementById("TockenCaption");
+const empTockenDetail = document.getElementById("TockenDetail");
+const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingTocken = false;
     resetModal();
+    renderLevelAccessCheckboxes([]);
     openModal("TockenModal");
 }
-function openEditModal(TockenId) {
-    const data = TockenList.find(data => data.TockenId === TockenId);
-    if (data) {
-        editingTocken = true;
-        
-	 empTockenId.value = data.TockenId;
-	 empTockenCaption.value = data.TockenCaption;
-	 empTockenDetail.value = data.TockenDetail;
-	 empStatus.checked = Boolean(data.Status);
-        modalTitle.innerText = "ویرایش رکورد";
-        openModal("TockenModal");
-    }
+
+function openEditModal(id) {
+    const data = TockenList.find(d => d.TockenId === id);
+    if (!data) return;
+
+    editingTocken = true;
+
+    empTockenId.value = data.TockenId || 0;
+    empTockenCaption.value = data.TockenCaption || '';
+    empTockenDetail.value = data.TockenDetail || '';
+    empStatus.checked = Boolean(data.Status);
+
+    const levelAccessIds = (data.LevelAccessIds || "").split(',').filter(x => x).map(x => parseInt(x));
+    renderLevelAccessCheckboxes(levelAccessIds);
+
+    modalTitle.innerText = "ویرایش توکن";
+    openModal("TockenModal");
 }
+
 function CanselSaveModal() {
     closeModal("TockenModal");
     resetModal();
 }
-function SaveNewModel() {
-    
-	 const TockenId = empTockenId.value.trim();
-	 const TockenCaption = empTockenCaption.value.trim();
-	 const TockenDetail = empTockenDetail.value.trim();
-	 const Status = empStatus.checked;
-    if (!TockenCaption || !TockenDetail) {
-        alert("لطفاً تمام فیلدها را پر کنید");
-        return;
-    }
-    if (editingTocken) { updateTocken(TockenId,TockenCaption,TockenDetail,Status); } else { addTocken(TockenId,TockenCaption,TockenDetail,Status); }
-    closeModal("TockenModal");
-}
-function addTocken(TockenId,TockenCaption,TockenDetail,Status) {
-    const newTocken = {
-        TockenId,TockenCaption,TockenDetail,Status
-    };
-    newTocken.TockenId = 0;
-    SendData(newTocken, true);
-}
-function updateTocken(TockenId,TockenCaption,TockenDetail,Status) {
-    const idx = TockenList.findIndex(data => data.TockenId == TockenId);
-    if (idx !== -1) {
-        TockenList[idx] = { TockenId,TockenCaption,TockenDetail,Status };
-        SendData(TockenList[idx], false);
-    }
-}
-function SendData(newTocken, typeRequst) {
-    $.post('/Tockens/UpdateData', newTocken, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                TockenList.push(newTocken);
-            }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
+
 function resetModal() {
-    
- empTockenId.value = "";
- empTockenCaption.value = "";
- empTockenDetail.value = "";
- empStatus.checked = false;
-    modalTitle.innerText = "افزودن رکورد جدید";
-}
-function openModal(Modal) {
-    document.getElementById(Modal).classList.add("active");
-}
-function closeModal(Modal) {
-    document.getElementById(Modal).classList.remove("active");
+    empTockenId.value = 0;
+    empTockenCaption.value = '';
+    empTockenDetail.value = '';
+    empStatus.checked = false;
+    modalTitle.innerText = "افزودن توکن جدید";
 }
 
-document.getElementById("searchTocken").addEventListener("input", () => renderTable());
-document.getElementById("statusFilter").addEventListener("change", () => renderTable());
-modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("TockenModal"); });
+function openModal(Id) {
+    const el = document.getElementById(Id);
+    if (el) el.classList.add("active");
+}
 
-loadFromStorage(); renderTable();
+function closeModal(Id) {
+    const el = document.getElementById(Id);
+    if (el) el.classList.remove("active");
+}
 
+// ═══════════════════════════════════════════════════════
+// ذخیره
+// ═══════════════════════════════════════════════════════
+function SaveNewModel() {
+    const id = parseInt(empTockenId.value) || 0;
+    const caption = empTockenCaption.value.trim();
+    const detail = empTockenDetail.value.trim();
+    const status = empStatus.checked;
+    const levelAccessIds = getSelectedLevelAccessIds();
 
+    if (!caption) { alert("لطفاً عنوان توکن را وارد کنید"); return; }
 
+    const data = {
+        TockenId: id,
+        TockenCaption: caption,
+        TockenDetail: detail,
+        Status: status,
+        levelAccessIds: levelAccessIds
+    };
 
-GetTocken();
-let TockenId = 0;
-function saveLevelAccessTocken() {
-    let id = document.getElementById("LevelAccessTockenId").value;
-    $.post('/LevelAccessTocken/AddData', { 'LevelAccessId': id, 'TockenId': TockenId }, function (response) {
-        if (response.isSuccess) {
-            GetLevelAccessTockenData(TockenId);
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
+    const url = id === 0 ? '/Tockens/AddData' : '/Tockens/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, data)
+        .then(res => {
+            if (res.isSuccess) {
+                saveToStorage();
+                alert(res.data);
+                closeModal("TockenModal");
+            } else {
+                alert(res.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
+}
+
+// ═══════════════════════════════════════════════════════
+// رویدادها
+// ═══════════════════════════════════════════════════════
+document.getElementById("searchTocken")?.addEventListener("input", () => renderTable());
+document.getElementById("statusFilter")?.addEventListener("change", () => renderTable());
+
+if (modal) {
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal("TockenModal");
     });
 }
-function GetTocken() {
-    $.post('/LevelAccesss/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let options = "";
-            let dataConvert = JSON.parse(response.data);
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.LevelAccessId}\">${item.LevelAccessCaption}</option>`;
-            });
-            document.getElementById("LevelAccessTockenId").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
-function GetLevelAccessTockenData(id) {
-    TockenId = id;
-  var Tocken = TockenList.filter(p => p.TockenId == id)[0];
-    const modalLevelAccessTockenTitle = document.getElementById("modalLevelAccessTockenTitle");
-    let title = modalLevelAccessTockenTitle.innerHTML;
-    modalLevelAccessTockenTitle.innerHTML = title.split(" با ")[0] + " با " + Tocken.TockenCaption;  $.post('/LevelAccessTocken/GetData', { 'id': id }, function (response) {
-        if (response.isSuccess) {
-            openModal("LevelAccessTockenModal");
-            let options = "";
-            let filtered = JSON.parse(response.data);
-            document.getElementById("LevelAccessTockenTableBody").innerHTML = filtered.map(data => {
-                return `<tr>
-                <td>${data.LevelAccessCaption}</td>
-                <td class="action-buttons">
-                    <button class="action-btn deleteLevelAccessTocken-btn" data-id="${data.LevelAccessId}" title="حذف"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>`;
-            }).join('');
-            document.querySelectorAll('.deleteLevelAccessTocken-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                if (confirm("حذف رکورد؟")) { deleteLevelAccessTocken(parseInt(btn.dataset.id)); }
-            }));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
-function deleteLevelAccessTocken(LevelAccessId) {
-    $.post('/LevelAccessTocken/DeleteData', { 'LevelAccessId': LevelAccessId, 'TockenId': TockenId }, function (response) {
-        if (response.isSuccess) {
-            GetLevelAccessTockenData(TockenId);
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
- const modalLevelAccessTocken = document.getElementById("LevelAccessTockenModal");
- modalLevelAccessTocken.addEventListener("click", (e) => { if (e.target === modalLevelAccessTocken) closeModal('LevelAccessTockenModal'); });
- const modalAddLevelAccessTocken = document.getElementById("AddLevelAccessTockenModal");
- modalAddLevelAccessTocken.addEventListener("click", (e) => { if (e.target === modalAddLevelAccessTocken) closeModal('AddLevelAccessTockenModal'); });
 
-
-
+// ═══════════════════════════════════════════════════════
+// شروع
+// ═══════════════════════════════════════════════════════
+loadFromStorage();
+GetLevelAccesses();

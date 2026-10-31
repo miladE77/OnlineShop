@@ -1,3 +1,5 @@
+// ═══ Receipts.js ═══
+
 /* ============================================================
    Receipts.js — مدیریت رسید پرداخت (با تقویم شمسی)
    ------------------------------------------------------------
@@ -5,9 +7,23 @@
    - ارسال: DateTimePeymentFa (شمسی) به سرور
    - سرور: تبدیل DateTimePeymentFa → DateTimePeyment (میلادی)
    ============================================================ */
-
+const H = window.HttpHelper;
+const Http = window.HttpHelper;
+const UI = window.UICore;
 let ReceiptList = [];
 let editingReceipt = false;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 // ============================================================
 // ابزار: نمایش تاریخ شمسی در جدول
@@ -36,18 +52,23 @@ function toJalaliString(gregorianValue) {
 // ============================================================
 GetTypePeymentData();
 function GetTypePeymentData() {
-    $.post('/TypePeyments/GetAllData', function (response) {
-        if (response.isSuccess) {
-            const dataConvert = JSON.parse(response.data);
-            let options = '<option value="">انتخاب نوع پرداخت</option>';
-            dataConvert.forEach(function (item) {
-                options += `<option value="${item.TypePeymentId}">${item.TypePeymentCaption}</option>`;
-            });
-            document.getElementById("TypePeyment").innerHTML = options;
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/TypePeyments/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                const dataConvert = JSON.parse(response.data);
+                let options = '<option value="">انتخاب نوع پرداخت</option>';
+                dataConvert.forEach(function (item) {
+                    options += `<option value="${item.TypePeymentId}">${item.TypePeymentCaption}</option>`;
+                });
+                document.getElementById("TypePeyment").innerHTML = options;
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -55,37 +76,46 @@ function GetTypePeymentData() {
 // ============================================================
 GetRecommendationsData();
 function GetRecommendationsData() {
-    $.post('/Recommendationss/GetAllData', function (response) {
-        if (response.isSuccess) {
-            const dataConvert = JSON.parse(response.data);
-            let options = '<option value="">انتخاب سفارش</option>';
-            dataConvert.forEach(function (item) {
-                const caption = item.RecommendationsCaption || `سفارش #${item.RecommendationsId}`;
-                options += `<option value="${item.RecommendationsId}">${caption}</option>`;
-            });
-            document.getElementById("Recommendations").innerHTML = options;
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/Recommendationss/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                const dataConvert = JSON.parse(response.data);
+                let options = '<option value="">انتخاب سفارش</option>';
+                dataConvert.forEach(function (item) {
+                    const caption = item.RecommendationsCaption || `سفارش #${item.RecommendationsId}`;
+                    options += `<option value="${item.RecommendationsId}">${caption}</option>`;
+                });
+                document.getElementById("Recommendations").innerHTML = options;
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
 // localStorage
 // ============================================================
 function saveToStorage() {
-    $.post('/Receipts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            ReceiptList = JSON.parse(response.data);
-            localStorage.setItem("Receipts", JSON.stringify(ReceiptList));
-            renderTable();
-            if (ReceiptList.length > 0) {
-                nextId = Math.max(...ReceiptList.map(i => i.ReceiptId));
+    showLoading();
+    Http.postSecure('/Receipts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                ReceiptList = JSON.parse(response.data);
+                localStorage.setItem("Receipts", JSON.stringify(ReceiptList));
+                renderTable();
+                if (ReceiptList.length > 0) {
+                    nextId = Math.max(...ReceiptList.map(i => i.ReceiptId));
+                }
+            } else {
+                alert(response.errorTitle);
             }
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 function loadFromStorage() {
@@ -178,16 +208,20 @@ function renderTable() {
 // حذف
 // ============================================================
 function deleteReceipt(receiptId) {
-    $.post('/Receipts/DeleteData', { 'id': receiptId }, function (response) {
-        if (response.isSuccess) {
-            ReceiptList = ReceiptList.filter(d => d.ReceiptId !== receiptId);
-            localStorage.setItem("Receipts", JSON.stringify(ReceiptList));
-            renderTable();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Receipts/DeleteData', { 'id': receiptId })
+        .then(response => {
+            if (response.isSuccess) {
+                ReceiptList = ReceiptList.filter(d => d.ReceiptId !== receiptId);
+                localStorage.setItem("Receipts", JSON.stringify(ReceiptList));
+                renderTable();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -339,16 +373,22 @@ function updateReceipt(ReceiptId, ReceiptCaption, TypePeymentId, Recommendations
 }
 
 function SendData(receipt, isAdd) {
-    $.post('/Receipts/UpdateData', receipt, function (response) {
-        if (response.isSuccess) {
-            saveToStorage();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    }).fail(function () {
-        alert("خطا در ارتباط با سرور");
-    });
+    const url = isAdd
+        ? '/Receipts/AddData'
+        : '/Receipts/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, receipt)
+        .then(response => {
+            if (response.isSuccess) {
+                saveToStorage();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================

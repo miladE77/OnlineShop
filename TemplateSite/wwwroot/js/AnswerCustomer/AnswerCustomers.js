@@ -1,34 +1,58 @@
+// ═══ AnswerCustomers.js ═══
+
 let AnswerCustomerList = [];
 let editingAnswerCustomer = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 GetContactUsData(); function GetContactUsData() {
-    $.post('/ContactUss/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.ContactUsId}\">${item.ContactUsCaption}</option>`;
-            });
-            document.getElementById("ContactUs").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/ContactUss/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.ContactUsId}\">${item.ContactUsCaption}</option>`;
+                });
+                document.getElementById("ContactUs").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function saveToStorage() {
-    $.post('/AnswerCustomers/GetAllData', function (response) {
-        if (response.isSuccess) {
-            AnswerCustomerList = JSON.parse(response.data);
-            localStorage.setItem("AnswerCustomers", JSON.stringify(AnswerCustomerList));
-            renderTable();
-            nextId = Math.max(...AnswerCustomerList.map(i => i.AnswerCustomerId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/AnswerCustomers/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                AnswerCustomerList = JSON.parse(response.data);
+                localStorage.setItem("AnswerCustomers", JSON.stringify(AnswerCustomerList));
+                renderTable();
+                nextId = Math.max(...AnswerCustomerList.map(i => i.AnswerCustomerId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("AnswerCustomers");
@@ -49,14 +73,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchAnswerCustomer").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...AnswerCustomerList];
-    if (searchTerm) filtered = filtered.filter(p =>p.AnswerCustomerCaption.toLowerCase().includes(searchTerm) || p.ContactUsId.toLowerCase().includes(searchTerm) || p.AnswerDate.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.AnswerCustomerCaption.toLowerCase().includes(searchTerm) || p.ContactUsId.toLowerCase().includes(searchTerm) || p.AnswerDate.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("AnswerCustomerTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -75,27 +99,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteAnswerCustomer(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deleteAnswerCustomer(AnswerCustomerId) {
-    $.post('/AnswerCustomers/DeleteData', { 'id': AnswerCustomerId }, function (response) {
-        if (response.isSuccess) {
-            AnswerCustomerList = AnswerCustomerList.filter(data => data.AnswerCustomerId !== AnswerCustomerId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/AnswerCustomers/DeleteData', { 'id': AnswerCustomerId })
+        .then(response => {
+            if (response.isSuccess) {
+                AnswerCustomerList = AnswerCustomerList.filter(data => data.AnswerCustomerId !== AnswerCustomerId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("AnswerCustomerModal");
 const modalTitle = document.getElementById("modalTitle");
-const empAnswerCustomerId = document.getElementById("AnswerCustomerId");const empAnswerCustomerCaption = document.getElementById("AnswerCustomerCaption");const empContactUsId = document.getElementById("ContactUs");const empAnswerDate = document.getElementById("AnswerDate");const empStatus = document.getElementById("Status");
+const empAnswerCustomerId = document.getElementById("AnswerCustomerId"); const empAnswerCustomerCaption = document.getElementById("AnswerCustomerCaption"); const empContactUsId = document.getElementById("ContactUs"); const empAnswerDate = document.getElementById("AnswerDate"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingAnswerCustomer = false;
@@ -106,12 +134,12 @@ function openEditModal(AnswerCustomerId) {
     const data = AnswerCustomerList.find(data => data.AnswerCustomerId === AnswerCustomerId);
     if (data) {
         editingAnswerCustomer = true;
-        
-	 empAnswerCustomerId.value = data.AnswerCustomerId;
-	 empAnswerCustomerCaption.value = data.AnswerCustomerCaption;
-	 empContactUsId.value = data.ContactUsId;
-	 empAnswerDate.value = data.AnswerDate;
-	 empStatus.checked = Boolean(data.Status);
+
+        empAnswerCustomerId.value = data.AnswerCustomerId;
+        empAnswerCustomerCaption.value = data.AnswerCustomerCaption;
+        empContactUsId.value = data.ContactUsId;
+        empAnswerDate.value = data.AnswerDate;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("AnswerCustomerModal");
     }
@@ -121,55 +149,63 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const AnswerCustomerId = empAnswerCustomerId.value.trim();
-	 const AnswerCustomerCaption = empAnswerCustomerCaption.value.trim();
-	 const ContactUsId = empContactUsId.value.trim();
-	 const AnswerDate = empAnswerDate.value.trim();
-	 const Status = empStatus.checked;
+
+    const AnswerCustomerId = empAnswerCustomerId.value.trim();
+    const AnswerCustomerCaption = empAnswerCustomerCaption.value.trim();
+    const ContactUsId = empContactUsId.value.trim();
+    const AnswerDate = empAnswerDate.value.trim();
+    const Status = empStatus.checked;
     if (!AnswerCustomerCaption || !ContactUsId || !AnswerDate) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingAnswerCustomer) { updateAnswerCustomer(AnswerCustomerId,AnswerCustomerCaption,ContactUsId,AnswerDate,Status); } else { addAnswerCustomer(AnswerCustomerId,AnswerCustomerCaption,ContactUsId,AnswerDate,Status); }
+    if (editingAnswerCustomer) { updateAnswerCustomer(AnswerCustomerId, AnswerCustomerCaption, ContactUsId, AnswerDate, Status); } else { addAnswerCustomer(AnswerCustomerId, AnswerCustomerCaption, ContactUsId, AnswerDate, Status); }
     closeModal("AnswerCustomerModal");
 }
-function addAnswerCustomer(AnswerCustomerId,AnswerCustomerCaption,ContactUsId,AnswerDate,Status) {
+function addAnswerCustomer(AnswerCustomerId, AnswerCustomerCaption, ContactUsId, AnswerDate, Status) {
     const newAnswerCustomer = {
-        AnswerCustomerId,AnswerCustomerCaption,ContactUsId,AnswerDate,Status
+        AnswerCustomerId, AnswerCustomerCaption, ContactUsId, AnswerDate, Status
     };
     newAnswerCustomer.AnswerCustomerId = 0;
     SendData(newAnswerCustomer, true);
 }
-function updateAnswerCustomer(AnswerCustomerId,AnswerCustomerCaption,ContactUsId,AnswerDate,Status) {
+function updateAnswerCustomer(AnswerCustomerId, AnswerCustomerCaption, ContactUsId, AnswerDate, Status) {
     const idx = AnswerCustomerList.findIndex(data => data.AnswerCustomerId == AnswerCustomerId);
     if (idx !== -1) {
-        AnswerCustomerList[idx] = { AnswerCustomerId,AnswerCustomerCaption,ContactUsId,AnswerDate,Status };
+        AnswerCustomerList[idx] = { AnswerCustomerId, AnswerCustomerCaption, ContactUsId, AnswerDate, Status };
         SendData(AnswerCustomerList[idx], false);
     }
 }
 function SendData(newAnswerCustomer, typeRequst) {
-    $.post('/AnswerCustomers/UpdateData', newAnswerCustomer, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                AnswerCustomerList.push(newAnswerCustomer);
+    const url = typeRequst
+        ? '/AnswerCustomers/AddData'
+        : '/AnswerCustomers/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newAnswerCustomer)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    AnswerCustomerList.push(newAnswerCustomer);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empAnswerCustomerId.value = "";
- empAnswerCustomerCaption.value = "";
- empContactUsId.value = "";
- empAnswerDate.value = "";
- empStatus.checked = false;
+
+    empAnswerCustomerId.value = "";
+    empAnswerCustomerCaption.value = "";
+    empContactUsId.value = "";
+    empAnswerDate.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -184,9 +220,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("AnswerCustomerModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

@@ -4,6 +4,7 @@
 @{
     ViewData["Title"] = "ورود";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
+    var returnUrl = ViewData["ReturnUrl"] as string;
 }
 
 <div class="account-container">
@@ -11,6 +12,12 @@
         <h2 class="text-center mb-4">ورود</h2>
         <form asp-action="Login" method="post">
             @Html.AntiForgeryToken()
+
+            @if (!string.IsNullOrEmpty(returnUrl))
+            {
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+            }
+
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="mb-3">
                 <label asp-for="PhoneNumber" class="form-label"></label>
@@ -35,7 +42,8 @@
             </div>
             <input type="submit" value="ورود" class="btn btn-success w-100 p-2" />
             <p class="text-center mt-2">
-                حساب ندارید؟ <a asp-controller="Account" asp-action="Register" class="text-decoration-none">ثبت‌نام</a>
+                حساب ندارید؟ <a asp-controller="Account" asp-action="Register"
+                                asp-route-returnUrl="@returnUrl" class="text-decoration-none">ثبت‌نام</a>
             </p>
             <div class="text-center">
                 <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">بازگشت</a>

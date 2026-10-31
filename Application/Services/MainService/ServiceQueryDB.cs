@@ -16,22 +16,45 @@ namespace Application.Services
         {
             _queryRepository = queryRepository;
         }
-
-        // ═══════════════════════════════════════════════════
-        // Dictionary
-        // ═══════════════════════════════════════════════════
-        public async Task<ServiseResult<Dictionary<string, List<dynamic>>>> GetsDictionaryDataViewByQuery(
+        // ═══════════════════════════════════════════════════════
+        // اجرای DML امن
+        // ═══════════════════════════════════════════════════════
+        public async Task<ServiseResult<string>> ExecuteQuerySafe(
             string query,
-            string colName,
-            int connectionString,
             params SqlParameter[] parameters)
         {
             try
             {
+                // ⭐ QueryGuard
+                var guard = QueryGuard.Validate(query, parameters);
+                if (!guard.IsSuccess)
+                    return ServiseResult<string>.Failure(guard.ErrorTitle!);
+
+                await _queryRepository.ExecuteQueryAsync(query, 1, parameters);
+                return ServiseResult<string>.Success("عملیات با موفقیت انجام شد");
+            }
+            catch (Exception ex)
+            {
+                return ServiseResult<string>.Failure("خطا در اجرای کوئری");
+            }
+        }
+        // ═══════════════════════════════════════════════════
+        // Dictionary
+        // ═══════════════════════════════════════════════════
+        public async Task<ServiseResult<Dictionary<string, List<dynamic>>>> GetsDictionaryDataViewByQuery(
+            string query, string colName, int connectionString, params SqlParameter[] parameters)
+        {
+            try
+            {
+                var guard = QueryGuard.Validate(query, parameters);
+                if (!guard.IsSuccess)
+                    return ServiseResult<Dictionary<string, List<dynamic>>>.Failure(guard.ErrorTitle!);
+
                 var table = await _queryRepository.ExecuteQueryReturnTableAsync(query, connectionString, parameters);
 
                 if (!table.Columns.Contains(colName))
-                    return ServiseResult<Dictionary<string, List<dynamic>>>.Failure($"ستون '{colName}' در جدول وجود ندارد.");
+                    return ServiseResult<Dictionary<string, List<dynamic>>>.Failure(
+                        $"ستون '{colName}' در جدول وجود ندارد.");
 
                 var actualColName = table.Columns[colName].ColumnName;
                 var grouped = new Dictionary<string, List<dynamic>>();
@@ -66,14 +89,12 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
-                return ServiseResult<Dictionary<string, List<dynamic>>>.Failure(ex.Message);
+                return ServiseResult<Dictionary<string, List<dynamic>>>.Failure("خطا در اجرای کوئری");
             }
         }
 
         public async Task<ServiseResult<Dictionary<string, List<dynamic>>>> GetsDictionaryDataViewByQuery(
-            string query,
-            string colName,
-            params SqlParameter[] parameters)
+            string query, string colName, params SqlParameter[] parameters)
         {
             return await GetsDictionaryDataViewByQuery(query, colName, 1, parameters);
         }
@@ -82,24 +103,25 @@ namespace Application.Services
         // DataTable
         // ═══════════════════════════════════════════════════
         public async Task<ServiseResult<DataTable>> GetsTableDataViewByQuery(
-            string query,
-            int connectionString,
-            params SqlParameter[] parameters)
+            string query, int connectionString, params SqlParameter[] parameters)
         {
             try
             {
+                var guard = QueryGuard.Validate(query, parameters);
+                if (!guard.IsSuccess)
+                    return ServiseResult<DataTable>.Failure(guard.ErrorTitle!);
+
                 var result = await _queryRepository.ExecuteQueryReturnTableAsync(query, connectionString, parameters);
                 return ServiseResult<DataTable>.Success(result);
             }
             catch (Exception ex)
             {
-                return ServiseResult<DataTable>.Failure(ex.Message);
+                return ServiseResult<DataTable>.Failure("خطا در اجرای کوئری");
             }
         }
 
         public async Task<ServiseResult<DataTable>> GetsTableDataViewByQuery(
-            string query,
-            params SqlParameter[] parameters)
+            string query, params SqlParameter[] parameters)
         {
             return await GetsTableDataViewByQuery(query, 1, parameters);
         }
@@ -108,39 +130,64 @@ namespace Application.Services
         // JSON
         // ═══════════════════════════════════════════════════
         public async Task<ServiseResult<string>> GetsJsonDataViewByQuery(
-            string query,
-            int connectionString,
-            params SqlParameter[] parameters)
+            string query, int connectionString, params SqlParameter[] parameters)
         {
             try
             {
+                var guard = QueryGuard.Validate(query, parameters);
+                if (!guard.IsSuccess)
+                    return ServiseResult<string>.Failure(guard.ErrorTitle!);
+
                 var result = await _queryRepository.ExecuteQueryReturnTableAsync(query, connectionString, parameters);
                 return ServiseResult<string>.Success(
                     JsonConvert.SerializeObject(result, Formatting.Indented));
             }
             catch (Exception ex)
             {
-                return ServiseResult<string>.Failure(ex.Message);
+                return ServiseResult<string>.Failure("خطا در اجرای کوئری");
             }
         }
 
         public async Task<ServiseResult<string>> GetsJsonDataViewByQuery(
-            string query,
-            params SqlParameter[] parameters)
+            string query, params SqlParameter[] parameters)
         {
             return await GetsJsonDataViewByQuery(query, 1, parameters);
+        }
+
+        // ═══════════════════════════════════════════════════
+        // فیلتر امن بر اساس Whitelist ستون
+        // ═══════════════════════════════════════════════════
+        public async Task<ServiseResult<string>> GetsFilteredJsonDataSafe(
+            string pageName, string rawData)
+        {
+            try
+            {
+                var built = SafeFilterQuery.Build(pageName, rawData);
+                if (!built.IsSuccess)
+                    return ServiseResult<string>.Failure(built.ErrorTitle!);
+
+                var (query, param) = built.Data;
+                return await GetsJsonDataViewByQuery(query, param);
+            }
+            catch
+            {
+                return ServiseResult<string>.Failure("خطا در اجرای فیلتر");
+            }
         }
 
         // ═══════════════════════════════════════════════════
         // List<T>
         // ═══════════════════════════════════════════════════
         public async Task<ServiseResult<List<T>>> GetsListClassDataViewByQuery<T>(
-            string query,
-            int connectionString,
-            params SqlParameter[] parameters) where T : new()
+            string query, int connectionString, params SqlParameter[] parameters) where T : new()
         {
             try
             {
+
+                var guard = QueryGuard.Validate(query, parameters);
+                if (!guard.IsSuccess)
+                    return ServiseResult<List<T>>.Failure(guard.ErrorTitle!);
+
                 var table = await _queryRepository.ExecuteQueryReturnTableAsync(query, connectionString, parameters);
                 var result = new List<T>();
 
@@ -177,15 +224,14 @@ namespace Application.Services
 
                 return ServiseResult<List<T>>.Success(result);
             }
-            catch (Exception ex)
+            catch
             {
-                return ServiseResult<List<T>>.Failure(ex.Message);
+                return ServiseResult<List<T>>.Failure("خطا در اجرای کوئری");
             }
         }
 
         public async Task<ServiseResult<List<T>>> GetsListClassDataViewByQuery<T>(
-            string query,
-            params SqlParameter[] parameters) where T : new()
+            string query, params SqlParameter[] parameters) where T : new()
         {
             return await GetsListClassDataViewByQuery<T>(query, 1, parameters);
         }
@@ -194,12 +240,15 @@ namespace Application.Services
         // T
         // ═══════════════════════════════════════════════════
         public async Task<ServiseResult<T>> GetsClassDataViewByQuery<T>(
-            string query,
-            int connectionString,
-            params SqlParameter[] parameters) where T : new()
+            string query, int connectionString, params SqlParameter[] parameters) where T : new()
         {
             try
             {
+
+                var guard = QueryGuard.Validate(query, parameters);
+                if (!guard.IsSuccess)
+                    return ServiseResult<T>.Failure(guard.ErrorTitle!);
+
                 var table = await _queryRepository.ExecuteQueryReturnTableAsync(query, connectionString, parameters);
 
                 if (table == null || table.Rows.Count == 0)
@@ -233,15 +282,14 @@ namespace Application.Services
 
                 return ServiseResult<T>.Success(result);
             }
-            catch (Exception ex)
+            catch
             {
-                return ServiseResult<T>.Failure(ex.Message);
+                return ServiseResult<T>.Failure("خطا در اجرای کوئری");
             }
         }
 
         public async Task<ServiseResult<T>> GetsClassDataViewByQuery<T>(
-            string query,
-            params SqlParameter[] parameters) where T : new()
+            string query, params SqlParameter[] parameters) where T : new()
         {
             return await GetsClassDataViewByQuery<T>(query, 1, parameters);
         }
@@ -250,12 +298,15 @@ namespace Application.Services
         // List<dynamic>
         // ═══════════════════════════════════════════════════
         public async Task<ServiseResult<List<dynamic>>> GetsDynamicDataViewByQuery(
-            string query,
-            int connectionString,
-            params SqlParameter[] parameters)
+            string query, int connectionString, params SqlParameter[] parameters)
         {
             try
             {
+
+                var guard = QueryGuard.Validate(query, parameters);
+                if (!guard.IsSuccess)
+                    return ServiseResult<List<dynamic>>.Failure(guard.ErrorTitle!);
+
                 var table = await _queryRepository.ExecuteQueryReturnTableAsync(query, connectionString, parameters);
                 var result = new List<dynamic>();
 
@@ -273,15 +324,14 @@ namespace Application.Services
 
                 return ServiseResult<List<dynamic>>.Success(result);
             }
-            catch (Exception ex)
+            catch
             {
-                return ServiseResult<List<dynamic>>.Failure(ex.Message);
+                return ServiseResult<List<dynamic>>.Failure("خطا در اجرای کوئری");
             }
         }
 
         public async Task<ServiseResult<List<dynamic>>> GetsDynamicDataViewByQuery(
-            string query,
-            params SqlParameter[] parameters)
+            string query, params SqlParameter[] parameters)
         {
             return await GetsDynamicDataViewByQuery(query, 1, parameters);
         }

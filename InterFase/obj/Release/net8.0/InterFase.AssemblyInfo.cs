@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InterFase")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+10ffb0b665d98258fda59de1e0cadc667c041a40")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5f0be483369d57d1a960a7d5cf34b7575e44769e")]
 [assembly: System.Reflection.AssemblyProductAttribute("InterFase")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InterFase")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

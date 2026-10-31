@@ -35,18 +35,21 @@ namespace TemplateSite.Controllers.Auth
         // LOGIN
         // ═══════════════════════════════════════════════════════════
         [HttpGet]
-        public async Task<IActionResult> Login()
+        public async Task<IActionResult> Login(string returnUrl = null)
         {
             if (signInManager.IsSignedIn(User))
             {
                 return RedirectToAction("Index", "Dashboard");
             }
+
+            ViewData["ReturnUrl"] = returnUrl;
+
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
             if (signInManager.IsSignedIn(User))
             {
@@ -55,6 +58,7 @@ namespace TemplateSite.Controllers.Auth
 
             if (!ModelState.IsValid)
             {
+                ViewData["ReturnUrl"] = returnUrl;
                 return View(model);
             }
 
@@ -76,10 +80,18 @@ namespace TemplateSite.Controllers.Auth
                 };
                 var user = await userManager.FindByNameAsync(User.Identity.Name);
                 Response.Cookies.Append("DataPerson", user.FullName, cookieOption);
+
+                // ═══ ⭐ بازگشت به returnUrl اگر معتبر بود ═══
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
                 return await RedirectByRole();
             }
 
             ModelState.AddModelError(string.Empty, "شماره تماس یا رمز عبور اشتباه است.");
+            ViewData["ReturnUrl"] = returnUrl;
             return View(model);
         }
 

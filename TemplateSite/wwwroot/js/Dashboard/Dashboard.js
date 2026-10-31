@@ -1,27 +1,59 @@
 /* ═══════════════════════════════════════════════════
-   Dashboard.js — بدون فیلتر دستی
+   Dashboard.js — داشبورد مدیریتی (با HttpHelper)
    ═══════════════════════════════════════════════════ */
 
 const DashboardState = {
-    range: 'month'};
+    range: 'month'
+};
 
+// ═══════════════════════════════════════════════════════
+// HttpHelper و UICore
+// ═══════════════════════════════════════════════════════
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+// ═══════════════════════════════════════════════════════
+// مدیریت خطا
+// ═══════════════════════════════════════════════════════
+function handleHttpError(err) {
+    console.error('[Dashboard] HTTP error:', err);
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        showDashboardToast('نشست شما منقضی شده. صفحه را رفرش کنید.', 'error');
+        return;
+    }
+    showDashboardToast('خطا در ارتباط با سرور', 'error');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
+
+// ═══════════════════════════════════════════════════════
+// شروع
+// ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function () {
     loadUserInfo();
     loadAllDashboardData();
+    initDashboardEvents();
 });
 
-// ═══════════ Load All ═══════════
+// ═══════════════════════════════════════════════════════
+// Load All
+// ═══════════════════════════════════════════════════════
 function loadAllDashboardData() {
-    loadKpiCards();
-    loadSalesChart();
-    loadOrdersStatusChart();
-    loadTopProducts();
-    loadRecentOrders();
-    loadRecentContacts();
-    loadPersonelsWithStores();
-    loadStoresSummary();
-    loadLowStock();
-    loadRecentActivities();
+    showLoading();
+    Promise.all([
+        loadKpiCards(),
+        loadSalesChart(),
+        loadOrdersStatusChart(),
+        loadTopProducts(),
+        loadRecentOrders(),
+        loadRecentContacts(),
+        loadPersonelsWithStores(),
+        loadStoresSummary(),
+        loadLowStock(),
+        loadRecentActivities()
+    ]).finally(hideLoading);
 }
 
 function refreshDashboard() {
@@ -29,34 +61,42 @@ function refreshDashboard() {
     showDashboardToast('داشبورد بروزرسانی شد', 'success');
 }
 
-// ═══════════ User Info ═══════════
+// ═══════════════════════════════════════════════════════
+// User Info
+// ═══════════════════════════════════════════════════════
 function loadUserInfo() {
-    $.post('/Dashboard/GetUserInfo', {}, function (res) {
-        if (!res.isSuccess) return;
-        const info = JSON.parse(res.data);
-        const welcome = document.querySelector('.welcome-area h2');
-        if (welcome) {
-            welcome.innerHTML = `<i class="fas fa-tachometer-alt"></i> سلام، ${info.FullName} 👋`;
-        }
-    });
+    Http.postSecure('/Dashboard/GetUserInfo')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const info = JSON.parse(res.data);
+            const welcome = document.querySelector('.welcome-area h2');
+            if (welcome) {
+                welcome.innerHTML = `<i class="fas fa-tachometer-alt"></i> سلام، ${info.FullName} 👋`;
+            }
+        })
+        .catch(handleHttpError);
 }
 
-// ═══════════ KPI ═══════════
+// ═══════════════════════════════════════════════════════
+// KPI
+// ═══════════════════════════════════════════════════════
 function loadKpiCards() {
-    $.post('/Dashboard/GetKpiCards', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = JSON.parse(res.data);
-        const row = Array.isArray(data) ? data[0] : data;
+    return Http.postSecure('/Dashboard/GetKpiCards')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = JSON.parse(res.data);
+            const row = Array.isArray(data) ? data[0] : data;
 
-        setKpi('kpiTodaySales', formatMoney(row.todaySales || row.TodaySales || 0));
-        setKpi('kpiMonthSales', formatMoney(row.monthSales || row.MonthSales || 0));
-        setKpi('kpiPendingOrders', row.pendingOrders || row.PendingOrders || 0);
-        setKpi('kpiActiveProducts', row.activeProducts || row.ActiveProducts || 0);
-        setKpi('kpiNewMessages', row.newMessages || row.NewMessages || 0);
-        setKpi('kpiTotalPersonels', row.totalPersonels || row.TotalPersonels || 0);
-        setKpi('kpiTotalStores', row.totalStores || row.TotalStores || 0);
-        setKpi('kpiLowStock', row.lowStock || row.LowStock || 0);
-    });
+            setKpi('kpiTodaySales', formatMoney(row.todaySales || row.TodaySales || 0));
+            setKpi('kpiMonthSales', formatMoney(row.monthSales || row.MonthSales || 0));
+            setKpi('kpiPendingOrders', row.pendingOrders || row.PendingOrders || 0);
+            setKpi('kpiActiveProducts', row.activeProducts || row.ActiveProducts || 0);
+            setKpi('kpiNewMessages', row.newMessages || row.NewMessages || 0);
+            setKpi('kpiTotalPersonels', row.totalPersonels || row.TotalPersonels || 0);
+            setKpi('kpiTotalStores', row.totalStores || row.TotalStores || 0);
+            setKpi('kpiLowStock', row.lowStock || row.LowStock || 0);
+        })
+        .catch(handleHttpError);
 }
 
 function setKpi(id, value) {
@@ -64,33 +104,42 @@ function setKpi(id, value) {
     if (el) el.textContent = value;
 }
 
-// ═══════════ Sales Chart ═══════════
+// ═══════════════════════════════════════════════════════
+// Sales Chart
+// ═══════════════════════════════════════════════════════
 function loadSalesChart() {
-    $.post('/Dashboard/GetSalesChart', { range: DashboardState.range }, function (res) {
-        if (!res.isSuccess) return;
-        const data = JSON.parse(res.data);
-        renderSalesChart(data);  
-    });
+    return Http.postSecure('/Dashboard/GetSalesChart', { range: DashboardState.range })
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = JSON.parse(res.data);
+            renderSalesChart(data);
+        })
+        .catch(handleHttpError);
 }
 
-
-
-// ═══════════ Orders Status Chart ═══════════
+// ═══════════════════════════════════════════════════════
+// Orders Status Chart
+// ═══════════════════════════════════════════════════════
 function loadOrdersStatusChart() {
-    $.post('/Dashboard/GetOrdersStatusChart', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = JSON.parse(res.data);
-        renderOrdersChart(data);  // ⭐ تابع جدید
-    });
+    return Http.postSecure('/Dashboard/GetOrdersStatusChart')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = JSON.parse(res.data);
+            renderOrdersChart(data);
+        })
+        .catch(handleHttpError);
 }
 
-
-// ═══════════ Recent Orders ═══════════
+// ═══════════════════════════════════════════════════════
+// Recent Orders
+// ═══════════════════════════════════════════════════════
 function loadRecentOrders() {
-    $.post('/Dashboard/GetRecentOrders', {}, function (res) {
-        if (!res.isSuccess) return;
-        renderRecentOrders(JSON.parse(res.data));
-    });
+    return Http.postSecure('/Dashboard/GetRecentOrders')
+        .then(res => {
+            if (!res.isSuccess) return;
+            renderRecentOrders(JSON.parse(res.data));
+        })
+        .catch(handleHttpError);
 }
 
 function renderRecentOrders(data) {
@@ -105,10 +154,10 @@ function renderRecentOrders(data) {
         return `
             <tr>
                 <td><span class="num-badge">#${o.recommendationsId || o.RecommendationsId}</span></td>
-                <td>${o.customerName || o.CustomerName || '—'}</td>
+                <td>${escapeHtml(o.customerName || o.CustomerName || '—')}</td>
                 <td><span class="money">${formatMoney(o.totalAmount || o.TotalAmount || 0)}</span></td>
                 <td><span class="status-badge ${status.cls}">${status.text}</span></td>
-                <td>${o.orderDate || o.OrderDate || '—'}</td>
+                <td>${escapeHtml(o.orderDate || o.OrderDate || '—')}</td>
             </tr>`;
     }).join('');
 }
@@ -125,12 +174,16 @@ function getOrderStatusBadge(level) {
     return map[level] || { text: '—', cls: 'pending' };
 }
 
-// ═══════════ Recent Contacts ═══════════
+// ═══════════════════════════════════════════════════════
+// Recent Contacts
+// ═══════════════════════════════════════════════════════
 function loadRecentContacts() {
-    $.post('/Dashboard/GetRecentContacts', {}, function (res) {
-        if (!res.isSuccess) return;
-        renderRecentContacts(JSON.parse(res.data));
-    });
+    return Http.postSecure('/Dashboard/GetRecentContacts')
+        .then(res => {
+            if (!res.isSuccess) return;
+            renderRecentContacts(JSON.parse(res.data));
+        })
+        .catch(handleHttpError);
 }
 
 function renderRecentContacts(data) {
@@ -142,18 +195,22 @@ function renderRecentContacts(data) {
     }
     tbody.innerHTML = data.map(c => `
         <tr>
-            <td>${c.fullName || c.FullName || '—'}</td>
-            <td>${c.subject || c.Subject || '—'}</td>
-            <td>${c.createdDate || c.CreatedDate || '—'}</td>
+            <td>${escapeHtml(c.fullName || c.FullName || '—')}</td>
+            <td>${escapeHtml(c.subject || c.Subject || '—')}</td>
+            <td>${escapeHtml(c.createdDate || c.CreatedDate || '—')}</td>
         </tr>`).join('');
 }
 
-// ═══════════ Personels ═══════════
+// ═══════════════════════════════════════════════════════
+// Personels
+// ═══════════════════════════════════════════════════════
 function loadPersonelsWithStores() {
-    $.post('/Dashboard/GetPersonelsWithStores', {}, function (res) {
-        if (!res.isSuccess) return;
-        renderPersonels(JSON.parse(res.data));
-    });
+    return Http.postSecure('/Dashboard/GetPersonelsWithStores')
+        .then(res => {
+            if (!res.isSuccess) return;
+            renderPersonels(JSON.parse(res.data));
+        })
+        .catch(handleHttpError);
 }
 
 function renderPersonels(data) {
@@ -166,9 +223,9 @@ function renderPersonels(data) {
     tbody.innerHTML = data.map((p, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td><strong>${p.fullName || p.FullName || '—'}</strong></td>
-            <td>${p.roleCaption || p.RoleCaption || '—'}</td>
-            <td>${truncate(p.address || p.Address || '—', 40)}</td>
+            <td><strong>${escapeHtml(p.fullName || p.FullName || '—')}</strong></td>
+            <td>${escapeHtml(p.roleCaption || p.RoleCaption || '—')}</td>
+            <td>${escapeHtml(truncate(p.address || p.Address || '—', 40))}</td>
             <td><span class="num-badge gold">${p.storeCount || p.StoreCount || 0}</span></td>
             <td><span class="num-badge">${p.productCount || p.ProductCount || 0}</span></td>
             <td>
@@ -178,12 +235,16 @@ function renderPersonels(data) {
         </tr>`).join('');
 }
 
-// ═══════════ Stores ═══════════
+// ═══════════════════════════════════════════════════════
+// Stores
+// ═══════════════════════════════════════════════════════
 function loadStoresSummary() {
-    $.post('/Dashboard/GetStoresSummary', {}, function (res) {
-        if (!res.isSuccess) return;
-        renderStores(JSON.parse(res.data));
-    });
+    return Http.postSecure('/Dashboard/GetStoresSummary')
+        .then(res => {
+            if (!res.isSuccess) return;
+            renderStores(JSON.parse(res.data));
+        })
+        .catch(handleHttpError);
 }
 
 function renderStores(data) {
@@ -196,9 +257,9 @@ function renderStores(data) {
     tbody.innerHTML = data.map((s, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td><strong>${s.storeName || s.StoreName || '—'}</strong></td>
-            <td><span class="num-badge">${s.codeStore || s.CodeStore || '—'}</span></td>
-            <td>${s.ownerName || s.OwnerName || '—'}</td>
+            <td><strong>${escapeHtml(s.storeName || s.StoreName || '—')}</strong></td>
+            <td><span class="num-badge">${escapeHtml(s.codeStore || s.CodeStore || '—')}</span></td>
+            <td>${escapeHtml(s.ownerName || s.OwnerName || '—')}</td>
             <td><span class="num-badge">${s.productCount || s.ProductCount || 0}</span></td>
             <td><span class="num-badge">${s.orderCount || s.OrderCount || 0}</span></td>
             <td><span class="money">${formatMoney(s.totalRevenue || s.TotalRevenue || 0)}</span></td>
@@ -209,12 +270,16 @@ function renderStores(data) {
         </tr>`).join('');
 }
 
-// ═══════════ Top Products ═══════════
+// ═══════════════════════════════════════════════════════
+// Top Products
+// ═══════════════════════════════════════════════════════
 function loadTopProducts() {
-    $.post('/Dashboard/GetTopProducts', {}, function (res) {
-        if (!res.isSuccess) return;
-        renderTopProducts(JSON.parse(res.data));
-    });
+    return Http.postSecure('/Dashboard/GetTopProducts')
+        .then(res => {
+            if (!res.isSuccess) return;
+            renderTopProducts(JSON.parse(res.data));
+        })
+        .catch(handleHttpError);
 }
 
 function renderTopProducts(data) {
@@ -227,18 +292,22 @@ function renderTopProducts(data) {
     tbody.innerHTML = data.map((p, i) => `
         <tr>
             <td><span class="num-badge ${i === 0 ? 'gold' : ''}">${i + 1}</span></td>
-            <td>${p.productName || p.ProductName || '—'}</td>
+            <td>${escapeHtml(p.productName || p.ProductName || '—')}</td>
             <td><span class="num-badge">${p.totalSold || p.TotalSold || 0}</span></td>
             <td><span class="money">${formatMoney(p.totalRevenue || p.TotalRevenue || 0)}</span></td>
         </tr>`).join('');
 }
 
-// ═══════════ Low Stock ═══════════
+// ═══════════════════════════════════════════════════════
+// Low Stock
+// ═══════════════════════════════════════════════════════
 function loadLowStock() {
-    $.post('/Dashboard/GetLowStock', {}, function (res) {
-        if (!res.isSuccess) return;
-        renderLowStock(JSON.parse(res.data));
-    });
+    return Http.postSecure('/Dashboard/GetLowStock')
+        .then(res => {
+            if (!res.isSuccess) return;
+            renderLowStock(JSON.parse(res.data));
+        })
+        .catch(handleHttpError);
 }
 
 function renderLowStock(data) {
@@ -250,8 +319,8 @@ function renderLowStock(data) {
     }
     tbody.innerHTML = data.map(p => `
         <tr>
-            <td>${p.productName || p.ProductName || '—'}</td>
-            <td>${p.colorName || p.ColorName || '—'}</td>
+            <td>${escapeHtml(p.productName || p.ProductName || '—')}</td>
+            <td>${escapeHtml(p.colorName || p.ColorName || '—')}</td>
             <td>
                 <span class="status-badge ${(p.stock || p.Stock) < 3 ? 'cancelled' : 'pending'}">
                     ${p.stock || p.Stock || 0}
@@ -260,12 +329,16 @@ function renderLowStock(data) {
         </tr>`).join('');
 }
 
-// ═══════════ Activities ═══════════
+// ═══════════════════════════════════════════════════════
+// Activities
+// ═══════════════════════════════════════════════════════
 function loadRecentActivities() {
-    $.post('/Dashboard/GetRecentActivities', {}, function (res) {
-        if (!res.isSuccess) return;
-        renderActivities(JSON.parse(res.data));
-    });
+    return Http.postSecure('/Dashboard/GetRecentActivities')
+        .then(res => {
+            if (!res.isSuccess) return;
+            renderActivities(JSON.parse(res.data));
+        })
+        .catch(handleHttpError);
 }
 
 function renderActivities(data) {
@@ -286,16 +359,28 @@ function renderActivities(data) {
                 <div class="timeline-icon ${cls}"><i class="fas ${icon}"></i></div>
                 <div class="timeline-content">
                     <div class="timeline-name">
-                        ${a.personelName || a.PersonelName || '—'}
-                        <span style="opacity:.6;font-weight:400">${text}</span>
+                        ${escapeHtml(a.personelName || a.PersonelName || '—')}
+                        <span style="opacity:.6;font-weight:400">${escapeHtml(text)}</span>
                     </div>
-                    <div class="timeline-meta">${a.actDate || a.ActDate || '—'}</div>
+                    <div class="timeline-meta">${escapeHtml(a.actDate || a.ActDate || '—')}</div>
                 </div>
             </div>`;
     }).join('');
 }
 
-// ═══════════ Helpers ═══════════
+// ═══════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════
+function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function formatMoney(v) {
     if (v === null || v === undefined) return '0';
     return Number(v).toLocaleString('fa-IR') + ' ت';
@@ -334,6 +419,10 @@ function scrollToSection(id) {
 }
 
 function showDashboardToast(message, type = 'info') {
+    if (UI && UI.showToast) {
+        UI.showToast(message, type);
+        return;
+    }
     const colors = { success: '#10b981', error: '#ef4444', info: '#0f6bff' };
     const toast = document.createElement('div');
     toast.style.cssText = `
@@ -348,14 +437,16 @@ function showDashboardToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 2500);
 }
 
+// ═══════════════════════════════════════════════════════
+// Events
+// ═══════════════════════════════════════════════════════
 function initDashboardEvents() {
-    // ⭐ فیلتر بازه زمانی (باقی بماند)
     document.querySelectorAll('.date-range button').forEach(btn => {
         btn.addEventListener('click', function () {
             document.querySelectorAll('.date-range button').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             DashboardState.range = this.dataset.range;
-            loadSalesChart();  // فقط نمودار فروش آپدیت می‌شه
+            loadSalesChart();
         });
     });
 }

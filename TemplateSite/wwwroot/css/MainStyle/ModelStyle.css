@@ -21,7 +21,7 @@
     background: var(--bg-card);
     border-radius: 32px;
     padding: 28px;
-    max-width: 550px;
+    max-width: 750px;
 }
 
 .modelTable {
@@ -46,7 +46,7 @@
 .modal input, .modal select, .modal textarea {
     width: 100%;
     padding: 12px;
-    margin-bottom: 16px;
+    margin-top: 5px;
     border-radius: 16px;
     border: 1px solid var(--border-light);
     background: var(--bg-body);

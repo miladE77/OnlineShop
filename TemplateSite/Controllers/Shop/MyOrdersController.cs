@@ -3,7 +3,9 @@ using Domain.Models;
 using Domain.ServiseResult;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
+using System.Data;
 using TemplateSite.Filters;
 
 namespace TemplateSite.Controllers.ShopPanel
@@ -137,7 +139,8 @@ OUTER APPLY (
 ORDER BY rec.DateTimeRecord DESC;
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -189,10 +192,11 @@ ORDER BY rec.DateTimeRecord DESC;
         LEFT JOIN Personel p ON rec.PersonelId = p.PersonelId
         LEFT JOIN Receipt r ON r.RecommendationsId = rec.RecommendationsId AND r.Status = 1
         LEFT JOIN TypePeyment tp ON r.TypePeymentId = tp.TypePeymentId
-        WHERE rec.RecommendationsId = {orderId}
+        WHERE rec.RecommendationsId = @orderId
     ";
 
-            var headerResult = await _serviceQueryDB.GetsJsonDataViewByQuery(headerQuery);
+            var headerResult = await _serviceQueryDB.GetsJsonDataViewByQuery(headerQuery,
+                new SqlParameter($"@orderId", SqlDbType.Int) { Value = orderId });
             if (!headerResult.IsSuccess)
                 return ServiseResult<string>.Failure("خطا در دریافت اطلاعات سفارش");
 
@@ -231,11 +235,13 @@ ORDER BY rec.DateTimeRecord DESC;
         FROM [Order] o
         LEFT JOIN ColorPriceProduct cp ON o.ColorPriceProductId = cp.ColorPriceProductId
         LEFT JOIN Product pr ON cp.ProductId = pr.ProductId
-        WHERE o.RecommendationsId = {orderId}
+        WHERE o.RecommendationsId = @orderId
         ORDER BY o.OrderId
     ";
 
-            var itemsResult = await _serviceQueryDB.GetsJsonDataViewByQuery(itemsQuery);
+            var itemsResult = await _serviceQueryDB.GetsJsonDataViewByQuery(itemsQuery, 
+                new SqlParameter($"@orderId", SqlDbType.Int) { Value = orderId });
+
             if (!itemsResult.IsSuccess)
                 return ServiseResult<string>.Failure("خطا در دریافت محصولات سفارش");
 
@@ -252,10 +258,11 @@ ORDER BY rec.DateTimeRecord DESC;
             ISNULL(tp.TypePeymentCaption, N'نامشخص') AS TypePeymentCaption
             FROM Receipt r
             LEFT JOIN TypePeyment tp ON r.TypePeymentId = tp.TypePeymentId
-            WHERE r.RecommendationsId = {orderId}
+            WHERE r.RecommendationsId = @orderId
             ORDER BY r.ReceiptId";
 
-            var receiptsResult = await _serviceQueryDB.GetsJsonDataViewByQuery(receiptsQuery);
+            var receiptsResult = await _serviceQueryDB.GetsJsonDataViewByQuery(receiptsQuery, 
+                new SqlParameter($"@orderId", SqlDbType.Int) { Value = orderId });
 
             // ═══════════════════════════════════════════════════════
             // ⭐ ۴. ترکیب همه در یک پاسخ

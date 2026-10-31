@@ -4,7 +4,10 @@ using Domain.ServiseResult;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
+using Newtonsoft.Json;
 using Site.Filters;
+using System.Data;
 using TemplateSite.Filters;
 
 namespace TemplateSite.Controllers.ShopPanel
@@ -65,7 +68,7 @@ namespace TemplateSite.Controllers.ShopPanel
                 return ServiseResult<string>.Failure("دوباره وارد شوید");
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(
-                $"select * from PersonelView where PersonelId = {personelId}");
+                $"select * from PersonelView where PersonelId = @Code", new SqlParameter($"@Code", SqlDbType.Int) { Value = personelId });
         }
 
         // ═══════════════════════════════════════════════════════
@@ -104,10 +107,26 @@ namespace TemplateSite.Controllers.ShopPanel
             if (StoreNew.StoreId != 0) return ServiseResult<string>.Failure("این داده قبلا ثبت شده است");
 
             var personelId = await GetCurrentPersonelIdAsync();
+
             if (personelId == null)
                 return ServiseResult<string>.Failure("دوباره وارد شوید");
 
             StoreNew.PersonelId = personelId.Value;
+
+            string query = $"select Count(*) from Store where PersonelId = {personelId.Value}";
+            var result = await _serviceQueryDB.GetsTableDataViewByQuery(query);
+
+            if (result.IsSuccess)
+            {
+                if (Convert.ToInt32(result.Data.Rows[0][0]) >= 3)
+                {
+                    return ServiseResult<string>.Failure("حداکثر تعداد فروشگاهی که میتوانید داشته باشید 3 می باشد");
+                }
+            }
+            else
+            {
+                return ServiseResult<string>.Failure("خطا در ثبت");
+            }
 
             return await _serviceStore.UpdateStore(StoreNew);
         }
@@ -118,11 +137,20 @@ namespace TemplateSite.Controllers.ShopPanel
         [ValidateAntiForgeryToken]
         public async Task<ServiseResult<string>> Update(Store StoreNew)
         {
-            if (StoreNew.StoreId == 0) return ServiseResult<string>.Failure("این داده در دیتابیس وجود ندارد");
+            if (StoreNew.StoreId == 0)
+                return ServiseResult<string>.Failure("این داده در دیتابیس وجود ندارد");
 
             var personelId = await GetCurrentPersonelIdAsync();
             if (personelId == null)
                 return ServiseResult<string>.Failure("دوباره وارد شوید");
+
+            var storeIdsResult = await _serviceStore.GetStoreIds(personelId.Value);
+            if (!storeIdsResult.IsSuccess)
+                return ServiseResult<string>.Failure("خطا در بررسی دسترسی");
+
+            var allowedStoreIds = JsonConvert.DeserializeObject<List<int>>(storeIdsResult.Data);
+            if (allowedStoreIds == null || !allowedStoreIds.Contains(StoreNew.StoreId))
+                return ServiseResult<string>.Failure("دسترسی غیرمجاز — این فروشگاه متعلق به شما نیست");
 
             StoreNew.PersonelId = personelId.Value;
 

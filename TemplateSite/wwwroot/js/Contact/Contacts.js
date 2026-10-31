@@ -1,48 +1,77 @@
+// ═══ Contacts.js ═══
+
 let ContactList = [];
 let editingContact = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 GetTypeContactData(); function GetTypeContactData() {
-    $.post('/TypeContacts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.TypeContactId}\">${item.TypeContactCaption}</option>`;
-            });
-            document.getElementById("TypeContact").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}GetStoreData(); function GetStoreData() {
-    $.post('/Stores/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.StoreId}\">${item.StoreCaption}</option>`;
-            });
-            document.getElementById("Store").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/TypeContacts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.TypeContactId}\">${item.TypeContactCaption}</option>`;
+                });
+                document.getElementById("TypeContact").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
+} GetStoreData(); function GetStoreData() {
+    showLoading();
+    Http.postSecure('/Stores/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.StoreId}\">${item.StoreCaption}</option>`;
+                });
+                document.getElementById("Store").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function saveToStorage() {
-    $.post('/Contacts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            ContactList = JSON.parse(response.data);
-            localStorage.setItem("Contacts", JSON.stringify(ContactList));
-            renderTable();
-            nextId = Math.max(...ContactList.map(i => i.ContactId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Contacts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                ContactList = JSON.parse(response.data);
+                localStorage.setItem("Contacts", JSON.stringify(ContactList));
+                renderTable();
+                nextId = Math.max(...ContactList.map(i => i.ContactId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("Contacts");
@@ -63,14 +92,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchContact").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...ContactList];
-    if (searchTerm) filtered = filtered.filter(p =>p.ContactCaption.toLowerCase().includes(searchTerm) || p.TypeContactId.toLowerCase().includes(searchTerm) || p.StoreId.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.ContactCaption.toLowerCase().includes(searchTerm) || p.TypeContactId.toLowerCase().includes(searchTerm) || p.StoreId.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("ContactTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -89,27 +118,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteContact(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deleteContact(ContactId) {
-    $.post('/Roles/DeleteData', { 'id': ContactId }, function (response) {
-        if (response.isSuccess) {
-            ContactList = ContactList.filter(data => data.ContactId !== ContactId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Roles/DeleteData', { 'id': ContactId })
+        .then(response => {
+            if (response.isSuccess) {
+                ContactList = ContactList.filter(data => data.ContactId !== ContactId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("ContactModal");
 const modalTitle = document.getElementById("modalTitle");
-const empContactId = document.getElementById("ContactId");const empContactCaption = document.getElementById("ContactCaption");const empTypeContactId = document.getElementById("TypeContact");const empStoreId = document.getElementById("Store");const empStatus = document.getElementById("Status");
+const empContactId = document.getElementById("ContactId"); const empContactCaption = document.getElementById("ContactCaption"); const empTypeContactId = document.getElementById("TypeContact"); const empStoreId = document.getElementById("Store"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingContact = false;
@@ -120,12 +153,12 @@ function openEditModal(ContactId) {
     const data = ContactList.find(data => data.ContactId === ContactId);
     if (data) {
         editingContact = true;
-        
-	 empContactId.value = data.ContactId;
-	 empContactCaption.value = data.ContactCaption;
-	 empTypeContactId.value = data.TypeContactId;
-	 empStoreId.value = data.StoreId;
-	 empStatus.checked = Boolean(data.Status);
+
+        empContactId.value = data.ContactId;
+        empContactCaption.value = data.ContactCaption;
+        empTypeContactId.value = data.TypeContactId;
+        empStoreId.value = data.StoreId;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("ContactModal");
     }
@@ -135,55 +168,63 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const ContactId = empContactId.value.trim();
-	 const ContactCaption = empContactCaption.value.trim();
-	 const TypeContactId = empTypeContactId.value.trim();
-	 const StoreId = empStoreId.value.trim();
-	 const Status = empStatus.checked;
+
+    const ContactId = empContactId.value.trim();
+    const ContactCaption = empContactCaption.value.trim();
+    const TypeContactId = empTypeContactId.value.trim();
+    const StoreId = empStoreId.value.trim();
+    const Status = empStatus.checked;
     if (!ContactCaption || !TypeContactId || !StoreId) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingContact) { updateContact(ContactId,ContactCaption,TypeContactId,StoreId,Status); } else { addContact(ContactId,ContactCaption,TypeContactId,StoreId,Status); }
+    if (editingContact) { updateContact(ContactId, ContactCaption, TypeContactId, StoreId, Status); } else { addContact(ContactId, ContactCaption, TypeContactId, StoreId, Status); }
     closeModal("ContactModal");
 }
-function addContact(ContactId,ContactCaption,TypeContactId,StoreId,Status) {
+function addContact(ContactId, ContactCaption, TypeContactId, StoreId, Status) {
     const newContact = {
-        ContactId,ContactCaption,TypeContactId,StoreId,Status
+        ContactId, ContactCaption, TypeContactId, StoreId, Status
     };
     newContact.ContactId = 0;
     SendData(newContact, true);
 }
-function updateContact(ContactId,ContactCaption,TypeContactId,StoreId,Status) {
+function updateContact(ContactId, ContactCaption, TypeContactId, StoreId, Status) {
     const idx = ContactList.findIndex(data => data.ContactId == ContactId);
     if (idx !== -1) {
-        ContactList[idx] = { ContactId,ContactCaption,TypeContactId,StoreId,Status };
+        ContactList[idx] = { ContactId, ContactCaption, TypeContactId, StoreId, Status };
         SendData(ContactList[idx], false);
     }
 }
 function SendData(newContact, typeRequst) {
-    $.post('/Contacts/UpdateData', newContact, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                ContactList.push(newContact);
+    const url = typeRequst
+        ? '/Contacts/AddData'
+        : '/Contacts/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newContact)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    ContactList.push(newContact);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empContactId.value = "";
- empContactCaption.value = "";
- empTypeContactId.value = "";
- empStoreId.value = "";
- empStatus.checked = false;
+
+    empContactId.value = "";
+    empContactCaption.value = "";
+    empTypeContactId.value = "";
+    empStoreId.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -198,9 +239,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("ContactModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

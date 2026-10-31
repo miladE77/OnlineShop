@@ -132,10 +132,30 @@
 
 <div id="SitePageModal" class="modal-overlay">
     <div class="modal modelInput">
-        <h3 id="modalTitle">افزودن  تک صفحه نمایشی جدید</h3>
+        <h3 id="modalTitle">افزودن صفحه جدید</h3>
 
-        <input type="number" id="SitePageId" placeholder="شناسه">
-        <input type="text" id="SitePageCaption" placeholder="عنوان سایت">
+        <!-- ═══ شناسه — نمایش متنی ═══ -->
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <label style="padding:12px; font-weight:600;">شناسه</label>
+            <span id="displaySitePageId"
+                  style="flex:1; padding:12px; background:var(--bg-body); border-radius:12px; border:1px solid var(--border-light); color:var(--text-secondary); font-family:monospace;">
+                جدید
+            </span>
+        </div>
+
+        <!-- ═══ عنوان ═══ -->
+        <input type="text" id="SitePageCaption" placeholder="عنوان صفحه *" maxlength="200" />
+
+        <!-- ═══ کد دسترسی — نمایش متنی ═══ -->
+        <div style="display:flex; align-items:center; gap:10px; margin-top:16px; margin-bottom:10px;">
+            <label style="padding:12px; font-weight:600;">کد دسترسی داخلی</label>
+            <span id="displayCodePage"
+                  style="flex:1; padding:12px; background:var(--bg-body); border-radius:12px; border:1px solid var(--border-light); color:var(--primary); font-family:monospace; font-weight:700; letter-spacing:1px;">
+                خودکار تولید می‌شود
+            </span>
+        </div>
+
+        <!-- ═══ ویرایشگر HTML ═══ -->
         <div class="html-editor-wrapper">
             <div class="html-editor-tabs">
                 <button type="button" class="html-tab active" data-tab="code" onclick="switchHtmlTab('code')">
@@ -157,11 +177,12 @@
                 <iframe id="SitePageHtmlPreview" sandbox="allow-same-origin"></iframe>
             </div>
         </div>
-        <input type="text" id="CodePage" placeholder="کد دسترسی داخلی">
-        <div style="display:flex;">
-            <label>وضعیت</label> 
-            <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;margin-top: 5px;">
+
+        <div style="display:flex; align-items:center; margin-bottom:16px;">
+            <label style="margin:0 8px 0 0;">وضعیت</label>
+            <input type="checkbox" id="Status" style="width:20px; height:20px;" />
         </div>
+
         <div class="modal-buttons">
             <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
             <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>

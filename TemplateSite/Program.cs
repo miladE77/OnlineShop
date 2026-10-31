@@ -18,7 +18,6 @@ builder.Services.AddDbContext<DBContext>(options =>
     )
 );
 
-
 // ============================================
 // ۲. Identity
 // ============================================
@@ -39,6 +38,8 @@ builder.Services.AddIdentity<Userapp, IdentityRole>(options =>
     // Lockout
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
+
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<DBContext>()
 .AddDefaultTokenProviders();
@@ -62,8 +63,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 
     // تنظیمات امنیتی کوکی
     options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
     options.Cookie.SameSite = SameSiteMode.Lax;
+
 });
 
 // ============================================
@@ -76,8 +81,12 @@ builder.Services.AddProjectServices();
 // ============================================
 // ۶. MVC
 // ============================================
-builder.Services.AddControllersWithViews();
 
+builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+});
 // ============================================
 // ۷. Logging
 // ============================================

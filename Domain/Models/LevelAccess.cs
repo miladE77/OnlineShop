@@ -9,7 +9,7 @@
         ////DBconectID
         public int LevelAccessId { get; set; }///شناسه
         public string? LevelAccessCaption { get; set; }//&عنوان دسترسی
-        public string? CodeAccess { get; set; }///نوع عملیات
+        public string? CodeAccess { get; set; }///رشته کد عملیات
         public bool Status { get; set; } ///وضعیت
         public List<Tocken>? TockenId { get; set; }
         public List<Role>? RoleId { get; set; }

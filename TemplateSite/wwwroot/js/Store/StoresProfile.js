@@ -236,8 +236,8 @@
     // فروشگاه — ذخیره
     // ═══════════════════════════════════════════════════════
     async function saveStore() {
-        const caption = $('#storeCaption').val().trim();
-        const address = $('#storeAddress').val().trim();
+        const caption = $('#storeCaptionInput').val().trim();
+        const address = $('#storeAddressInput').val().trim();
 
         if (!caption) {
             UI.showToast('عنوان فروشگاه را وارد کنید', 'error');
@@ -291,7 +291,6 @@
                         };
                     }
                 } else {
-                    // ─── افزودن → دوباره از سرور بگیر ───
                     await loadStores();
                 }
 

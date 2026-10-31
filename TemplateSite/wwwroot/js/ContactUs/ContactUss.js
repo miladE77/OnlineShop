@@ -1,3 +1,5 @@
+// ═══ ContactUss.js ═══
+
 /* ============================================================
    ContactUss.js — مدیریت فرم تماس با ما (با تقویم شمسی)
    ------------------------------------------------------------
@@ -8,6 +10,21 @@
 
 let ContactUsList = [];
 let editingContactUs = false;
+
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 // ============================================================
 // ابزار: نمایش تاریخ شمسی در جدول
@@ -59,18 +76,23 @@ function getCondetionBadgeClass(condetion) {
 // ============================================================
 GetStoreData();
 function GetStoreData() {
-    $.post('/Stores/GetAllData', function (response) {
-        if (response.isSuccess) {
-            const dataConvert = JSON.parse(response.data);
-            let options = '<option value="">انتخاب فروشگاه</option>';
-            dataConvert.forEach(function (item) {
-                options += `<option value="${item.StoreId}">${item.StoreCaption}</option>`;
-            });
-            document.getElementById("Store").innerHTML = options;
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/Stores/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                const dataConvert = JSON.parse(response.data);
+                let options = '<option value="">انتخاب فروشگاه</option>';
+                dataConvert.forEach(function (item) {
+                    options += `<option value="${item.StoreId}">${item.StoreCaption}</option>`;
+                });
+                document.getElementById("Store").innerHTML = options;
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -78,37 +100,45 @@ function GetStoreData() {
 // ============================================================
 GetPersonelData();
 function GetPersonelData() {
-    $.post('/Personels/GetAllData', function (response) {
-        if (response.isSuccess) {
-            const dataConvert = JSON.parse(response.data);
-            let options = '<option value="">انتخاب پرسشگر</option>';
-            dataConvert.forEach(function (item) {
-                const fullName = `${item.FirstName || ''} ${item.LastName || ''}`.trim();
-                options += `<option value="${item.PersonelId}">${fullName || item.PersonelId}</option>`;
-            });
-            document.getElementById("Personel").innerHTML = options;
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Personels/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                const dataConvert = JSON.parse(response.data);
+                let options = '<option value="">انتخاب پرسشگر</option>';
+                dataConvert.forEach(function (item) {
+                    const fullName = `${item.FirstName || ''} ${item.LastName || ''}`.trim();
+                    options += `<option value="${item.PersonelId}">${fullName || item.PersonelId}</option>`;
+                });
+                document.getElementById("Personel").innerHTML = options;
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
 // localStorage
 // ============================================================
 function saveToStorage() {
-    $.post('/ContactUss/GetAllData', function (response) {
-        if (response.isSuccess) {
-            ContactUsList = JSON.parse(response.data);
-            localStorage.setItem("ContactUss", JSON.stringify(ContactUsList));
-            renderTable();
-            if (ContactUsList.length > 0) {
-                nextId = Math.max(...ContactUsList.map(i => i.ContactUsId));
+    showLoading();
+    Http.postSecure('/ContactUss/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                ContactUsList = JSON.parse(response.data);
+                localStorage.setItem("ContactUss", JSON.stringify(ContactUsList));
+                renderTable();
+                if (ContactUsList.length > 0) {
+                    nextId = Math.max(...ContactUsList.map(i => i.ContactUsId));
+                }
+            } else {
+                alert(response.errorTitle);
             }
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 function loadFromStorage() {
@@ -212,16 +242,20 @@ function renderTable() {
 // حذف
 // ============================================================
 function deleteContactUs(contactUsId) {
-    $.post('/ContactUss/DeleteData', { 'id': contactUsId }, function (response) {
-        if (response.isSuccess) {
-            ContactUsList = ContactUsList.filter(d => d.ContactUsId !== contactUsId);
-            localStorage.setItem("ContactUss", JSON.stringify(ContactUsList));
-            renderTable();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/ContactUss/DeleteData', { 'id': contactUsId })
+        .then(response => {
+            if (response.isSuccess) {
+                ContactUsList = ContactUsList.filter(d => d.ContactUsId !== contactUsId);
+                localStorage.setItem("ContactUss", JSON.stringify(ContactUsList));
+                renderTable();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -398,16 +432,22 @@ function updateContactUs(ContactUsId, ContactUsCaption, FullName, Email, PhoneNu
 }
 
 function SendData(contactUs, isAdd) {
-    $.post('/ContactUss/UpdateData', contactUs, function (response) {
-        if (response.isSuccess) {
-            saveToStorage();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    }).fail(function () {
-        alert("خطا در ارتباط با سرور");
-    });
+    const url = isAdd
+        ? '/ContactUss/AddData'
+        : '/ContactUss/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, contactUs)
+        .then(response => {
+            if (response.isSuccess) {
+                saveToStorage();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================

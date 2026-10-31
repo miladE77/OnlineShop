@@ -3,7 +3,9 @@ using Domain.Models;
 using Domain.ServiseResult;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
+using System.Data;
 using TemplateSite.Filters;
 
 namespace TemplateSite.Controllers.ShopPanel
@@ -124,7 +126,8 @@ namespace TemplateSite.Controllers.ShopPanel
                        AND p.StoreId IN ({ids})) AS totalColors
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -171,13 +174,15 @@ namespace TemplateSite.Controllers.ShopPanel
                 FROM Receipt r
                 INNER JOIN Recommendations rec ON r.RecommendationsId = rec.RecommendationsId
                 WHERE r.Status = 1
-                  AND r.DateTimePeyment >= DATEADD(DAY, -{days}, GETDATE())
-                  AND rec.PersonelId IN (SELECT PersonelId FROM Store WHERE StoreId IN ({ids}))
+                  AND r.DateTimePeyment >= DATEADD(DAY, -@day, GETDATE())
+                  AND rec.PersonelId IN (SELECT PersonelId FROM Store WHERE StoreId IN (@day))
                 GROUP BY CAST(r.DateTimePeyment AS DATE)
                 ORDER BY CAST(r.DateTimePeyment AS DATE)
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query,
+            new SqlParameter($"@day", SqlDbType.Int) { Value = days });
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -222,7 +227,8 @@ namespace TemplateSite.Controllers.ShopPanel
                 GROUP BY LevelOrder
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
+
         }
 
         // ═══════════════════════════════════════════════════════
@@ -264,7 +270,7 @@ namespace TemplateSite.Controllers.ShopPanel
                 ORDER BY rec.DateTimeRecord DESC
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
         }
 
         // ═══════════════════════════════════════════════════════
@@ -304,7 +310,7 @@ namespace TemplateSite.Controllers.ShopPanel
                 ORDER BY totalSold DESC
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
         }
 
         // ═══════════════════════════════════════════════════════
@@ -346,7 +352,7 @@ namespace TemplateSite.Controllers.ShopPanel
                 ORDER BY cp.InStore ASC
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
         }
 
         // ═══════════════════════════════════════════════════════
@@ -387,7 +393,7 @@ namespace TemplateSite.Controllers.ShopPanel
                 ORDER BY inventoryValue DESC
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
         }
 
         // ═══════════════════════════════════════════════════════
@@ -429,7 +435,7 @@ namespace TemplateSite.Controllers.ShopPanel
                 ORDER BY totalIncome DESC
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
         }
 
         // ═══════════════════════════════════════════════════════
@@ -470,7 +476,7 @@ namespace TemplateSite.Controllers.ShopPanel
                 ORDER BY MONTH(r.DateTimePeyment)
             ";
 
-            return await _serviceQueryDB.GetsJsonDataViewByQuery(query);
+            return await _serviceQueryDB.GetsJsonDataViewByQuery(query, Array.Empty<SqlParameter>());
         }
 
         // ═══════════════════════════════════════════════════════

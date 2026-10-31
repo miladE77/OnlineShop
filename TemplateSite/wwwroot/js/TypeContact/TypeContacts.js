@@ -1,20 +1,40 @@
+// ═══ TypeContacts.js ═══
+
 let TypeContactList = [];
 let editingTypeContact = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
 
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 function saveToStorage() {
-    $.post('/TypeContacts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            TypeContactList = JSON.parse(response.data);
-            localStorage.setItem("TypeContacts", JSON.stringify(TypeContactList));
-            renderTable();
-            nextId = Math.max(...TypeContactList.map(i => i.TypeContactId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/TypeContacts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                TypeContactList = JSON.parse(response.data);
+                localStorage.setItem("TypeContacts", JSON.stringify(TypeContactList));
+                renderTable();
+                nextId = Math.max(...TypeContactList.map(i => i.TypeContactId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("TypeContacts");
@@ -65,17 +85,21 @@ function renderTable() {
     renderStats();
 }
 function deleteTypeContact(TypeContactId) {
-    $.post('/TypeContacts/DeleteData', { 'id': TypeContactId }, function (response) {
-        if (response.isSuccess) {
-            TypeContactList = TypeContactList.filter(data => data.TypeContactId !== TypeContactId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/TypeContacts/DeleteData', { 'id': TypeContactId })
+        .then(response => {
+            if (response.isSuccess) {
+                TypeContactList = TypeContactList.filter(data => data.TypeContactId !== TypeContactId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("TypeContactModal");
 const modalTitle = document.getElementById("modalTitle");
@@ -110,7 +134,7 @@ function SaveNewModel() {
     const TypeContactCaption = empTypeContactCaption.value.trim();
     const File = empTypeContactArm.files[0];
     const Status = empStatus.checked;
-    
+
     if (!TypeContactCaption || !TypeContactArm) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
@@ -145,13 +169,17 @@ function SendData(newTypeContact, typeRequst) {
             Data.append('TypeContactArm', newTypeContact.File.name);
             Data.append('File', newTypeContact.File);
             Data.append('Status', newTypeContact.Status);
-            $.ajax({
-                type: "post",
-                url: '/TypeContacts/UpdateData',
-                data: Data,
-                contentType: false,
-                processData: false,
-                success: function (response) {
+            showLoading();
+            fetch('/TypeContacts/UpdateData', {
+                method: 'POST',
+                body: Data,
+                headers: {
+                    'RequestVerificationToken': Http.getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(r => r.json())
+                .then(response => {
                     if (response.isSuccess) {
                         if (typeRequst) {
                             const newTypeContact2 = {};
@@ -169,8 +197,9 @@ function SendData(newTypeContact, typeRequst) {
                     else {
                         alert(response.errorTitle);
                     }
-                }
-            });
+                })
+                .catch(handleHttpError)
+                .finally(hideLoading);
         } else {
             alert("فرمت فایل ورودی درست نمی باشد.");
         }
@@ -196,9 +225,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("TypeContactModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

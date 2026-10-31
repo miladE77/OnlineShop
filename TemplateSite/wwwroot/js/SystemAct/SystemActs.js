@@ -1,3 +1,5 @@
+// ═══ SystemActs.js ═══
+
 /* ============================================================
    SystemActs.js — مدیریت تاریخچه عملیات (با تقویم شمسی)
    ------------------------------------------------------------
@@ -8,6 +10,21 @@
 
 let SystemActList = [];
 let editingSystemAct = false;
+
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 // ============================================================
 // ابزار: نمایش تاریخ شمسی در جدول
@@ -40,37 +57,45 @@ function toJalaliString(gregorianValue) {
 // ============================================================
 GetPersonelData();
 function GetPersonelData() {
-    $.post('/Personels/GetAllData', function (response) {
-        if (response.isSuccess) {
-            const dataConvert = JSON.parse(response.data);
-            let options = '<option value="">انتخاب پرسنل</option>';
-            dataConvert.forEach(function (item) {
-                const fullName = `${item.FirstName || ''} ${item.LastName || ''}`.trim();
-                options += `<option value="${item.PersonelId}">${fullName || item.PersonelId}</option>`;
-            });
-            document.getElementById("Personel").innerHTML = options;
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/Personels/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                const dataConvert = JSON.parse(response.data);
+                let options = '<option value="">انتخاب پرسنل</option>';
+                dataConvert.forEach(function (item) {
+                    const fullName = `${item.FirstName || ''} ${item.LastName || ''}`.trim();
+                    options += `<option value="${item.PersonelId}">${fullName || item.PersonelId}</option>`;
+                });
+                document.getElementById("Personel").innerHTML = options;
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
 // localStorage
 // ============================================================
 function saveToStorage() {
-    $.post('/SystemActs/GetAllData', function (response) {
-        if (response.isSuccess) {
-            SystemActList = JSON.parse(response.data);
-            localStorage.setItem("SystemActs", JSON.stringify(SystemActList));
-            renderTable();
-            if (SystemActList.length > 0) {
-                nextId = Math.max(...SystemActList.map(i => i.SystemActId));
+    showLoading();
+    Http.postSecure('/SystemActs/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                SystemActList = JSON.parse(response.data);
+                localStorage.setItem("SystemActs", JSON.stringify(SystemActList));
+                renderTable();
+                if (SystemActList.length > 0) {
+                    nextId = Math.max(...SystemActList.map(i => i.SystemActId));
+                }
+            } else {
+                alert(response.errorTitle);
             }
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 function loadFromStorage() {
@@ -169,16 +194,20 @@ function renderTable() {
 // حذف
 // ============================================================
 function deleteSystemAct(systemActId) {
-    $.post('/SystemActs/DeleteData', { 'id': systemActId }, function (response) {
-        if (response.isSuccess) {
-            SystemActList = SystemActList.filter(d => d.SystemActId !== systemActId);
-            localStorage.setItem("SystemActs", JSON.stringify(SystemActList));
-            renderTable();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/SystemActs/DeleteData', { 'id': systemActId })
+        .then(response => {
+            if (response.isSuccess) {
+                SystemActList = SystemActList.filter(d => d.SystemActId !== systemActId);
+                localStorage.setItem("SystemActs", JSON.stringify(SystemActList));
+                renderTable();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================
@@ -317,16 +346,22 @@ function updateSystemAct(SystemActId, SystemActCaption, PersonelId, TypeSystemAc
 }
 
 function SendData(systemAct, isAdd) {
-    $.post('/SystemActs/UpdateData', systemAct, function (response) {
-        if (response.isSuccess) {
-            saveToStorage();
-            alert(response.data);
-        } else {
-            alert(response.errorTitle);
-        }
-    }).fail(function () {
-        alert("خطا در ارتباط با سرور");
-    });
+    const url = isAdd
+        ? '/SystemActs/AddData'
+        : '/SystemActs/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, systemAct)
+        .then(response => {
+            if (response.isSuccess) {
+                saveToStorage();
+                alert(response.data);
+            } else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 
 // ============================================================

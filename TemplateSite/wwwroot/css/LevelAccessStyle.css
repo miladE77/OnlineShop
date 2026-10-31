@@ -1,0 +1,371 @@
+﻿.code-check-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--bg-body);
+    border: 2px solid var(--border-light);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.2s;
+    user-select: none;
+}
+
+.code-check-item:hover {
+    border-color: var(--primary);
+}
+
+.code-check-item:has(input:checked) {
+    background: rgba(15, 107, 255, 0.1);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.code-check-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+/* ═══════════════════════════════════════════════════════
+   CodeAccess Checkboxes — انتخاب نوع عملیات
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── ظرف اصلی ─── */
+.code-access-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+/* ─── هر آیتم ─── */
+.code-check-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-card, #fff);
+    border: 2px solid var(--border-light, #e2e8f0);
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary, #1e2a3a);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+    /* ─── افکت hover ─── */
+    .code-check-item:hover {
+        border-color: var(--primary, #0f6bff);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(15, 107, 255, 0.15);
+    }
+
+    /* ─── حالت انتخاب‌شده ─── */
+    .code-check-item:has(input:checked) {
+        background: linear-gradient(135deg, rgba(15, 107, 255, 0.08), rgba(15, 107, 255, 0.15));
+        border-color: var(--primary, #0f6bff);
+        color: var(--primary, #0f6bff);
+        box-shadow: 0 4px 14px rgba(15, 107, 255, 0.25);
+    }
+
+        /* ─── نوار رنگی کنار آیتم انتخاب‌شده ─── */
+        .code-check-item:has(input:checked)::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary, #0f6bff);
+            border-radius: 0 14px 14px 0;
+            animation: slideIn 0.3s ease;
+        }
+
+@keyframes slideIn {
+    from {
+        transform: scaleY(0);
+    }
+
+    to {
+        transform: scaleY(1);
+    }
+}
+
+/* ─── مخفی کردن چک‌باکس پیش‌فرض ─── */
+.code-check-item input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+/* ─── دایره سفارشی چک‌باکس ─── */
+.code-check-box {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border-light, #e2e8f0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    background: var(--bg-body, #f4f6f9);
+}
+
+    .code-check-box i {
+        font-size: 0.7rem;
+        color: #fff;
+        opacity: 0;
+        transform: scale(0.3);
+        transition: all 0.25s ease;
+    }
+
+/* ─── حالت انتخاب: دایره پر ─── */
+.code-check-item:has(input:checked) .code-check-box {
+    background: var(--primary, #0f6bff);
+    border-color: var(--primary, #0f6bff);
+    box-shadow: 0 2px 6px rgba(15, 107, 255, 0.4);
+}
+
+    .code-check-item:has(input:checked) .code-check-box i {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+/* ─── برچسب حرف (V/A/U/D/F) ─── */
+.code-check-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: var(--bg-body, #f4f6f9);
+    color: var(--text-secondary, #6b7280);
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+.code-check-item:has(input:checked) .code-check-letter {
+    background: var(--primary, #0f6bff);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(15, 107, 255, 0.3);
+}
+
+/* ─── متن ─── */
+.code-check-text {
+    flex: 1;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+    .code-check-text small {
+        display: block;
+        font-size: 0.7rem;
+        opacity: 0.7;
+        margin-top: 2px;
+        font-weight: 400;
+    }
+
+/* ─── آیتم رزرو (ویژه) ─── */
+.code-check-item.reserve-item {
+    border-style: dashed;
+    border-color: var(--warning, #f59e0b);
+}
+
+    .code-check-item.reserve-item:hover {
+        border-color: var(--warning, #f59e0b);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+    }
+
+    .code-check-item.reserve-item:has(input:checked) {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.2));
+        border-color: var(--warning, #f59e0b);
+        color: var(--warning, #f59e0b);
+        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+    }
+
+        .code-check-item.reserve-item:has(input:checked)::before {
+            background: var(--warning, #f59e0b);
+        }
+
+        .code-check-item.reserve-item:has(input:checked) .code-check-box {
+            background: var(--warning, #f59e0b);
+            border-color: var(--warning, #f59e0b);
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+        }
+
+        .code-check-item.reserve-item:has(input:checked) .code-check-letter {
+            background: var(--warning, #f59e0b);
+            color: #fff;
+        }
+
+/* ─── wrapper رزرو ─── */
+#reserveInputWrapper {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.1));
+    border: 2px dashed var(--warning, #f59e0b);
+    border-radius: 12px;
+    animation: reserveFade 0.3s ease;
+}
+
+@keyframes reserveFade {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#reserveInputWrapper label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--warning, #f59e0b);
+    margin-bottom: 6px;
+}
+
+#CodeAccessReserveInput {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--warning, #f59e0b);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-align: center;
+    background: var(--bg-card, #fff);
+    color: var(--text-primary, #1e2a3a);
+    outline: none;
+    transition: 0.2s;
+    box-sizing: border-box;
+}
+
+    #CodeAccessReserveInput:focus {
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    }
+
+/* ─── پیش‌نمایش نهایی ─── */
+.code-access-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--bg-body, #f4f6f9);
+    border-radius: 12px;
+    border-right: 4px solid var(--primary, #0f6bff);
+}
+
+.code-access-preview-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #6b7280);
+    font-weight: 600;
+}
+
+.code-access-preview-value {
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    font-weight: 800;
+    color: var(--primary, #0f6bff);
+    letter-spacing: 2px;
+    padding: 2px 12px;
+    background: rgba(15, 107, 255, 0.1);
+    border-radius: 8px;
+    min-width: 40px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+    .code-access-preview-value:empty::before {
+        content: '—';
+        color: var(--text-secondary);
+        opacity: 0.5;
+    }
+
+/* ─── تم تاریک ─── */
+body.dark .code-check-item {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+    body.dark .code-check-item:has(input:checked) {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.25));
+        border-color: #3b82f6;
+    }
+
+body.dark .code-check-box {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+body.dark .code-check-letter {
+    background: #0f172a;
+    color: #cbd5e1;
+}
+
+body.dark #reserveInputWrapper {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.15));
+}
+
+body.dark #CodeAccessReserveInput {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+body.dark .code-access-preview {
+    background: #0f172a;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+    .code-access-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .code-check-item {
+        padding: 10px 10px;
+        gap: 6px;
+    }
+
+    .code-check-letter {
+        width: 22px;
+        height: 22px;
+        font-size: 0.75rem;
+    }
+
+    .code-check-box {
+        width: 18px;
+        height: 18px;
+    }
+
+    .code-check-text {
+        font-size: 0.75rem;
+    }
+
+        .code-check-text small {
+            display: none;
+        }
+}
+
+

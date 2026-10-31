@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "مدیریت توکن دسترسی";
     Layout = "~/Views/Shared/_LayoutMain.cshtml";
 }
 
@@ -7,20 +7,23 @@
 {
     <title>مدیریت توکن دسترسی</title>
 }
+
 @section scripts {
     <script src="/js/Tocken/Tockens.js"></script>
 }
+
 @section html
 {
     lang="fa" dir="rtl"
 }
 
-<!-- مودال افزودن/ویرایش  توکن دسترسی -->
 <div class="main-content" id="mainContent">
     <div class="container">
         <div class="page-header">
-            <h2><i class="fas fa-users"></i> مدیریت توکن دسترسی</h2>
-            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> افزودن توکن دسترسی جدید</button>
+            <h2><i class="fas fa-key"></i> مدیریت توکن دسترسی</h2>
+            <button class="btn-add" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> افزودن توکن جدید
+            </button>
         </div>
 
         <div class="stats-cards" id="statsCards"></div>
@@ -28,7 +31,7 @@
         <div class="search-filter-bar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchTocken" placeholder="جستجو بر اساس ایتم ها...">
+                <input type="text" id="searchTocken" placeholder="جستجو بر اساس عنوان توکن...">
             </div>
             <select id="statusFilter" class="filter-select">
                 <option value="all">همه وضعیت‌ها</option>
@@ -38,13 +41,14 @@
         </div>
 
         <div class="table-wrapper">
-            <table id="personelTable">
+            <table id="tockenTable">
                 <thead>
                     <tr>
                         <th>شناسه</th>
-	 <th>عنوان توکن</th>
-	 <th>توضیحات توکن</th>
-	 <th>وضعیت</th>
+                        <th>عنوان توکن</th>
+                        <th>توضیحات</th>
+                        <th>دسترسی‌های مرتبط</th>
+                        <th>وضعیت</th>
                         <th>عملیات</th>
                     </tr>
                 </thead>
@@ -54,62 +58,35 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════
+     Modal افزودن/ویرایش
+     ═══════════════════════════════════════════════════════ -->
 <div id="TockenModal" class="modal-overlay">
     <div class="modal modelInput">
-        <h3 id="modalTitle">افزودن توکن دسترسی جدید</h3>
-        
- <input type="number" id="TockenId" placeholder="شناسه">
- <input type="text" id="TockenCaption" placeholder="عنوان توکن">
- <input type="text" id="TockenDetail" placeholder="توضیحات توکن">
-<div style="display:flex;">
- <label>وضعیت</label> <input type="checkbox" id="Status" placeholder="وضعیت" style="width: 10%;
-  margin-top: 5px;">
-</div>
+        <h3 id="modalTitle">افزودن توکن جدید</h3>
+
+        <input type="hidden" id="TockenId" value="0" />
+
+        <input type="text" id="TockenCaption" placeholder="عنوان توکن *" maxlength="100" />
+        <input type="text" id="TockenDetail" placeholder="توضیحات توکن" maxlength="500" />
+
+        <div style="margin-bottom:16px;">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">دسترسی‌های مرتبط</label>
+            <div id="levelAccessList" style="max-height:220px; overflow-y:auto; background:var(--bg-body); padding:10px; border-radius:12px; border:1px solid var(--border-light);">
+                <div style="text-align:center; color:var(--text-secondary); padding:10px;">
+                    <i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; align-items:center; margin-bottom:16px;">
+            <label style="margin:0 8px 0 0;">وضعیت</label>
+            <input type="checkbox" id="Status" style="width:20px; height:20px;" />
+        </div>
+
         <div class="modal-buttons">
             <button class="btn-save" onclick="SaveNewModel()">ذخیره</button>
             <button class="btn-cancel" onclick="CanselSaveModal()">انصراف</button>
         </div>
     </div>
 </div>
-
-
-
-<div id="LevelAccessTockenModal" class="modal-overlay">
-    <div class="modal modelTable">
-        <div class="modelRelative">
-            <div style="align-content: center;">
-                <h3 id="modalLevelAccessTockenTitle">دسترسی سیستم مرتبط</h3>
-            </div><div>
-                <button onclick="openModal('AddLevelAccessTockenModal')" class="btn-add">
-                    افزودن
-                </button>
-            </div>
-        </div>
-        <div class="table-wrapper">
-            <table id="LevelAccessTockenTable">
-                <thead>
-                    <tr>
-                        <th>عنوان دسترسی سیستم</th>
-                        <th>عملیات</th>
-                    </tr>
-                </thead>
-                <tbody id="LevelAccessTockenTableBody">
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-<div id="AddLevelAccessTockenModal" class="modal-overlay">
-    <div class="modal modelInput">
-        <h3 id="modalTitle">افزودن دسترسی سیستم مرتبط جدید</h3>
-        <select id="LevelAccessTockenId" class="filter-select">
-        </select>
-        <div class="modal-buttons">
-            <button class="btn-save" onclick="saveLevelAccessTocken()">ذخیره</button>
-            <button class="btn-cancel" onclick="closeModal('AddLevelAccessTockenModal')">انصراف</button>
-        </div>
-    </div>
-</div>
-
-
-

@@ -43,6 +43,7 @@ C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\DataLayer.Gene
 C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\DataLayer.AssemblyInfoInputs.cache
 C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\DataLayer.AssemblyInfo.cs
 C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\DataLayer.csproj.CoreCompileInputs.cache
+C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\DataLayer.sourcelink.json
 C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\DataLayer.csproj.Up2Date
 C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\DataLayer.dll
 C:\Users\Milad\source\repos\OnlineShop\DataLayer\obj\Debug\net8.0\refint\DataLayer.dll

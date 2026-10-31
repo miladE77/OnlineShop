@@ -1,48 +1,76 @@
+// ═══ DetailProducts.js ═══
+
 let DetailProductList = [];
 let editingDetailProduct = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 GetOptionProductData(); function GetOptionProductData() {
-    $.post('/OptionProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.OptionProductId}\">${item.OptionProductCaption}</option>`;
-            });
-            document.getElementById("OptionProduct").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}GetProductData(); function GetProductData() {
-    $.post('/Products/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.ProductId}\">${item.ProductCaption}</option>`;
-            });
-            document.getElementById("Product").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/OptionProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.OptionProductId}\">${item.OptionProductCaption}</option>`;
+                });
+                document.getElementById("OptionProduct").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
+} GetProductData(); function GetProductData() {
+    showLoading();
+    Http.postSecure('/Products/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.ProductId}\">${item.ProductCaption}</option>`;
+                });
+                document.getElementById("Product").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function saveToStorage() {
-    $.post('/DetailProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            DetailProductList = JSON.parse(response.data);
-            localStorage.setItem("DetailProducts", JSON.stringify(DetailProductList));
-            renderTable();
-            nextId = Math.max(...DetailProductList.map(i => i.DetailProductId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/DetailProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                DetailProductList = JSON.parse(response.data);
+                localStorage.setItem("DetailProducts", JSON.stringify(DetailProductList));
+                renderTable();
+                nextId = Math.max(...DetailProductList.map(i => i.DetailProductId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("DetailProducts");
@@ -63,14 +91,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchDetailProduct").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...DetailProductList];
-    if (searchTerm) filtered = filtered.filter(p =>p.DetailProductCaption.toLowerCase().includes(searchTerm) || p.OptionProductId.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.DetailProductCaption.toLowerCase().includes(searchTerm) || p.OptionProductId.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("DetailProductTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -89,27 +117,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteDetailProduct(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deleteDetailProduct(DetailProductId) {
-    $.post('/DetailProducts/DeleteData', { 'id': DetailProductId }, function (response) {
-        if (response.isSuccess) {
-            DetailProductList = DetailProductList.filter(data => data.DetailProductId !== DetailProductId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/DetailProducts/DeleteData', { 'id': DetailProductId })
+        .then(response => {
+            if (response.isSuccess) {
+                DetailProductList = DetailProductList.filter(data => data.DetailProductId !== DetailProductId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("DetailProductModal");
 const modalTitle = document.getElementById("modalTitle");
-const empDetailProductId = document.getElementById("DetailProductId");const empDetailProductCaption = document.getElementById("DetailProductCaption");const empOptionProductId = document.getElementById("OptionProduct");const empProductId = document.getElementById("Product");const empStatus = document.getElementById("Status");
+const empDetailProductId = document.getElementById("DetailProductId"); const empDetailProductCaption = document.getElementById("DetailProductCaption"); const empOptionProductId = document.getElementById("OptionProduct"); const empProductId = document.getElementById("Product"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingDetailProduct = false;
@@ -120,12 +152,12 @@ function openEditModal(DetailProductId) {
     const data = DetailProductList.find(data => data.DetailProductId === DetailProductId);
     if (data) {
         editingDetailProduct = true;
-        
-	 empDetailProductId.value = data.DetailProductId;
-	 empDetailProductCaption.value = data.DetailProductCaption;
-	 empOptionProductId.value = data.OptionProductId;
-	 empProductId.value = data.ProductId;
-	 empStatus.checked = Boolean(data.Status);
+
+        empDetailProductId.value = data.DetailProductId;
+        empDetailProductCaption.value = data.DetailProductCaption;
+        empOptionProductId.value = data.OptionProductId;
+        empProductId.value = data.ProductId;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("DetailProductModal");
     }
@@ -135,55 +167,63 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const DetailProductId = empDetailProductId.value.trim();
-	 const DetailProductCaption = empDetailProductCaption.value.trim();
-	 const OptionProductId = empOptionProductId.value.trim();
-	 const ProductId = empProductId.value.trim();
-	 const Status = empStatus.checked;
+
+    const DetailProductId = empDetailProductId.value.trim();
+    const DetailProductCaption = empDetailProductCaption.value.trim();
+    const OptionProductId = empOptionProductId.value.trim();
+    const ProductId = empProductId.value.trim();
+    const Status = empStatus.checked;
     if (!DetailProductCaption || !OptionProductId || !ProductId) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingDetailProduct) { updateDetailProduct(DetailProductId,DetailProductCaption,OptionProductId,ProductId,Status); } else { addDetailProduct(DetailProductId,DetailProductCaption,OptionProductId,ProductId,Status); }
+    if (editingDetailProduct) { updateDetailProduct(DetailProductId, DetailProductCaption, OptionProductId, ProductId, Status); } else { addDetailProduct(DetailProductId, DetailProductCaption, OptionProductId, ProductId, Status); }
     closeModal("DetailProductModal");
 }
-function addDetailProduct(DetailProductId,DetailProductCaption,OptionProductId,ProductId,Status) {
+function addDetailProduct(DetailProductId, DetailProductCaption, OptionProductId, ProductId, Status) {
     const newDetailProduct = {
-        DetailProductId,DetailProductCaption,OptionProductId,ProductId,Status
+        DetailProductId, DetailProductCaption, OptionProductId, ProductId, Status
     };
     newDetailProduct.DetailProductId = 0;
     SendData(newDetailProduct, true);
 }
-function updateDetailProduct(DetailProductId,DetailProductCaption,OptionProductId,ProductId,Status) {
+function updateDetailProduct(DetailProductId, DetailProductCaption, OptionProductId, ProductId, Status) {
     const idx = DetailProductList.findIndex(data => data.DetailProductId == DetailProductId);
     if (idx !== -1) {
-        DetailProductList[idx] = { DetailProductId,DetailProductCaption,OptionProductId,ProductId,Status };
+        DetailProductList[idx] = { DetailProductId, DetailProductCaption, OptionProductId, ProductId, Status };
         SendData(DetailProductList[idx], false);
     }
 }
 function SendData(newDetailProduct, typeRequst) {
-    $.post('/DetailProducts/UpdateData', newDetailProduct, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                DetailProductList.push(newDetailProduct);
+    const url = typeRequst
+        ? '/DetailProducts/AddData'
+        : '/DetailProducts/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newDetailProduct)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    DetailProductList.push(newDetailProduct);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empDetailProductId.value = "";
- empDetailProductCaption.value = "";
- empOptionProductId.value = "";
- empProductId.value = "";
- empStatus.checked = false;
+
+    empDetailProductId.value = "";
+    empDetailProductCaption.value = "";
+    empOptionProductId.value = "";
+    empProductId.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -198,9 +238,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("DetailProductModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

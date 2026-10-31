@@ -1,20 +1,40 @@
+// ═══ TypePeyments.js ═══
+
 let TypePeymentList = [];
 let editingTypePeyment = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
 
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 function saveToStorage() {
-    $.post('/TypePeyments/GetAllData', function (response) {
-        if (response.isSuccess) {
-            TypePeymentList = JSON.parse(response.data);
-            localStorage.setItem("TypePeyments", JSON.stringify(TypePeymentList));
-            renderTable();
-            nextId = Math.max(...TypePeymentList.map(i => i.TypePeymentId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+    showLoading();
+    Http.postSecure('/TypePeyments/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                TypePeymentList = JSON.parse(response.data);
+                localStorage.setItem("TypePeyments", JSON.stringify(TypePeymentList));
+                renderTable();
+                nextId = Math.max(...TypePeymentList.map(i => i.TypePeymentId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("TypePeyments");
@@ -35,14 +55,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchTypePeyment").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...TypePeymentList];
-    if (searchTerm) filtered = filtered.filter(p =>p.TypePeymentCaption.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.TypePeymentCaption.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("TypePeymentTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -59,27 +79,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteTypePeyment(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deleteTypePeyment(TypePeymentId) {
-    $.post('/TypePeyments/DeleteData', { 'id': TypePeymentId }, function (response) {
-        if (response.isSuccess) {
-            TypePeymentList = TypePeymentList.filter(data => data.TypePeymentId !== TypePeymentId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/TypePeyments/DeleteData', { 'id': TypePeymentId })
+        .then(response => {
+            if (response.isSuccess) {
+                TypePeymentList = TypePeymentList.filter(data => data.TypePeymentId !== TypePeymentId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("TypePeymentModal");
 const modalTitle = document.getElementById("modalTitle");
-const empTypePeymentId = document.getElementById("TypePeymentId");const empTypePeymentCaption = document.getElementById("TypePeymentCaption");const empStatus = document.getElementById("Status");
+const empTypePeymentId = document.getElementById("TypePeymentId"); const empTypePeymentCaption = document.getElementById("TypePeymentCaption"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingTypePeyment = false;
@@ -90,10 +114,10 @@ function openEditModal(TypePeymentId) {
     const data = TypePeymentList.find(data => data.TypePeymentId === TypePeymentId);
     if (data) {
         editingTypePeyment = true;
-        
-	 empTypePeymentId.value = data.TypePeymentId;
-	 empTypePeymentCaption.value = data.TypePeymentCaption;
-	 empStatus.checked = Boolean(data.Status);
+
+        empTypePeymentId.value = data.TypePeymentId;
+        empTypePeymentCaption.value = data.TypePeymentCaption;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("TypePeymentModal");
     }
@@ -103,51 +127,59 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const TypePeymentId = empTypePeymentId.value.trim();
-	 const TypePeymentCaption = empTypePeymentCaption.value.trim();
-	 const Status = empStatus.checked;
+
+    const TypePeymentId = empTypePeymentId.value.trim();
+    const TypePeymentCaption = empTypePeymentCaption.value.trim();
+    const Status = empStatus.checked;
     if (!TypePeymentCaption) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingTypePeyment) { updateTypePeyment(TypePeymentId,TypePeymentCaption,Status); } else { addTypePeyment(TypePeymentId,TypePeymentCaption,Status); }
+    if (editingTypePeyment) { updateTypePeyment(TypePeymentId, TypePeymentCaption, Status); } else { addTypePeyment(TypePeymentId, TypePeymentCaption, Status); }
     closeModal("TypePeymentModal");
 }
-function addTypePeyment(TypePeymentId,TypePeymentCaption,Status) {
+function addTypePeyment(TypePeymentId, TypePeymentCaption, Status) {
     const newTypePeyment = {
-        TypePeymentId,TypePeymentCaption,Status
+        TypePeymentId, TypePeymentCaption, Status
     };
     newTypePeyment.TypePeymentId = 0;
     SendData(newTypePeyment, true);
 }
-function updateTypePeyment(TypePeymentId,TypePeymentCaption,Status) {
+function updateTypePeyment(TypePeymentId, TypePeymentCaption, Status) {
     const idx = TypePeymentList.findIndex(data => data.TypePeymentId == TypePeymentId);
     if (idx !== -1) {
-        TypePeymentList[idx] = { TypePeymentId,TypePeymentCaption,Status };
+        TypePeymentList[idx] = { TypePeymentId, TypePeymentCaption, Status };
         SendData(TypePeymentList[idx], false);
     }
 }
 function SendData(newTypePeyment, typeRequst) {
-    $.post('/TypePeyments/UpdateData', newTypePeyment, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                TypePeymentList.push(newTypePeyment);
+    const url = typeRequst
+        ? '/TypePeyments/AddData'
+        : '/TypePeyments/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newTypePeyment)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    TypePeymentList.push(newTypePeyment);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empTypePeymentId.value = "";
- empTypePeymentCaption.value = "";
- empStatus.checked = false;
+
+    empTypePeymentId.value = "";
+    empTypePeymentCaption.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -162,9 +194,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("TypePeymentModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

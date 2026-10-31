@@ -1,34 +1,60 @@
+// ═══ ColorPriceProducts.js ═══
+
 let ColorPriceProductList = [];
 let editingColorPriceProduct = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+function handleHttpError(err) {
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
 
 GetProductData(); function GetProductData() {
-    $.post('/Products/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let dataConvert = JSON.parse(response.data);
-            let options = "";
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.ProductId}\">${item.ProductCaption}</option>`;
-            });
-            document.getElementById("Product").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+
+    showLoading();
+    Http.postSecure('/Products/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                let dataConvert = JSON.parse(response.data);
+                let options = "";
+                dataConvert.forEach(function (item) {
+                    options = options + `<option value=\"${item.ProductId}\">${item.ProductCaption}</option>`;
+                });
+                document.getElementById("Product").innerHTML = options;
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function saveToStorage() {
-    $.post('/ColorPriceProducts/GetAllData', function (response) {
-        if (response.isSuccess) {
-            ColorPriceProductList = JSON.parse(response.data);
-            localStorage.setItem("ColorPriceProducts", JSON.stringify(ColorPriceProductList));
-            renderTable();
-            nextId = Math.max(...ColorPriceProductList.map(i => i.ColorPriceProductId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/ColorPriceProducts/GetAllData')
+        .then(response => {
+            if (response.isSuccess) {
+                ColorPriceProductList = JSON.parse(response.data);
+                localStorage.setItem("ColorPriceProducts", JSON.stringify(ColorPriceProductList));
+                renderTable();
+                nextId = Math.max(...ColorPriceProductList.map(i => i.ColorPriceProductId));
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function loadFromStorage() {
     const saved = localStorage.getItem("ColorPriceProducts");
@@ -49,14 +75,14 @@ function renderTable() {
     const searchTerm = document.getElementById("searchColorPriceProduct").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
     let filtered = [...ColorPriceProductList];
-    if (searchTerm) filtered = filtered.filter(p =>p.ColorPriceProductCaption.toLowerCase().includes(searchTerm) || p.Offer.toLowerCase().includes(searchTerm) || p.InStore.toLowerCase().includes(searchTerm));
+    if (searchTerm) filtered = filtered.filter(p => p.ColorPriceProductCaption.toLowerCase().includes(searchTerm) || p.Offer.toLowerCase().includes(searchTerm) || p.InStore.toLowerCase().includes(searchTerm));
     if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
     const tbody = document.getElementById("ColorPriceProductTableBody");
     if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+
+        const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
         return `<tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -77,27 +103,31 @@ function renderTable() {
                 </td>
             </tr>`;
     }).join('');
-    
+
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteColorPriceProduct(parseInt(btn.dataset.id)); }));
     renderStats();
 }
 function deleteColorPriceProduct(ColorPriceProductId) {
-    $.post('/ColorPriceProducts/DeleteData', { 'id': ColorPriceProductId }, function (response) {
-        if (response.isSuccess) {
-            ColorPriceProductList = ColorPriceProductList.filter(data => data.ColorPriceProductId !== ColorPriceProductId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+    showLoading();
+    Http.postSecure('/ColorPriceProducts/DeleteData', { 'id': ColorPriceProductId })
+        .then(response => {
+            if (response.isSuccess) {
+                ColorPriceProductList = ColorPriceProductList.filter(data => data.ColorPriceProductId !== ColorPriceProductId);
+                saveToStorage();
+                renderTable();
+                alert(response.data);
+            }
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 const modal = document.getElementById("ColorPriceProductModal");
 const modalTitle = document.getElementById("modalTitle");
-const empColorPriceProductId = document.getElementById("ColorPriceProductId");const empColorPriceProductCaption = document.getElementById("ColorPriceProductCaption");const empPriceProduct = document.getElementById("PriceProduct");const empOffer = document.getElementById("Offer");const empProductId = document.getElementById("Product");const empInStore = document.getElementById("InStore");const empStatus = document.getElementById("Status");
+const empColorPriceProductId = document.getElementById("ColorPriceProductId"); const empColorPriceProductCaption = document.getElementById("ColorPriceProductCaption"); const empPriceProduct = document.getElementById("PriceProduct"); const empOffer = document.getElementById("Offer"); const empProductId = document.getElementById("Product"); const empInStore = document.getElementById("InStore"); const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingColorPriceProduct = false;
@@ -108,14 +138,14 @@ function openEditModal(ColorPriceProductId) {
     const data = ColorPriceProductList.find(data => data.ColorPriceProductId === ColorPriceProductId);
     if (data) {
         editingColorPriceProduct = true;
-        
-	 empColorPriceProductId.value = data.ColorPriceProductId;
-	 empColorPriceProductCaption.value = data.ColorPriceProductCaption;
-	 empPriceProduct.value = data.PriceProduct;
-	 empOffer.value = data.Offer;
-	 empProductId.value = data.ProductId;
-	 empInStore.value = data.InStore;
-	 empStatus.checked = Boolean(data.Status);
+
+        empColorPriceProductId.value = data.ColorPriceProductId;
+        empColorPriceProductCaption.value = data.ColorPriceProductCaption;
+        empPriceProduct.value = data.PriceProduct;
+        empOffer.value = data.Offer;
+        empProductId.value = data.ProductId;
+        empInStore.value = data.InStore;
+        empStatus.checked = Boolean(data.Status);
         modalTitle.innerText = "ویرایش رکورد";
         openModal("ColorPriceProductModal");
     }
@@ -125,59 +155,67 @@ function CanselSaveModal() {
     resetModal();
 }
 function SaveNewModel() {
-    
-	 const ColorPriceProductId = empColorPriceProductId.value.trim();
-	 const ColorPriceProductCaption = empColorPriceProductCaption.value.trim();
-	 const PriceProduct = empPriceProduct.value.trim();
-	 const Offer = empOffer.value.trim();
-	 const ProductId = empProductId.value.trim();
-	 const InStore = empInStore.value.trim();
-	 const Status = empStatus.checked;
+
+    const ColorPriceProductId = empColorPriceProductId.value.trim();
+    const ColorPriceProductCaption = empColorPriceProductCaption.value.trim();
+    const PriceProduct = empPriceProduct.value.trim();
+    const Offer = empOffer.value.trim();
+    const ProductId = empProductId.value.trim();
+    const InStore = empInStore.value.trim();
+    const Status = empStatus.checked;
     if (!ColorPriceProductCaption || !PriceProduct || !Offer || !ProductId || !InStore) {
         alert("لطفاً تمام فیلدها را پر کنید");
         return;
     }
-    if (editingColorPriceProduct) { updateColorPriceProduct(ColorPriceProductId,ColorPriceProductCaption,PriceProduct,Offer,ProductId,InStore,Status); } else { addColorPriceProduct(ColorPriceProductId,ColorPriceProductCaption,PriceProduct,Offer,ProductId,InStore,Status); }
+    if (editingColorPriceProduct) { updateColorPriceProduct(ColorPriceProductId, ColorPriceProductCaption, PriceProduct, Offer, ProductId, InStore, Status); } else { addColorPriceProduct(ColorPriceProductId, ColorPriceProductCaption, PriceProduct, Offer, ProductId, InStore, Status); }
     closeModal("ColorPriceProductModal");
 }
-function addColorPriceProduct(ColorPriceProductId,ColorPriceProductCaption,PriceProduct,Offer,ProductId,InStore,Status) {
+function addColorPriceProduct(ColorPriceProductId, ColorPriceProductCaption, PriceProduct, Offer, ProductId, InStore, Status) {
     const newColorPriceProduct = {
-        ColorPriceProductId,ColorPriceProductCaption,PriceProduct,Offer,ProductId,InStore,Status
+        ColorPriceProductId, ColorPriceProductCaption, PriceProduct, Offer, ProductId, InStore, Status
     };
     newColorPriceProduct.ColorPriceProductId = 0;
     SendData(newColorPriceProduct, true);
 }
-function updateColorPriceProduct(ColorPriceProductId,ColorPriceProductCaption,PriceProduct,Offer,ProductId,InStore,Status) {
+function updateColorPriceProduct(ColorPriceProductId, ColorPriceProductCaption, PriceProduct, Offer, ProductId, InStore, Status) {
     const idx = ColorPriceProductList.findIndex(data => data.ColorPriceProductId == ColorPriceProductId);
     if (idx !== -1) {
-        ColorPriceProductList[idx] = { ColorPriceProductId,ColorPriceProductCaption,PriceProduct,Offer,ProductId,InStore,Status };
+        ColorPriceProductList[idx] = { ColorPriceProductId, ColorPriceProductCaption, PriceProduct, Offer, ProductId, InStore, Status };
         SendData(ColorPriceProductList[idx], false);
     }
 }
 function SendData(newColorPriceProduct, typeRequst) {
-    $.post('/ColorPriceProducts/UpdateData', newColorPriceProduct, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                ColorPriceProductList.push(newColorPriceProduct);
+    const url = typeRequst
+        ? '/ColorPriceProducts/AddData'
+        : '/ColorPriceProducts/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, newColorPriceProduct)
+        .then(response => {
+            if (response.isSuccess) {
+                if (typeRequst) {
+                    ColorPriceProductList.push(newColorPriceProduct);
+                }
+                saveToStorage();
+                renderTable();
+                alert(response.data);
             }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+            else {
+                alert(response.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
 function resetModal() {
-    
- empColorPriceProductId.value = "";
- empColorPriceProductCaption.value = "";
- empPriceProduct.value = "";
- empOffer.value = "";
- empProductId.value = "";
- empInStore.value = "";
- empStatus.checked = false;
+
+    empColorPriceProductId.value = "";
+    empColorPriceProductCaption.value = "";
+    empPriceProduct.value = "";
+    empOffer.value = "";
+    empProductId.value = "";
+    empInStore.value = "";
+    empStatus.checked = false;
     modalTitle.innerText = "افزودن رکورد جدید";
 }
 function openModal(Modal) {
@@ -192,9 +230,3 @@ document.getElementById("statusFilter").addEventListener("change", () => renderT
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("ColorPriceProductModal"); });
 
 loadFromStorage(); renderTable();
-
-
-
-
-
-

@@ -6,7 +6,31 @@ const FinState = {
     range: 'all'
 };
 
-// ═══════════ Init ═══════════
+// ═══════════════════════════════════════════════════════
+// HttpHelper و UICore
+// ═══════════════════════════════════════════════════════
+const Http = window.HttpHelper;
+const UI = window.UICore;
+
+// ═══════════════════════════════════════════════════════
+// مدیریت خطا
+// ═══════════════════════════════════════════════════════
+function handleHttpError(err) {
+    console.error('[FinancialReports] HTTP error:', err);
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        showToast('نشست شما منقضی شده. صفحه را رفرش کنید.', 'error');
+        return;
+    }
+    showToast('خطا در ارتباط با سرور', 'error');
+}
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
+
+// ═══════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function () {
     initPeriodButtons();
     loadAllReports();
@@ -29,22 +53,27 @@ function refreshAll() {
 }
 
 function loadAllReports() {
-    loadKpi();
-    loadMonthlyIncomeChart();
-    loadDailyIncomeChart();
-    loadIncomeByTypeChart();
-    loadProfitReport();
-    loadMonthComparison();
-    loadSalesForecast();
-    loadTopProducts();
-    loadTopCustomers();
-    loadInventoryByStore();
-    loadSalesByStore();
-    loadPendingPayments();
-    loadSlowMovingProducts();
+    showLoading();
+    Promise.all([
+        loadKpi(),
+        loadMonthlyIncomeChart(),
+        loadDailyIncomeChart(),
+        loadIncomeByTypeChart(),
+        loadProfitReport(),
+        loadMonthComparison(),
+        loadSalesForecast(),
+        loadTopProducts(),
+        loadTopCustomers(),
+        loadInventoryByStore(),
+        loadSalesByStore(),
+        loadPendingPayments(),
+        loadSlowMovingProducts()
+    ]).finally(hideLoading);
 }
 
-// ═══════════ Helpers ═══════════
+// ═══════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════
 function extractArray(data) {
     if (!data) return [];
     if (Array.isArray(data)) return data;
@@ -81,22 +110,36 @@ function truncate(s, len) {
     return s.length > len ? s.substring(0, len) + '…' : s;
 }
 
-// ═══════════ KPI ═══════════
-function loadKpi() {
-    $.post('/FinancialReports/GetKpi', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const row = data[0] || {};
+function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
-        setText('kpiTotalIncome', formatMoney(getVal(row, ['TotalIncome', 'totalIncome'])));
-        setText('kpiTodayIncome', formatMoney(getVal(row, ['TodayIncome', 'todayIncome'])));
-        setText('kpiMonthIncome', formatMoney(getVal(row, ['MonthIncome', 'monthIncome'])));
-        setText('kpiInventoryValue', formatMoney(getVal(row, ['InventoryValue', 'inventoryValue'])));
-        setText('kpiTotalOrders', getVal(row, ['TotalOrders', 'totalOrders']));
-        setText('kpiAvgOrder', formatMoney(getVal(row, ['AvgOrderValue', 'avgOrderValue'])));
-        setText('kpiTotalProducts', getVal(row, ['TotalProducts', 'totalProducts']));
-        setText('kpiTotalStores', getVal(row, ['TotalStores', 'totalStores']));
-    });
+// ═══════════════════════════════════════════════════════
+// KPI
+// ═══════════════════════════════════════════════════════
+function loadKpi() {
+    return Http.postSecure('/FinancialReports/GetKpi')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const row = data[0] || {};
+
+            setText('kpiTotalIncome', formatMoney(getVal(row, ['TotalIncome', 'totalIncome'])));
+            setText('kpiTodayIncome', formatMoney(getVal(row, ['TodayIncome', 'todayIncome'])));
+            setText('kpiMonthIncome', formatMoney(getVal(row, ['MonthIncome', 'monthIncome'])));
+            setText('kpiInventoryValue', formatMoney(getVal(row, ['InventoryValue', 'inventoryValue'])));
+            setText('kpiTotalOrders', getVal(row, ['TotalOrders', 'totalOrders']));
+            setText('kpiAvgOrder', formatMoney(getVal(row, ['AvgOrderValue', 'avgOrderValue'])));
+            setText('kpiTotalProducts', getVal(row, ['TotalProducts', 'totalProducts']));
+            setText('kpiTotalStores', getVal(row, ['TotalStores', 'totalStores']));
+        })
+        .catch(handleHttpError);
 }
 
 function setText(id, val) {
@@ -104,46 +147,60 @@ function setText(id, val) {
     if (el) el.textContent = val;
 }
 
-// ═══════════ Monthly Income Chart (Line/Area) ═══════════
+// ═══════════════════════════════════════════════════════
+// Monthly Income Chart
+// ═══════════════════════════════════════════════════════
 function loadMonthlyIncomeChart() {
-    $.post('/FinancialReports/GetMonthlyIncome', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        renderLineChart('monthlyIncomeChart', data, {
-            xKey: 'MonthName',
-            yKey: 'TotalIncome',
-            color: '#0f6bff'
-        });
-    });
+    return Http.postSecure('/FinancialReports/GetMonthlyIncome')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            renderLineChart('monthlyIncomeChart', data, {
+                xKey: 'MonthName',
+                yKey: 'TotalIncome',
+                color: '#0f6bff'
+            });
+        })
+        .catch(handleHttpError);
 }
 
-// ═══════════ Daily Income Chart (Line/Area) ═══════════
+// ═══════════════════════════════════════════════════════
+// Daily Income Chart
+// ═══════════════════════════════════════════════════════
 function loadDailyIncomeChart() {
-    $.post('/FinancialReports/GetDailyIncome', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        renderLineChart('dailyIncomeChart', data, {
-            xKey: 'IncomeDate',
-            yKey: 'TotalIncome',
-            color: '#10b981',
-            dateFormat: true
-        });
-    });
+    return Http.postSecure('/FinancialReports/GetDailyIncome')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            renderLineChart('dailyIncomeChart', data, {
+                xKey: 'IncomeDate',
+                yKey: 'TotalIncome',
+                color: '#10b981',
+                dateFormat: true
+            });
+        })
+        .catch(handleHttpError);
 }
 
-// ═══════════ Income by Type Chart (Donut) ═══════════
+// ═══════════════════════════════════════════════════════
+// Income by Type Chart
+// ═══════════════════════════════════════════════════════
 function loadIncomeByTypeChart() {
-    $.post('/FinancialReports/GetIncomeByTypePeyment', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        renderDonutChart('incomeByTypeChart', data, {
-            labelKey: 'PeymentType',
-            valueKey: 'TotalIncome'
-        });
-    });
+    return Http.postSecure('/FinancialReports/GetIncomeByTypePeyment')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            renderDonutChart('incomeByTypeChart', data, {
+                labelKey: 'PeymentType',
+                valueKey: 'TotalIncome'
+            });
+        })
+        .catch(handleHttpError);
 }
 
-// ═══════════ Line Chart Renderer ═══════════
+// ═══════════════════════════════════════════════════════
+// Line Chart Renderer (بدون تغییر)
+// ═══════════════════════════════════════════════════════
 function renderLineChart(containerId, data, opts) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -208,7 +265,7 @@ function renderLineChart(containerId, data, opts) {
         if (showDot) {
             dots += `<circle cx="${c.x}" cy="${c.y}" r="4" fill="#fff" 
                             stroke="${opts.color}" stroke-width="2">
-                        <title>${c.label}: ${formatMoney(c.value)}</title>
+                        <title>${escapeHtml(c.label)}: ${formatMoney(c.value)}</title>
                     </circle>`;
         }
     });
@@ -220,7 +277,7 @@ function renderLineChart(containerId, data, opts) {
             i === coords.length - 1;
         if (showLabel) {
             xLabels += `<text x="${c.x}" y="${height - 12}" text-anchor="middle" 
-                              font-size="10" fill="#94a3b8" direction="ltr">${truncate(c.label, 12)}</text>`;
+                              font-size="10" fill="#94a3b8" direction="ltr">${escapeHtml(truncate(c.label, 12))}</text>`;
         }
     });
 
@@ -246,7 +303,9 @@ function renderLineChart(containerId, data, opts) {
     container.innerHTML = svg;
 }
 
-// ═══════════ Donut Chart Renderer ═══════════
+// ═══════════════════════════════════════════════════════
+// Donut Chart Renderer (بدون تغییر)
+// ═══════════════════════════════════════════════════════
 function renderDonutChart(containerId, data, opts) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -289,7 +348,7 @@ function renderDonutChart(containerId, data, opts) {
                     stroke-dasharray="${dash} ${circumference - dash}"
                     stroke-dashoffset="${-offset}"
                     transform="rotate(-90 ${center} ${center})">
-                <title>${item.label}: ${formatMoney(item.value)} (${(percent * 100).toFixed(1)}%)</title>
+                <title>${escapeHtml(item.label)}: ${formatMoney(item.value)} (${(percent * 100).toFixed(1)}%)</title>
             </circle>
         `;
 
@@ -303,7 +362,7 @@ function renderDonutChart(containerId, data, opts) {
         legend += `
             <div class="chart-legend-item">
                 <span class="legend-color" style="background:${color}"></span>
-                <span class="legend-label">${item.label}</span>
+                <span class="legend-label">${escapeHtml(item.label)}</span>
                 <span class="legend-value">${percent}%</span>
             </div>
         `;
@@ -328,40 +387,48 @@ function renderDonutChart(containerId, data, opts) {
     `;
 }
 
-// ═══════════ Profit Report ═══════════
+// ═══════════════════════════════════════════════════════
+// Profit Report
+// ═══════════════════════════════════════════════════════
 function loadProfitReport() {
-    $.post('/FinancialReports/GetProfitReport', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const row = data[0] || {};
+    return Http.postSecure('/FinancialReports/GetProfitReport')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const row = data[0] || {};
 
-        setText('profitRevenue', formatMoney(getVal(row, ['TotalRevenue', 'totalRevenue'])));
-        setText('profitCost', formatMoney(getVal(row, ['EstimatedCost', 'estimatedCost'])));
-        setText('profitNet', formatMoney(getVal(row, ['EstimatedProfit', 'estimatedProfit'])));
-        setText('profitTax', formatMoney(getVal(row, ['EstimatedTax', 'estimatedTax'])));
-    });
+            setText('profitRevenue', formatMoney(getVal(row, ['TotalRevenue', 'totalRevenue'])));
+            setText('profitCost', formatMoney(getVal(row, ['EstimatedCost', 'estimatedCost'])));
+            setText('profitNet', formatMoney(getVal(row, ['EstimatedProfit', 'estimatedProfit'])));
+            setText('profitTax', formatMoney(getVal(row, ['EstimatedTax', 'estimatedTax'])));
+        })
+        .catch(handleHttpError);
 }
 
-// ═══════════ Month Comparison ═══════════
+// ═══════════════════════════════════════════════════════
+// Month Comparison
+// ═══════════════════════════════════════════════════════
 function loadMonthComparison() {
-    $.post('/FinancialReports/GetMonthComparison', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const row = data[0] || {};
+    return Http.postSecure('/FinancialReports/GetMonthComparison')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const row = data[0] || {};
 
-        const thisMonth = getVal(row, ['ThisMonth', 'thisMonth']);
-        const lastMonth = getVal(row, ['LastMonth', 'lastMonth']);
-        const thisOrders = getVal(row, ['ThisMonthOrders', 'thisMonthOrders']);
-        const lastOrders = getVal(row, ['LastMonthOrders', 'lastMonthOrders']);
+            const thisMonth = getVal(row, ['ThisMonth', 'thisMonth']);
+            const lastMonth = getVal(row, ['LastMonth', 'lastMonth']);
+            const thisOrders = getVal(row, ['ThisMonthOrders', 'thisMonthOrders']);
+            const lastOrders = getVal(row, ['LastMonthOrders', 'lastMonthOrders']);
 
-        setText('compareThisMonth', formatMoney(thisMonth));
-        setText('compareLastMonth', formatMoney(lastMonth));
-        setText('compareThisOrders', thisOrders);
-        setText('compareLastOrders', lastOrders);
+            setText('compareThisMonth', formatMoney(thisMonth));
+            setText('compareLastMonth', formatMoney(lastMonth));
+            setText('compareThisOrders', thisOrders);
+            setText('compareLastOrders', lastOrders);
 
-        updatePercent('compareIncomePercent', thisMonth, lastMonth);
-        updatePercent('compareOrdersPercent', thisOrders, lastOrders);
-    });
+            updatePercent('compareIncomePercent', thisMonth, lastMonth);
+            updatePercent('compareOrdersPercent', thisOrders, lastOrders);
+        })
+        .catch(handleHttpError);
 }
 
 function updatePercent(id, current, previous) {
@@ -383,185 +450,214 @@ function updatePercent(id, current, previous) {
     el.className = 'compare-percent ' + (percent >= 0 ? 'up' : 'down');
 }
 
-// ═══════════ Sales Forecast ═══════════
+// ═══════════════════════════════════════════════════════
+// Sales Forecast
+// ═══════════════════════════════════════════════════════
 function loadSalesForecast() {
-    $.post('/FinancialReports/GetSalesForecast', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const row = data[0] || {};
+    return Http.postSecure('/FinancialReports/GetSalesForecast')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const row = data[0] || {};
 
-        const last30 = getVal(row, ['Last30Days', 'last30Days']);
-        const prev30 = getVal(row, ['Previous30Days', 'previous30Days']);
-        const avgOrder = getVal(row, ['AvgOrderValue', 'avgOrderValue']);
-        const orders = getVal(row, ['OrdersLast30Days', 'ordersLast30Days']);
+            const last30 = getVal(row, ['Last30Days', 'last30Days']);
+            const prev30 = getVal(row, ['Previous30Days', 'previous30Days']);
+            const avgOrder = getVal(row, ['AvgOrderValue', 'avgOrderValue']);
+            const orders = getVal(row, ['OrdersLast30Days', 'ordersLast30Days']);
 
-        // پیش‌بینی: میانگین وزنی (۶۰٪ ماه اخیر + ۴۰٪ ماه قبل) × رشد
-        const forecast = (Number(last30) * 0.6 + Number(prev30) * 0.4) * 1.05;
+            const forecast = (Number(last30) * 0.6 + Number(prev30) * 0.4) * 1.05;
 
-        setText('forecastLast30', formatMoney(last30));
-        setText('forecastPrevious30', formatMoney(prev30));
-        setText('forecastNext', formatMoney(forecast));
-        setText('forecastAvgOrder', formatMoney(avgOrder));
-    });
+            setText('forecastLast30', formatMoney(last30));
+            setText('forecastPrevious30', formatMoney(prev30));
+            setText('forecastNext', formatMoney(forecast));
+            setText('forecastAvgOrder', formatMoney(avgOrder));
+        })
+        .catch(handleHttpError);
 }
 
-// ═══════════ Top Products ═══════════
+// ═══════════════════════════════════════════════════════
+// Top Products
+// ═══════════════════════════════════════════════════════
 function loadTopProducts() {
-    $.post('/FinancialReports/GetTopSellingProducts', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const tbody = document.getElementById('topProductsBody');
-        if (!tbody) return;
+    return Http.postSecure('/FinancialReports/GetTopSellingProducts')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const tbody = document.getElementById('topProductsBody');
+            if (!tbody) return;
 
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
-            return;
-        }
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
+                return;
+            }
 
-        tbody.innerHTML = data.map((p, i) => `
-            <tr>
-                <td><span class="num-badge ${i < 3 ? 'gold' : ''}">${i + 1}</span></td>
-                <td>${truncate(p.ProductName || p.productName || '—', 40)}</td>
-                <td><span class="num-badge">${getVal(p, ['TotalSold', 'totalSold'])}</span></td>
-                <td><span class="money">${formatMoney(getVal(p, ['AvgPrice', 'avgPrice']))}</span></td>
-                <td><span class="money">${formatMoney(getVal(p, ['TotalRevenue', 'totalRevenue']))}</span></td>
-            </tr>
-        `).join('');
-    });
-}
-
-// ═══════════ Top Customers ═══════════
-function loadTopCustomers() {
-    $.post('/FinancialReports/GetTopCustomers', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const tbody = document.getElementById('topCustomersBody');
-        if (!tbody) return;
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data.map((c, i) => `
-            <tr>
-                <td><span class="num-badge ${i < 3 ? 'gold' : ''}">${i + 1}</span></td>
-                <td>${truncate(c.CustomerName || c.customerName || '—', 30)}</td>
-                <td><span class="num-badge">${getVal(c, ['OrderCount', 'orderCount'])}</span></td>
-                <td><span class="money">${formatMoney(getVal(c, ['TotalSpent', 'totalSpent']))}</span></td>
-                <td>${formatDate(getVal(c, ['LastOrderDate', 'lastOrderDate']))}</td>
-            </tr>
-        `).join('');
-    });
-}
-
-// ═══════════ Inventory By Store ═══════════
-function loadInventoryByStore() {
-    $.post('/FinancialReports/GetInventoryValueByStore', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const tbody = document.getElementById('inventoryByStoreBody');
-        if (!tbody) return;
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data.map((s, i) => `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${truncate(s.StoreName || s.storeName || '—', 35)}</td>
-                <td><span class="num-badge">${getVal(s, ['ProductCount', 'productCount'])}</span></td>
-                <td><span class="num-badge">${getVal(s, ['TotalItems', 'totalItems'])}</span></td>
-                <td><span class="money">${formatMoney(getVal(s, ['InventoryValue', 'inventoryValue']))}</span></td>
-            </tr>
-        `).join('');
-    });
-}
-
-// ═══════════ Sales By Store ═══════════
-function loadSalesByStore() {
-    $.post('/FinancialReports/GetSalesByStore', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const tbody = document.getElementById('salesByStoreBody');
-        if (!tbody) return;
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data.map((s, i) => `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${truncate(s.StoreName || s.storeName || '—', 35)}</td>
-                <td><span class="num-badge">${s.CodeStore || s.codeStore || '—'}</span></td>
-                <td><span class="num-badge">${getVal(s, ['OrderCount', 'orderCount'])}</span></td>
-                <td><span class="money">${formatMoney(getVal(s, ['TotalIncome', 'totalIncome']))}</span></td>
-            </tr>
-        `).join('');
-    });
-}
-
-// ═══════════ Pending Payments ═══════════
-function loadPendingPayments() {
-    $.post('/FinancialReports/GetPendingPayments', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const tbody = document.getElementById('pendingPaymentsBody');
-        if (!tbody) return;
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="chart-empty">✅ پرداخت معلقی وجود ندارد</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data.map(p => `
-            <tr>
-                <td><span class="num-badge">#${p.RecommendationsId || p.recommendationsId}</span></td>
-                <td>${truncate(p.OrderTitle || p.orderTitle || '—', 30)}</td>
-                <td>${truncate(p.CustomerName || p.customerName || '—', 25)}</td>
-                <td><span class="money">${formatMoney(getVal(p, ['ExpectedAmount', 'expectedAmount']))}</span></td>
-                <td><span class="status-badge pending">${p.StatusText || p.statusText || '—'}</span></td>
-                <td>${formatDate(getVal(p, ['OrderDate', 'orderDate']))}</td>
-            </tr>
-        `).join('');
-    });
-}
-
-// ═══════════ Slow Moving Products ═══════════
-function loadSlowMovingProducts() {
-    $.post('/FinancialReports/GetSlowMovingProducts', {}, function (res) {
-        if (!res.isSuccess) return;
-        const data = extractArray(JSON.parse(res.data));
-        const tbody = document.getElementById('slowMovingBody');
-        if (!tbody) return;
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">✅ محصول راکدی وجود ندارد</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data.map(p => {
-            const sold = getVal(p, ['SoldLast30Days', 'soldLast30Days']);
-            const stock = getVal(p, ['CurrentStock', 'currentStock']);
-            const cls = sold === 0 ? 'red' : sold < 3 ? 'gold' : '';
-            return `
+            tbody.innerHTML = data.map((p, i) => `
                 <tr>
-                    <td>—</td>
-                    <td>${truncate(p.ProductName || p.productName || '—', 35)}</td>
-                    <td>${truncate(p.StoreName || p.storeName || '—', 25)}</td>
-                    <td><span class="num-badge ${stock > 20 ? 'red' : ''}">${stock}</span></td>
-                    <td><span class="num-badge ${cls}">${sold}</span></td>
+                    <td><span class="num-badge ${i < 3 ? 'gold' : ''}">${i + 1}</span></td>
+                    <td>${escapeHtml(truncate(p.ProductName || p.productName || '—', 40))}</td>
+                    <td><span class="num-badge">${getVal(p, ['TotalSold', 'totalSold'])}</span></td>
+                    <td><span class="money">${formatMoney(getVal(p, ['AvgPrice', 'avgPrice']))}</span></td>
+                    <td><span class="money">${formatMoney(getVal(p, ['TotalRevenue', 'totalRevenue']))}</span></td>
                 </tr>
-            `;
-        }).join('');
-    });
+            `).join('');
+        })
+        .catch(handleHttpError);
 }
 
-// ═══════════ Date format ═══════════
+// ═══════════════════════════════════════════════════════
+// Top Customers
+// ═══════════════════════════════════════════════════════
+function loadTopCustomers() {
+    return Http.postSecure('/FinancialReports/GetTopCustomers')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const tbody = document.getElementById('topCustomersBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map((c, i) => `
+                <tr>
+                    <td><span class="num-badge ${i < 3 ? 'gold' : ''}">${i + 1}</span></td>
+                    <td>${escapeHtml(truncate(c.CustomerName || c.customerName || '—', 30))}</td>
+                    <td><span class="num-badge">${getVal(c, ['OrderCount', 'orderCount'])}</span></td>
+                    <td><span class="money">${formatMoney(getVal(c, ['TotalSpent', 'totalSpent']))}</span></td>
+                    <td>${formatDate(getVal(c, ['LastOrderDate', 'lastOrderDate']))}</td>
+                </tr>
+            `).join('');
+        })
+        .catch(handleHttpError);
+}
+
+// ═══════════════════════════════════════════════════════
+// Inventory By Store
+// ═══════════════════════════════════════════════════════
+function loadInventoryByStore() {
+    return Http.postSecure('/FinancialReports/GetInventoryValueByStore')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const tbody = document.getElementById('inventoryByStoreBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map((s, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${escapeHtml(truncate(s.StoreName || s.storeName || '—', 35))}</td>
+                    <td><span class="num-badge">${getVal(s, ['ProductCount', 'productCount'])}</span></td>
+                    <td><span class="num-badge">${getVal(s, ['TotalItems', 'totalItems'])}</span></td>
+                    <td><span class="money">${formatMoney(getVal(s, ['InventoryValue', 'inventoryValue']))}</span></td>
+                </tr>
+            `).join('');
+        })
+        .catch(handleHttpError);
+}
+
+// ═══════════════════════════════════════════════════════
+// Sales By Store
+// ═══════════════════════════════════════════════════════
+function loadSalesByStore() {
+    return Http.postSecure('/FinancialReports/GetSalesByStore')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const tbody = document.getElementById('salesByStoreBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">داده‌ای نیست</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map((s, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${escapeHtml(truncate(s.StoreName || s.storeName || '—', 35))}</td>
+                    <td><span class="num-badge">${escapeHtml(s.CodeStore || s.codeStore || '—')}</span></td>
+                    <td><span class="num-badge">${getVal(s, ['OrderCount', 'orderCount'])}</span></td>
+                    <td><span class="money">${formatMoney(getVal(s, ['TotalIncome', 'totalIncome']))}</span></td>
+                </tr>
+            `).join('');
+        })
+        .catch(handleHttpError);
+}
+
+// ═══════════════════════════════════════════════════════
+// Pending Payments
+// ═══════════════════════════════════════════════════════
+function loadPendingPayments() {
+    return Http.postSecure('/FinancialReports/GetPendingPayments')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const tbody = document.getElementById('pendingPaymentsBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="chart-empty">✅ پرداخت معلقی وجود ندارد</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => `
+                <tr>
+                    <td><span class="num-badge">#${p.RecommendationsId || p.recommendationsId}</span></td>
+                    <td>${escapeHtml(truncate(p.OrderTitle || p.orderTitle || '—', 30))}</td>
+                    <td>${escapeHtml(truncate(p.CustomerName || p.customerName || '—', 25))}</td>
+                    <td><span class="money">${formatMoney(getVal(p, ['ExpectedAmount', 'expectedAmount']))}</span></td>
+                    <td><span class="status-badge pending">${escapeHtml(p.StatusText || p.statusText || '—')}</span></td>
+                    <td>${formatDate(getVal(p, ['OrderDate', 'orderDate']))}</td>
+                </tr>
+            `).join('');
+        })
+        .catch(handleHttpError);
+}
+
+// ═══════════════════════════════════════════════════════
+// Slow Moving Products
+// ═══════════════════════════════════════════════════════
+function loadSlowMovingProducts() {
+    return Http.postSecure('/FinancialReports/GetSlowMovingProducts')
+        .then(res => {
+            if (!res.isSuccess) return;
+            const data = extractArray(JSON.parse(res.data));
+            const tbody = document.getElementById('slowMovingBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="chart-empty">✅ محصول راکدی وجود ندارد</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => {
+                const sold = getVal(p, ['SoldLast30Days', 'soldLast30Days']);
+                const stock = getVal(p, ['CurrentStock', 'currentStock']);
+                const cls = sold === 0 ? 'red' : sold < 3 ? 'gold' : '';
+                return `
+                    <tr>
+                        <td>—</td>
+                        <td>${escapeHtml(truncate(p.ProductName || p.productName || '—', 35))}</td>
+                        <td>${escapeHtml(truncate(p.StoreName || p.storeName || '—', 25))}</td>
+                        <td><span class="num-badge ${stock > 20 ? 'red' : ''}">${stock}</span></td>
+                        <td><span class="num-badge ${cls}">${sold}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        })
+        .catch(handleHttpError);
+}
+
+// ═══════════════════════════════════════════════════════
+// Date format
+// ═══════════════════════════════════════════════════════
 function formatDate(d) {
     if (!d) return '—';
     try {
@@ -571,8 +667,14 @@ function formatDate(d) {
     } catch { return d; }
 }
 
-// ═══════════ Toast ═══════════
+// ═══════════════════════════════════════════════════════
+// Toast
+// ═══════════════════════════════════════════════════════
 function showToast(msg, type = 'info') {
+    if (UI && UI.showToast) {
+        UI.showToast(msg, type);
+        return;
+    }
     const colors = { success: '#10b981', error: '#ef4444', info: '#0f6bff' };
     const t = document.createElement('div');
     t.style.cssText = `position:fixed;bottom:24px;left:24px;background:${colors[type]};color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,.2);`;

@@ -422,17 +422,19 @@
 
             return `
                 <div class="sub-item">
+                <div class="sub-item">
                     <span class="item-name">${UI.escapeHtml(c.ColorPriceProductCaption || '—')}</span>
                     <span class="item-meta">قیمت: ${price}</span>
                     <span class="item-meta">تخفیف: ${offer}</span>
                     <span class="item-meta">موجودی: ${stock}</span>
+                    </div><div class="sub-item">
                     <button class="remove-sub" onclick="openColorModal(${product.ProductId}, ${c.ColorPriceProductId})" title="ویرایش">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="remove-sub" onclick="deleteColor(${c.ColorPriceProductId}, ${product.ProductId})" title="حذف">
                         <i class="fas fa-times"></i>
                     </button>
-                </div>`;
+                </div></div>`;
         }).join('');
     }
 

@@ -1,246 +1,309 @@
+/* ═══════════════════════════════════════════════════════
+   Roles.js — مدیریت نقش سیستم
+   ═══════════════════════════════════════════════════════ */
+
 let RoleList = [];
+let LevelAccessesList = [];
 let editingRole = false;
 
+const Http = window.HttpHelper;
+const UI = window.UICore;
 
-
-function saveToStorage() {
-    $.post('/Roles/GetAllData', function (response) {
-        if (response.isSuccess) {
-            RoleList = JSON.parse(response.data);
-            localStorage.setItem("Roles", JSON.stringify(RoleList));
-            renderTable();
-            nextId = Math.max(...RoleList.map(i => i.RoleId));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+function handleHttpError(err) {
+    console.error('[Role] HTTP error:', err);
+    if (err.message === 'AUTH_REQUIRED') return;
+    if (err.message === 'CSRF_OR_BAD_REQUEST') {
+        alert('نشست شما منقضی شده. صفحه را رفرش کنید.');
+        return;
+    }
+    alert('خطا در ارتباط با سرور');
 }
+
+function showLoading() { if (UI && UI.showLoading) UI.showLoading(); }
+function hideLoading() { if (UI && UI.hideLoading) UI.hideLoading(); }
+
+function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ═══════════════════════════════════════════════════════
+// GetLevelAccesses — برای پر کردن چک‌باکس‌ها
+// ═══════════════════════════════════════════════════════
+function GetLevelAccesses() {
+    return Http.postSecure('/Roles/GetLevelAccesses')
+        .then(res => {
+            if (res.isSuccess) {
+                LevelAccessesList = JSON.parse(res.data);
+                renderLevelAccessCheckboxes();
+            }
+        })
+        .catch(handleHttpError);
+}
+
+function renderLevelAccessCheckboxes(selectedIds = []) {
+    const container = document.getElementById('levelAccessList');
+    if (!container) return;
+
+    if (!LevelAccessesList || LevelAccessesList.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:10px;">هیچ دسترسی‌ای ثبت نشده است</div>';
+        return;
+    }
+
+    container.innerHTML = LevelAccessesList.map(l => {
+        const checked = selectedIds.includes(l.LevelAccessId) ? 'checked' : '';
+        return `
+            <label style="display:flex; align-items:center; padding:6px; cursor:pointer; border-bottom:1px solid var(--border-light);">
+                <input type="checkbox" class="levelaccess-checkbox" value="${l.LevelAccessId}" ${checked} style="margin-left:8px; width:18px; height:18px;">
+                <span>${escapeHtml(l.LevelAccessCaption)} <code style="font-size:0.7rem; color:var(--primary);">${escapeHtml(l.CodeAccess || '')}</code></span>
+            </label>
+        `;
+    }).join('');
+}
+
+function getSelectedLevelAccessIds() {
+    const checkboxes = document.querySelectorAll('.levelaccess-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value).join(',');
+}
+
+// ═══════════════════════════════════════════════════════
+// GetAllData
+// ═══════════════════════════════════════════════════════
+function saveToStorage() {
+    showLoading();
+    Http.postSecure('/Roles/GetAllData')
+        .then(res => {
+            if (res.isSuccess) {
+                RoleList = JSON.parse(res.data);
+                localStorage.setItem("Roles", JSON.stringify(RoleList));
+                renderTable();
+            } else {
+                alert(res.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
+}
+
 function loadFromStorage() {
     const saved = localStorage.getItem("Roles");
     if (saved) {
-        RoleList = JSON.parse(saved);
+        try {
+            RoleList = JSON.parse(saved);
+            renderTable();
+        } catch {
+            saveToStorage();
+        }
+    } else {
+        saveToStorage();
     }
-    else saveToStorage();
 }
+
+// ═══════════════════════════════════════════════════════
+// آمار
+// ═══════════════════════════════════════════════════════
 function renderStats() {
-    const total = RoleList.length, active = RoleList.filter(data => data.Status).length, inactive = RoleList.filter(data => !data.Status).length;
-    document.getElementById("statsCards").innerHTML = `
-            <div class="stat-card"><div class="stat-info"><div class="number">${total}</div><div class="label">کل نقش سیستم</div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
-            <div class="stat-card"><div class="stat-info"><div class="number">${active}</div><div class="label">فعال</div></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div>
-            <div class="stat-card"><div class="stat-info"><div class="number">${inactive}</div><div class="label">غیرفعال</div></div><div class="stat-icon"><i class="fas fa-ban"></i></div></div>
-        `;
+    const total = RoleList.length;
+    const active = RoleList.filter(d => d.Status).length;
+    const inactive = RoleList.filter(d => !d.Status).length;
+
+    const el = document.getElementById("statsCards");
+    if (!el) return;
+
+    el.innerHTML = `
+        <div class="stat-card"><div class="stat-info"><div class="number">${total}</div><div class="label">کل نقش‌ها</div></div><div class="stat-icon"><i class="fas fa-user-tag"></i></div></div>
+        <div class="stat-card"><div class="stat-info"><div class="number">${active}</div><div class="label">فعال</div></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div>
+        <div class="stat-card"><div class="stat-info"><div class="number">${inactive}</div><div class="label">غیرفعال</div></div><div class="stat-icon"><i class="fas fa-ban"></i></div></div>
+    `;
 }
+
+// ═══════════════════════════════════════════════════════
+// جدول
+// ═══════════════════════════════════════════════════════
 function renderTable() {
-    const searchTerm = document.getElementById("searchRole").value.toLowerCase();
-    const statusFilter = document.getElementById("statusFilter").value;
-    let filtered = [...RoleList];
-    if (searchTerm) filtered = filtered.filter(p =>p.RoleCaption.toLowerCase().includes(searchTerm));
-    if (statusFilter !== "all") filtered = filtered.filter(p => p.Status.toString() === statusFilter);
+    const searchEl = document.getElementById("searchRole");
+    const statusEl = document.getElementById("statusFilter");
     const tbody = document.getElementById("RoleTableBody");
-    if (filtered.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">هیچ رکورد یافت نشد</td></tr>`; renderStats(); return; }
-    
+    if (!tbody) return;
+
+    const searchTerm = (searchEl?.value || "").toLowerCase().trim();
+    const statusFilter = statusEl?.value || "all";
+
+    let filtered = [...RoleList];
+
+    if (searchTerm) {
+        filtered = filtered.filter(p =>
+            (p.RoleCaption || "").toLowerCase().includes(searchTerm)
+        );
+    }
+
+    if (statusFilter !== "all") {
+        filtered = filtered.filter(p => p.Status.toString() === statusFilter);
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="5">هیچ رکورد یافت نشد</td></tr>`;
+        renderStats();
+        return;
+    }
+
     tbody.innerHTML = filtered.map(data => {
-        
- const statusStatus = data.Status === true ? "فعال" : "غیرفعال";
+        const statusText = data.Status === true ? "فعال" : "غیرفعال";
+        const levelAccessIds = (data.LevelAccessIds || "").split(',').filter(x => x);
+        const count = levelAccessIds.length;
+
         return `<tr>
-                <td>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <div><strong>${data.RoleId}</strong></div>
-                  </div>
-                </td>
-                
- <td>${data.RoleCaption}</td>
- <td>${statusStatus}</td>
-                <td class="action-buttons">
-                    
-
-<button class="action-btn LevelAccessRole-btn" data-id="${data.RoleId}" title="ویرایش"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn edit-btn" data-id="${data.RoleId}" title="ویرایش"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete-btn" data-id="${data.RoleId}" title="حذف"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>`;
+            <td><strong>${data.RoleId}</strong></td>
+            <td>${escapeHtml(data.RoleCaption || '—')}</td>
+            <td><span class="badge">${count} دسترسی</span></td>
+            <td>${statusText}</td>
+            <td class="action-buttons">
+                <button class="action-btn edit-btn" data-id="${data.RoleId}" title="ویرایش"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete-btn" data-id="${data.RoleId}" title="حذف"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>`;
     }).join('');
-    
 
-document.querySelectorAll('.LevelAccessRole-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); GetLevelAccessRoleData(id); }));
-    document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); openEditModal(id); }));
-    document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { if (confirm("حذف رکورد؟")) deleteRole(parseInt(btn.dataset.id)); }));
+    document.querySelectorAll('.edit-btn').forEach(btn =>
+        btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id))));
+
+    document.querySelectorAll('.delete-btn').forEach(btn =>
+        btn.addEventListener('click', () => {
+            if (confirm("حذف رکورد؟")) deleteRole(parseInt(btn.dataset.id));
+        }));
+
     renderStats();
 }
-function deleteRole(RoleId) {
-    $.post('/Roles/DeleteData', { 'id': RoleId }, function (response) {
-        if (response.isSuccess) {
-            RoleList = RoleList.filter(data => data.RoleId !== RoleId);
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
+
+// ═══════════════════════════════════════════════════════
+// حذف
+// ═══════════════════════════════════════════════════════
+function deleteRole(id) {
+    showLoading();
+    Http.postSecure('/Roles/DeleteData', { 'id': id })
+        .then(res => {
+            if (res.isSuccess) {
+                RoleList = RoleList.filter(d => d.RoleId !== id);
+                saveToStorage();
+                renderTable();
+                alert(res.data);
+            } else {
+                alert(res.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
 }
+
+// ═══════════════════════════════════════════════════════
+// Modal
+// ═══════════════════════════════════════════════════════
 const modal = document.getElementById("RoleModal");
 const modalTitle = document.getElementById("modalTitle");
-const empRoleId = document.getElementById("RoleId");const empRoleCaption = document.getElementById("RoleCaption");const empStatus = document.getElementById("Status");
+const empRoleId = document.getElementById("RoleId");
+const empRoleCaption = document.getElementById("RoleCaption");
+const empStatus = document.getElementById("Status");
 
 function openAddModal() {
     editingRole = false;
     resetModal();
+    renderLevelAccessCheckboxes([]);
     openModal("RoleModal");
 }
-function openEditModal(RoleId) {
-    const data = RoleList.find(data => data.RoleId === RoleId);
-    if (data) {
-        editingRole = true;
-        
-	 empRoleId.value = data.RoleId;
-	 empRoleCaption.value = data.RoleCaption;
-	 empStatus.checked = Boolean(data.Status);
-        modalTitle.innerText = "ویرایش رکورد";
-        openModal("RoleModal");
-    }
+
+function openEditModal(id) {
+    const data = RoleList.find(d => d.RoleId === id);
+    if (!data) return;
+
+    editingRole = true;
+
+    empRoleId.value = data.RoleId || 0;
+    empRoleCaption.value = data.RoleCaption || '';
+    empStatus.checked = Boolean(data.Status);
+
+    const levelAccessIds = (data.LevelAccessIds || "").split(',').filter(x => x).map(x => parseInt(x));
+    renderLevelAccessCheckboxes(levelAccessIds);
+
+    modalTitle.innerText = "ویرایش نقش";
+    openModal("RoleModal");
 }
+
 function CanselSaveModal() {
     closeModal("RoleModal");
     resetModal();
 }
-function SaveNewModel() {
-    
-	 const RoleId = empRoleId.value.trim();
-	 const RoleCaption = empRoleCaption.value.trim();
-	 const Status = empStatus.checked;
-    if (!RoleCaption) {
-        alert("لطفاً تمام فیلدها را پر کنید");
-        return;
-    }
-    if (editingRole) { updateRole(RoleId,RoleCaption,Status); } else { addRole(RoleId,RoleCaption,Status); }
-    closeModal("RoleModal");
-}
-function addRole(RoleId,RoleCaption,Status) {
-    const newRole = {
-        RoleId,RoleCaption,Status
-    };
-    newRole.RoleId = 0;
-    SendData(newRole, true);
-}
-function updateRole(RoleId,RoleCaption,Status) {
-    const idx = RoleList.findIndex(data => data.RoleId == RoleId);
-    if (idx !== -1) {
-        RoleList[idx] = { RoleId,RoleCaption,Status };
-        SendData(RoleList[idx], false);
-    }
-}
-function SendData(newRole, typeRequst) {
-    $.post('/Roles/UpdateData', newRole, function (response) {
-        if (response.isSuccess) {
-            if (typeRequst) {
-                RoleList.push(newRole);
-            }
-            saveToStorage();
-            renderTable();
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
+
 function resetModal() {
-    
- empRoleId.value = "";
- empRoleCaption.value = "";
- empStatus.checked = false;
-    modalTitle.innerText = "افزودن رکورد جدید";
-}
-function openModal(Modal) {
-    document.getElementById(Modal).classList.add("active");
-}
-function closeModal(Modal) {
-    document.getElementById(Modal).classList.remove("active");
+    empRoleId.value = 0;
+    empRoleCaption.value = '';
+    empStatus.checked = false;
+    modalTitle.innerText = "افزودن نقش جدید";
 }
 
-document.getElementById("searchRole").addEventListener("input", () => renderTable());
-document.getElementById("statusFilter").addEventListener("change", () => renderTable());
-modal.addEventListener("click", (e) => { if (e.target === modal) closeModal("RoleModal"); });
+function openModal(Id) {
+    const el = document.getElementById(Id);
+    if (el) el.classList.add("active");
+}
 
-loadFromStorage(); renderTable();
+function closeModal(Id) {
+    const el = document.getElementById(Id);
+    if (el) el.classList.remove("active");
+}
 
+// ═══════════════════════════════════════════════════════
+// ذخیره
+// ═══════════════════════════════════════════════════════
+function SaveNewModel() {
+    const id = parseInt(empRoleId.value) || 0;
+    const caption = empRoleCaption.value.trim();
+    const status = empStatus.checked;
+    const levelAccessIds = getSelectedLevelAccessIds();
 
+    if (!caption) { alert("لطفاً عنوان نقش را وارد کنید"); return; }
 
+    const data = {
+        RoleId: id,
+        RoleCaption: caption,
+        Status: status,
+        levelAccessIds: levelAccessIds
+    };
 
-GetRole();
-let RoleId = 0;
-function saveLevelAccessRole() {
-    let id = document.getElementById("LevelAccessRoleId").value;
-    $.post('/LevelAccessRole/AddData', { 'LevelAccessId': id, 'RoleId': RoleId }, function (response) {
-        if (response.isSuccess) {
-            GetLevelAccessRoleData(RoleId);
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
+    const url = id === 0 ? '/Roles/AddData' : '/Roles/UpdateData';
+
+    showLoading();
+    Http.postSecure(url, data)
+        .then(res => {
+            if (res.isSuccess) {
+                saveToStorage();
+                alert(res.data);
+                closeModal("RoleModal");
+            } else {
+                alert(res.errorTitle);
+            }
+        })
+        .catch(handleHttpError)
+        .finally(hideLoading);
+}
+
+// ═══════════════════════════════════════════════════════
+// رویدادها
+// ═══════════════════════════════════════════════════════
+document.getElementById("searchRole")?.addEventListener("input", () => renderTable());
+document.getElementById("statusFilter")?.addEventListener("change", () => renderTable());
+
+if (modal) {
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal("RoleModal");
     });
 }
-function GetRole() {
-    $.post('/LevelAccesss/GetAllData', function (response) {
-        if (response.isSuccess) {
-            let options = "";
-            let dataConvert = JSON.parse(response.data);
-            dataConvert.forEach(function (item) {
-                options = options + `<option value=\"${item.LevelAccessId}\">${item.LevelAccessCaption}</option>`;
-            });
-            document.getElementById("LevelAccessRoleId").innerHTML = options;
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
-function GetLevelAccessRoleData(id) {
-    RoleId = id;
-  var Role = RoleList.filter(p => p.RoleId == id)[0];
-    const modalLevelAccessRoleTitle = document.getElementById("modalLevelAccessRoleTitle");
-    let title = modalLevelAccessRoleTitle.innerHTML;
-    modalLevelAccessRoleTitle.innerHTML = title.split(" با ")[0] + " با " + Role.RoleCaption;  $.post('/LevelAccessRole/GetData', { 'id': id }, function (response) {
-        if (response.isSuccess) {
-            openModal("LevelAccessRoleModal");
-            let options = "";
-            let filtered = JSON.parse(response.data);
-            document.getElementById("LevelAccessRoleTableBody").innerHTML = filtered.map(data => {
-                return `<tr>
-                <td>${data.LevelAccessCaption}</td>
-                <td class="action-buttons">
-                    <button class="action-btn deleteLevelAccessRole-btn" data-id="${data.LevelAccessId}" title="حذف"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>`;
-            }).join('');
-            document.querySelectorAll('.deleteLevelAccessRole-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                if (confirm("حذف رکورد؟")) { deleteLevelAccessRole(parseInt(btn.dataset.id)); }
-            }));
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
-function deleteLevelAccessRole(LevelAccessId) {
-    $.post('/LevelAccessRole/DeleteData', { 'LevelAccessId': LevelAccessId, 'RoleId': RoleId }, function (response) {
-        if (response.isSuccess) {
-            GetLevelAccessRoleData(RoleId);
-            alert(response.data);
-        }
-        else {
-            alert(response.errorTitle);
-        }
-    });
-}
- const modalLevelAccessRole = document.getElementById("LevelAccessRoleModal");
- modalLevelAccessRole.addEventListener("click", (e) => { if (e.target === modalLevelAccessRole) closeModal('LevelAccessRoleModal'); });
- const modalAddLevelAccessRole = document.getElementById("AddLevelAccessRoleModal");
- modalAddLevelAccessRole.addEventListener("click", (e) => { if (e.target === modalAddLevelAccessRole) closeModal('AddLevelAccessRoleModal'); });
 
-
-
+// ═══════════════════════════════════════════════════════
+// شروع
+// ═══════════════════════════════════════════════════════
+loadFromStorage();
+GetLevelAccesses();

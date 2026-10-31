@@ -3,6 +3,8 @@ using Domain.Models;
 using Domain.ServiseResult;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using System.Data;
 using TemplateSite.Filters;
 
 namespace TemplateSite.Controllers.ShopPanel
@@ -39,7 +41,7 @@ namespace TemplateSite.Controllers.ShopPanel
             // ۱. دریافت TypeCode از CodeAccess
             // ═══════════════════════════════════════════════════════
             var data = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                $"select * from CodeAccessView where CodeAccessCaption = '{Code}'");
+                $"select * from CodeAccessView where CodeAccessCaption = @Code", new SqlParameter($"@Code", SqlDbType.NVarChar) { Value = Code });
 
             if (!data.IsSuccess || data.Data == null || data.Data.Count == 0)
                 return RedirectToAction(nameof(VitrinShop), new { Code = "" });
@@ -78,7 +80,7 @@ namespace TemplateSite.Controllers.ShopPanel
         private async Task<IActionResult> RedirectToProduct(string code)
         {
             var products = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                $"select * from Product where CodeInternalProducts = '{code}'");
+                $"select * from Product where CodeInternalProducts = @Code and Status = 1", new SqlParameter($"@Code", SqlDbType.NVarChar) { Value = code });
 
             if (products.IsSuccess && products.Data?.Count > 0)
             {
@@ -103,7 +105,7 @@ namespace TemplateSite.Controllers.ShopPanel
         private async Task<IActionResult> RedirectToSitePage(string code)
         {
             var sitePage = await _serviceQueryDB.GetsDynamicDataViewByQuery(
-                $"select * from SitePage where CodePage = '{code}' and Status = 1");
+                $"select * from SitePage where CodePage = @Code and Status = 1", new SqlParameter($"@Code", SqlDbType.NVarChar) { Value = code });
 
             if (sitePage.IsSuccess && sitePage.Data?.Count > 0)
             {
@@ -138,12 +140,14 @@ namespace TemplateSite.Controllers.ShopPanel
         // POST: /ShopPanel/Products/GetAll
         // ═══════════════════════════════════════════════════════
         [HttpPost("Products/GetAll")]
+        [IgnoreAntiforgeryToken]
+
         public async Task<ServiseResult<string>> GetVitrinProducts(string Code)
         {
             Code = string.IsNullOrWhiteSpace(Code) ? "" : Code.Replace("'", "''").Trim();
 
             return await _serviceQueryDB.GetsJsonDataViewByQuery(
-                $"Exec dbo.VitrinShop '{Code}'");
+                $"Exec dbo.VitrinShop @Code", new SqlParameter($"@Code", SqlDbType.NVarChar) { Value = Code });
         }
 
 
